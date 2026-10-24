@@ -26,7 +26,7 @@
   --fd:'Cormorant Garamond',serif;--fb:'Jost',sans-serif;
   /* Category colors */
   --cat-author:#E5B33E;   /* golden yellow — Author Intro (navy text on it) */
-  --cat-general:#5A7A58;  /* sage-d — General authors */
+  --cat-general:#5A7A58;  /* sage-d — All authors */
   --cat-tickets:#E8704A;  /* coral — Tickets */
   --cat-event:#2D3561;    /* navy — Event */
   --cat-fun:#C8AA88;      /* tan — Fun */
@@ -191,7 +191,7 @@ body{font-family:var(--fb);background:var(--cream);color:var(--black);min-height
 .cat-chip{border:1px solid var(--gray);background:var(--white);font-family:var(--fb);font-size:11px;font-weight:500;padding:6px 12px;border-radius:20px;cursor:pointer;color:#555;transition:all .15s}
 .cat-chip.active{color:var(--white);border-color:transparent}
 .cat-chip[data-cat="Author Intro"].active{background:var(--cat-author);border-color:var(--cat-author);color:var(--navy)}
-.cat-chip[data-cat="General authors"].active{background:var(--cat-general)}
+.cat-chip[data-cat="All authors"].active{background:var(--cat-general)}
 .cat-chip[data-cat="Tickets"].active{background:var(--cat-tickets)}
 .cat-chip[data-cat="Event"].active{background:var(--cat-event)}
 .cat-chip[data-cat="Fun"].active{background:var(--cat-fun)}
@@ -650,12 +650,12 @@ const V8_POSTS = [
   {id:"v8-pre-5",dateType:"premar1",date:"",type:"social",cat:"Fun",postType:"",title:"Soirée's 5th birthday",purpose:"",caption:"",driveLink:"",htagId:"",extraHtags:"",lastUpdated:"Oct 24 · Nik",lastUpdatedBy:"Nik"},
   {id:"v8-post-1",dateType:"postmar1",date:"",type:"social",cat:"Event",postType:"",title:"Book exchange",purpose:"",caption:"",driveLink:"",htagId:"",extraHtags:"",lastUpdated:"Oct 24 · Nik",lastUpdatedBy:"Nik"},
   {id:"v8-post-2",dateType:"postmar1",date:"",type:"social",cat:"Event",postType:"",title:"What to wear",purpose:"",caption:"",driveLink:"",htagId:"",extraHtags:"",lastUpdated:"Oct 24 · Nik",lastUpdatedBy:"Nik"},
-  {id:"v8-post-3",dateType:"postmar1",date:"",type:"social",cat:"Event",postType:"",title:"Sponsor post",purpose:"",caption:"",driveLink:"",htagId:"",extraHtags:"",lastUpdated:"Oct 24 · Nik",lastUpdatedBy:"Nik"},
+  {id:"v8-post-3",dateType:"postmar1",date:"",type:"social",cat:"All authors",postType:"",title:"Sponsor post",purpose:"",caption:"",driveLink:"",htagId:"",extraHtags:"",lastUpdated:"Oct 24 · Nik",lastUpdatedBy:"Nik"},
   {id:"v8-post-4",dateType:"postmar1",date:"",type:"social",cat:"Event",postType:"",title:"Prizes",purpose:"",caption:"",driveLink:"",htagId:"",extraHtags:"",lastUpdated:"Oct 24 · Nik",lastUpdatedBy:"Nik"},
   {id:"v8-post-5",dateType:"postmar1",date:"",type:"social",cat:"Event",postType:"",title:"Prizes (part 2)",purpose:"",caption:"",driveLink:"",htagId:"",extraHtags:"",lastUpdated:"Oct 24 · Nik",lastUpdatedBy:"Nik"},
   {id:"v8-post-6",dateType:"postmar1",date:"",type:"social",cat:"Fun",postType:"",title:"5th birthday celebration",purpose:"",caption:"",driveLink:"",htagId:"",extraHtags:"",lastUpdated:"Oct 24 · Nik",lastUpdatedBy:"Nik"},
-  {id:"v8-post-7",dateType:"postmar1",date:"",type:"social",cat:"Event",postType:"",title:"Shadow Mountain",purpose:"",caption:"",driveLink:"",htagId:"",extraHtags:"",lastUpdated:"Oct 24 · Nik",lastUpdatedBy:"Nik"},
-  {id:"v8-post-8",dateType:"postmar1",date:"",type:"social",cat:"Event",postType:"",title:"Storefront",purpose:"",caption:"",driveLink:"",htagId:"",extraHtags:"",lastUpdated:"Oct 24 · Nik",lastUpdatedBy:"Nik"},
+  {id:"v8-post-7",dateType:"postmar1",date:"",type:"social",cat:"All authors",postType:"",title:"Shadow Mountain",purpose:"",caption:"",driveLink:"",htagId:"",extraHtags:"",lastUpdated:"Oct 24 · Nik",lastUpdatedBy:"Nik"},
+  {id:"v8-post-8",dateType:"postmar1",date:"",type:"social",cat:"All authors",postType:"",title:"Storefront",purpose:"",caption:"",driveLink:"",htagId:"",extraHtags:"",lastUpdated:"Oct 24 · Nik",lastUpdatedBy:"Nik"},
   {id:"v8-soldout",dateType:"fixed",date:"2027-03-01",type:"social",cat:"Tickets",postType:"",title:"Sold Out",purpose:"",caption:"",driveLink:"",htagId:"",extraHtags:"",lastUpdated:"Oct 24 · Nik",lastUpdatedBy:"Nik"},
 ];
 // Ideas I suggested should never come with a date. Clear the ones I dated earlier
@@ -677,6 +677,29 @@ function migrateV8(){
 }
 // "Author announcement" was renamed "Author Intro" (category, and the numbered idea titles).
 // Safe to run on every load: it only changes posts that still use the old name.
+// "General authors" was renamed "All authors". Safe to run on every load.
+function migrateAllAuthors(){
+  const OLD = 'General ' + 'authors', NEW = 'All authors';
+  let changed = false;
+  posts.forEach(p=>{ if(p.cat === OLD){ p.cat = NEW; changed = true; } });
+  // A brief update removed this category and moved my three suggested posts to Event.
+  // Put them back if nobody has edited them since.
+  ['v8-post-3','v8-post-7','v8-post-8'].forEach(id=>{
+    const p = posts.find(x=>x.id===id);
+    if(p && p.cat==='Event' && p.lastUpdated==='Oct 24 · Nik'){ p.cat = NEW; changed = true; }
+  });
+  const i = cats.indexOf(OLD);
+  if(i > -1){ if(cats.includes(NEW)) cats.splice(i,1); else cats[i] = NEW; changed = true; }
+  // bring the category back once on this device (after that, Settings decides)
+  let restored = false; try{ restored = localStorage.getItem('ss_allauthors_v1')==='1'; }catch(e){}
+  if(!restored){
+    if(!cats.includes(NEW)){ const at = cats.indexOf('Author Intro'); cats.splice(at>-1 ? at+1 : 0, 0, NEW); changed = true; }
+    try{ localStorage.setItem('ss_allauthors_v1','1'); }catch(e){}
+  }
+  if(activeCatFilters.has(OLD)){ activeCatFilters.delete(OLD); activeCatFilters.add(NEW); }
+  if(changed){ save(); renderAll(); }
+  return changed;
+}
 function migrateAuthorIntro(){
   const OLD = 'Author ' + 'announcement';
   let changed = false;
@@ -685,11 +708,6 @@ function migrateAuthorIntro(){
     const m = /^Author announcement (\d+)$/.exec(p.title||'');
     if(m){ p.title = 'Author Intro ' + m[1]; changed = true; }
   });
-  const GONE = 'General ' + 'authors';
-  posts.forEach(p=>{ if(p.cat === GONE){ p.cat = 'Event'; changed = true; } });
-  const gi = cats.indexOf(GONE);
-  if(gi > -1){ cats.splice(gi,1); changed = true; }
-  if(activeCatFilters && activeCatFilters.delete) activeCatFilters.delete(GONE);
   const i = cats.indexOf(OLD);
   if(i > -1){ if(cats.includes('Author Intro')) cats.splice(i,1); else cats[i] = 'Author Intro'; changed = true; }
   if(activeCatFilters && activeCatFilters.has && activeCatFilters.has(OLD)){ activeCatFilters.delete(OLD); activeCatFilters.add('Author Intro'); }
@@ -747,7 +765,7 @@ const DC = [
   {id:"cd1",label:"Tickets On Sale",date:"2027-03-01",color:"#E8704A"},
   {id:"cd2",label:"THE SOIRÉE",date:"2027-06-12",color:"#2D3561"},
 ];
-const DCATS = ["Author Intro","Tickets","Event","Fun"];
+const DCATS = ["Author Intro","All authors","Tickets","Event","Fun"];
 const DHTAGS = [
   {id:"h1",name:"BSS General",tags:"#bookishsummersoiree #bss2027 #bookish #booklover #bookstagram #booktok #authorevent #indiebooks #romancereader #summerreads"},
   {id:"h2",name:"Author Promo",tags:"#indieauthor #selfpublished #writingcommunity #authorlife #booklaunch #newrelease #romancebooks #romantasy #cleanromance"},
@@ -872,16 +890,17 @@ async function loadFromFirestoreAll(){
     }
     migrateV8();
     migrateAuthorIntro();
+    migrateAllAuthors();
     syncAuthorIntros();
     setupFirestoreListeners();
-  } catch(e){ console.warn('Firestore load failed', e); migrateV8(); migrateAuthorIntro(); syncAuthorIntros(); }
+  } catch(e){ console.warn('Firestore load failed', e); migrateV8(); migrateAuthorIntro(); migrateAllAuthors(); syncAuthorIntros(); }
 }
 function setupFirestoreListeners(){
   if(!window._firestoreDB || window._fsListenersActive2) return;
   window._fsListenersActive2 = true;
   window._fbOnSnapshot(window._fbCollection(window._firestoreDB,'ss_posts2'), snap=>{
     const data = snap.docs.map(d=>d.data());
-    if(data.length > 0){ posts = sortByOrder(data); if(migrateV8()) return; if(migrateAuthorIntro()) return; localStorage.setItem('ss_p2',JSON.stringify(posts)); renderAll(); }
+    if(data.length > 0){ posts = sortByOrder(data); if(migrateV8()) return; if(migrateAuthorIntro()) return; if(migrateAllAuthors()) return; localStorage.setItem('ss_p2',JSON.stringify(posts)); renderAll(); }
   });
   window._fbOnSnapshot(window._fbCollection(window._firestoreDB,'ss_cds2'), snap=>{
     const data = snap.docs.map(d=>d.data());
@@ -908,7 +927,7 @@ function catClass(cat){
   if(!cat) return 'cat-misc';
   const map = {
     'Author Intro':'cat-author',
-    'General authors':'cat-general',
+    'All authors':'cat-general',
     'Tickets':'cat-tickets',
     'Event':'cat-event',
     'Fun':'cat-fun',
@@ -1141,7 +1160,7 @@ let _calSelectedDay = null; // 'YYYY-MM-DD'
 function renderCalendarView(){
   const el = document.getElementById('master-list-content');
   const catColors = {
-    'Author Intro':'#E5B33E','General authors':'#5A7A58',
+    'Author Intro':'#E5B33E','All authors':'#5A7A58',
     'Tickets':'#E8704A','Event':'#2D3561','Fun':'#C8AA88'
   };
   function postColor(p){
@@ -1565,7 +1584,7 @@ function renderMockCalendar(proposed){
   document.querySelectorAll('[data-mv]').forEach(b=>b.classList.toggle('active', b.dataset.mv===_mockView));
   const cal = document.getElementById('as-mock-cal');
   if(!proposed.length){ cal.innerHTML='<div style="padding:14px;color:#aaa;font-style:italic">No posts to schedule</div>'; return; }
-  const catColors = {'Author Intro':'#E5B33E','General authors':'#5A7A58','Tickets':'#E8704A','Event':'#2D3561','Fun':'#C8AA88'};
+  const catColors = {'Author Intro':'#E5B33E','All authors':'#5A7A58','Tickets':'#E8704A','Event':'#2D3561','Fun':'#C8AA88'};
   const colorOf = item=>{ const p = posts.find(x=>x.id===item.id); return p ? (p.type==='email'?'#C4522E':p.type==='other'?'#aaa':(catColors[p.cat]||'#8BA888')) : '#8BA888'; };
 
   if(_mockView === 'calendar'){
