@@ -355,10 +355,10 @@ mark.hit{background:#F6E2A6;color:inherit;border-radius:2px;padding:0 1px}
   </div>
   <div class="filter-group" id="listview-row">
     <span class="fg-lbl">Show</span>
+    <button class="chip c-lv" data-lv="all-posts" onclick="setListView('all-posts')">All Posts</button>
     <button class="chip c-lv" data-lv="unposted" onclick="setListView('unposted')">Unscheduled</button>
     <button class="chip c-lv" data-lv="scheduled" onclick="setListView('scheduled')">Scheduled</button>
     <button class="chip c-lv" data-lv="all-tasks" onclick="setListView('all-tasks')">All Tasks</button>
-    <button class="chip c-lv" data-lv="all-posts" onclick="setListView('all-posts')">All Posts</button>
     <button class="chip c-lv" data-lv="by-type" onclick="setListView('by-type')">By Post Type</button>
     <button class="chip c-lv" data-lv="by-cat" onclick="setListView('by-cat')">By Category</button>
     <button class="chip c-lv" data-lv="emails" onclick="setListView('emails')">Emails</button>
@@ -1135,7 +1135,11 @@ function setViewMode(m){
   try{ localStorage.setItem('ss_view', m); }catch(e){}
   renderMasterList();
 }
-let listView = (()=>{ try{ return localStorage.getItem('ss_listview') || 'unposted'; }catch(e){ return 'unposted'; } })();
+// All Posts is the starting view (switched to once on each device when this came in)
+let listView = (()=>{ try{
+  if(localStorage.getItem('ss_lv_default')!=='all-posts'){ localStorage.setItem('ss_lv_default','all-posts'); localStorage.setItem('ss_listview','all-posts'); }
+  return localStorage.getItem('ss_listview') || 'all-posts';
+}catch(e){ return 'all-posts'; } })();
 function setListView(v){
   if(v === listView) return;
   if(arrangeMode) toggleArrange();
