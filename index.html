@@ -70,11 +70,21 @@ body{font-family:var(--fb);background:var(--cream);color:var(--black);min-height
 .view-toggle{display:flex;background:var(--cream);border-radius:20px;padding:2px;flex-shrink:0}
 .vt-btn{border:none;background:transparent;font-family:var(--fb);font-size:11px;font-weight:500;color:#777;padding:5px 12px;border-radius:18px;cursor:pointer;white-space:nowrap}
 .vt-btn.active{background:var(--navy);color:var(--white)}
-.view-row .view-toggle{margin-right:auto}
+.search-box{flex:1;min-width:0;display:flex;align-items:center;gap:4px;background:var(--cream);border:1px solid var(--cream-d);border-radius:18px;padding:0 8px;height:32px}
+.search-box:focus-within{border-color:var(--sage);background:var(--white)}
+.search-ic{font-size:11px;opacity:.6}
+#search-input{flex:1;min-width:0;border:none;background:transparent;outline:none;font-family:var(--fb);font-size:16px;color:var(--black);padding:0;-webkit-appearance:none;appearance:none}
+#search-input::-webkit-search-cancel-button{display:none}
+@media (min-width:640px){#search-input{font-size:12px}}
+.search-x{border:none;background:none;color:#999;font-size:12px;cursor:pointer;padding:2px;display:none}
+.search-box.has-q .search-x{display:block}
+.search-head{font-size:11px;color:#888;margin:2px 2px 8px}
+.search-head b{color:var(--navy)}
+mark.hit{background:#F6E2A6;color:inherit;border-radius:2px;padding:0 1px}
 #listview-row{margin-bottom:2px}
 #listview-row.hide{display:none}
 .view-row .arrange-btn{padding:6px 11px;border-radius:18px;font-size:10.5px}
-.view-row.cal-mode .arrange-btn{display:none}
+.view-row.cal-mode .arrange-btn,.view-row.searching .arrange-btn{display:none}
 
 /* ── MAIN ── */
 .main{padding:12px 14px 100px}
@@ -325,6 +335,11 @@ body{font-family:var(--fb);background:var(--cream);color:var(--black);min-height
     <div class="view-toggle">
       <button class="vt-btn" data-view="calendar" onclick="setViewMode('calendar')">📅 Calendar</button>
       <button class="vt-btn" data-view="list" onclick="setViewMode('list')">☰ List</button>
+    </div>
+    <div class="search-box">
+      <span class="search-ic">🔍</span>
+      <input id="search-input" type="search" placeholder="Search posts" autocomplete="off" oninput="onSearchInput(this.value)" onkeydown="if(event.key==='Escape'){clearSearch();this.blur();}">
+      <button class="search-x" id="search-x" onclick="clearSearch()" aria-label="Clear search">✕</button>
     </div>
     <button class="arrange-btn" id="arrange-btn" onclick="toggleArrange()">Arrange</button>
   </div>
@@ -1146,10 +1161,46 @@ function syncViewToggle(){
   if(row) row.classList.toggle('cal-mode', viewMode==='calendar');
 }
 
+// ── SEARCH ─────────────────────────────────────────────────────────────────
+// Looks through every post (whatever Show / filters are picked): title, purpose,
+// caption, category, hashtags, post type, date type.
+let searchQ = '', _searchTimer = null;
+function onSearchInput(v){
+  clearTimeout(_searchTimer);
+  _searchTimer = setTimeout(()=>{ searchQ = v.trim(); renderMasterList(); }, 120);
+}
+function clearSearch(){
+  const i = document.getElementById('search-input'); if(i) i.value = '';
+  searchQ = ''; renderMasterList();
+}
+function searchText(p){
+  const g = p.htagId ? hashtagGroups.find(x=>x.id===p.htagId) : null;
+  return [p.title, p.purpose, p.subject, p.caption, p.cat, p.postType, DATE_TYPE_LBL[p.dateType],
+          p.extraHtags, g && g.tags, p.type==='email' ? 'email' : p.type==='other' ? 'other note' : ''].filter(Boolean).join(' \n ').toLowerCase();
+}
+function renderSearchResults(el){
+  const words = searchQ.toLowerCase().split(/\s+/).filter(Boolean);
+  const hits = posts.filter(p=>{ const t = searchText(p); return words.every(w=>t.includes(w)); })
+    .sort((a,b)=>(a.date?1:0)-(b.date?1:0) || (a.date||'').localeCompare(b.date||''));
+  el.innerHTML = `<div class="search-head"><b>${hits.length}</b> post${hits.length===1?'':'s'} match "${esc(searchQ)}" (searching all posts)</div>` +
+    (hits.length ? hits.map(p=>cardHTML(p)).join('') : `<div class="empty-msg">Nothing found. Try fewer or different words.</div>`);
+  // highlight the words in titles and descriptions
+  const re = new RegExp('(' + words.map(w=>w.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')).join('|') + ')', 'gi');
+  el.querySelectorAll('.card-title, .card-desc').forEach(n=>{ n.innerHTML = n.innerHTML.replace(re, '<mark class="hit">$1</mark>'); });
+}
+
 function renderMasterList(){
   const el = document.getElementById('master-list-content');
   const view = viewMode === 'calendar' ? 'calendar' : listView;
   syncViewToggle();
+  const sb = document.querySelector('.search-box'); if(sb) sb.classList.toggle('has-q', !!searchQ);
+  const vr = document.querySelector('.view-row'); if(vr) vr.classList.toggle('searching', !!searchQ);
+  if(searchQ){
+    if(arrangeMode) toggleArrange();
+    const lvr = document.getElementById('listview-row'); if(lvr) lvr.classList.add('hide');
+    renderSearchResults(el);
+    return;
+  }
   const filtered = getFiltered();
 
   if(view === 'unposted'){
