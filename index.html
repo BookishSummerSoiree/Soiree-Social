@@ -123,6 +123,8 @@ mark.hit{background:#F6E2A6;color:inherit;border-radius:2px;padding:0 1px}
 .cat-misc .card-stripe{background:#aaa}
 .tab-mon{font-size:8px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;line-height:1.1}
 .tab-num{font-family:var(--fd);font-size:19px;font-weight:500;line-height:1}
+.tab-fixed{font-size:6.5px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;line-height:1;margin-top:2px;opacity:.9}
+.drag-handle.pin{cursor:default;color:inherit;font-size:11px}
 .tab-none{font-size:8px;font-weight:500;letter-spacing:.05em;text-transform:uppercase;line-height:1.25;opacity:.9}
 
 .card-body{flex:1;padding:7px 6px 7px 10px;min-width:0;display:flex;gap:8px;align-items:stretch}
@@ -1091,20 +1093,22 @@ function cardHTML(post, opts={}){
   const postTypeBadge = pt ? `<span class="post-type-badge" title="${esc(pt)}" aria-label="${esc(pt)}">${TYPE_ICONS[pt] || esc(pt)}</span>` : '';
   const isPast = post.date && new Date(post.date+"T12:00:00") < today;
   const pastCls = isPast && post.dateType==='fixed' ? ' past-post' : '';
-  const dragAttr = opts.draggable ? 'draggable="true"' : '';
+  const dragAttr = opts.draggable && !(post.dateType==='fixed' && post.date) ? 'draggable="true"' : '';
 
   // left colour tab: the post's date
   let tab;
   if(post.date){
     const d = new Date(post.date+"T12:00:00");
-    tab = `<span class="tab-mon">${MONTHS[d.getMonth()].slice(0,3)}</span><span class="tab-num">${d.getDate()}</span>`;
+    tab = `<span class="tab-mon">${MONTHS[d.getMonth()].slice(0,3)}</span><span class="tab-num">${d.getDate()}</span>` +
+          (post.dateType==='fixed' ? `<span class="tab-fixed">Fixed</span>` : '');
   } else {
     tab = `<span class="tab-none">No<br>date</span>`;
   }
-  const dtLbl = DATE_TYPE_LBL[post.dateType] || '';
+  const isFixed = post.dateType==='fixed' && !!post.date;
+  const dtLbl = isFixed ? '' : (DATE_TYPE_LBL[post.dateType] || '');
   const desc = post.purpose || post.subject || '';
 
-  return `<div class="card ${cls}${pastCls}" data-id="${post.id}" ${dragAttr}>
+  return `<div class="card ${cls}${pastCls}" data-id="${post.id}" ${isFixed?'data-fixed="1"':''} ${dragAttr}>
     <div class="card-stripe">${tab}</div>
     <div class="card-body">
       <div class="card-text">
@@ -1113,7 +1117,7 @@ function cardHTML(post, opts={}){
       <div class="card-side">
         <div class="card-side-top">
           ${dtLbl ? `<span class="dt-lbl">${dtLbl}</span>` : ''}
-          <button class="drag-handle" title="Drag to reorder">⠿</button>
+          ${isFixed ? `<span class="drag-handle pin" title="Fixed date: stays put">📌</span>` : `<button class="drag-handle" title="Drag to reorder">⠿</button>`}
           <button class="edit-btn" onclick="event.stopPropagation();openEditPost('${post.id}')">✏️</button>
         </div>
         <div class="card-side-bot">${postImages[post.id] ? `<img class="card-thumb" src="${postImages[post.id]}" alt="">` : ''}${catLabel ? `<span class="card-cat-tag">${esc(catLabel)}</span>` : ''}${postTypeBadge}</div>
@@ -1184,9 +1188,10 @@ function renderMasterList(){
   const vr = document.querySelector('.view-row'); if(vr) vr.classList.toggle('searching', !!searchQ);
   if(arrangeMode && !searchQ){
     const lvr = document.getElementById('listview-row'); if(lvr) lvr.classList.add('hide');
-    const list = arrangeCandidates();
-    el.innerHTML = `<div class="search-head">${list.length} post${list.length===1?'':'s'} to schedule. Fixed-date posts aren't shown since they stay put.</div>` +
-      (list.length ? list.map(p=>cardHTML(p, {draggable:canDrag()})).join('') : `<div class="empty-msg">Nothing to schedule here</div>`);
+    const list = arrangeCandidates(), anchors = fixedAnchors();
+    el.innerHTML = `<div class="search-head">${list.length} post${list.length===1?'':'s'} to schedule. 📌 Fixed posts stay put; posts above one go before its date, posts below go after.</div>` +
+      (list.length ? list.concat(anchors).map(p=>cardHTML(p, {draggable:canDrag()})).join('') : `<div class="empty-msg">Nothing to schedule here</div>`);
+    if(list.length) placeAnchors();
     if(canDrag()) setupDragDrop();
     return;
   }
@@ -1380,6 +1385,28 @@ function calDayTap(ds){
 // ── ARRANGE / DRAG ─────────────────────────────────────────────────────────
 // Posts Arrange can schedule: social posts that aren't Fixed and aren't already in the past,
 // in your list order, using the category / type / date chips but not the Show pills.
+// Upcoming Fixed posts, shown in the Arrange list as markers to arrange around
+function fixedAnchors(){
+  const t = today.toISOString().slice(0,10);
+  return getFiltered().filter(p=>p.type==='social' && p.dateType==='fixed' && p.date && p.date >= t)
+                      .sort((a,b)=>a.date.localeCompare(b.date));
+}
+// Put each Fixed card where it falls in time, based on the dates the other posts would get
+// in their current order.
+function placeAnchors(){
+  const el = document.getElementById('master-list-content');
+  const cards = _listCards();
+  const anchorsEls = cards.filter(c=>c.dataset.fixed).map(c=>({c, p:posts.find(x=>x.id===c.dataset.id)})).filter(a=>a.p)
+                          .sort((a,b)=>a.p.date.localeCompare(b.p.date));
+  const movEls = cards.filter(c=>!c.dataset.fixed);
+  if(!anchorsEls.length || !movEls.length) return;
+  const prov = {};
+  computeProposal(movEls.map(c=>c.dataset.id), today.toISOString().slice(0,10)).forEach(i=>{ prov[i.id] = i.date; });
+  anchorsEls.forEach(({c,p})=>{
+    const next = movEls.find(m=>prov[m.dataset.id] && prov[m.dataset.id] > p.date);
+    if(next) next.parentNode.insertBefore(c, next); else el.appendChild(c);
+  });
+}
 function arrangeCandidates(){
   return getFiltered().filter(p=>p.type==='social' && p.dateType!=='fixed' && !(p.date && new Date(p.date+'T12:00:00') < today));
 }
@@ -1547,6 +1574,7 @@ function shuffleAndPreview(again){
   const slots = cards.filter(c=>movableIds.has(c.dataset.id));
   const markers = slots.map(c=>{ const m=document.createComment('slot'); c.parentNode.insertBefore(m,c); return m; });
   markers.forEach((m,i)=>{ const card = parentOf.get(order[i].id); m.parentNode.insertBefore(card, m); m.remove(); });
+  placeAnchors();
   if(again) runAutoSchedule(); else openAutoSchedule('shuffle');
 }
 
@@ -1585,6 +1613,7 @@ function setupDragDrop(){
     list.addEventListener('drop', e=>{ if(!canDrag()||!_dragSrc) return; e.preventDefault(); _dropAtLine(); });
   }
   _listCards().forEach(card=>{
+    if(card.dataset.fixed) return;   // Fixed posts stay put
     card.addEventListener('dragstart', e=>{
       _dragSrc = card;
       card.classList.add('dragging');
@@ -1652,10 +1681,48 @@ function openAutoSchedule(mode){
 function runAutoSchedule(){
   const startStr = document.getElementById('as-start-date').value;
   if(!startStr){ alert('Please pick a start date.'); return; }
-
-  // Gather current card order from DOM (reflects user's drag ordering)
-  const domCards = [...document.querySelectorAll('#master-list-content .card[data-id]')];
-  const orderedIds = domCards.map(c=>c.dataset.id);
+  const orderedIds = _listCards().map(c=>c.dataset.id);   // the order on screen, Fixed posts included
+  const proposed = respectFixedPlacement(computeProposal(orderedIds, startStr), orderedIds, startStr);
+  pendingAutoSchedule = proposed;
+  _mockYear = null; _mockSel = null;
+  renderMockCalendar(proposed);
+}
+// If you put a post above a Fixed post it goes before that date; below it goes after.
+// Posts already on the right side keep the date they were given.
+function respectFixedPlacement(proposed, orderedIds, startStr){
+  const day = ds=>new Date(ds+"T12:00:00"), iso = d=>d.toISOString().slice(0,10);
+  const shift = (ds,n)=>{ const d = day(ds); d.setDate(d.getDate()+n); return iso(d); };
+  const byId = {}; proposed.forEach(i=>{ byId[i.id] = i; });
+  const fixedDate = id=>{ const p = posts.find(x=>x.id===id); return p && p.dateType==='fixed' && p.date ? p.date : null; };
+  const lastDay = shift(SOIREE_DATE,-1), feb28 = shift(TICKETS_DATE,-1), jan31 = shift(AUTHOR_DEADLINE,-1), mar2 = shift(TICKETS_DATE,1);
+  const used = new Set(posts.filter(p=>p.dateType==='fixed' && p.date).map(p=>p.date));
+  const fix = [];
+  orderedIds.forEach((id,idx)=>{
+    const it = byId[id]; if(!it || it.kept || !it.date) return;
+    const p = posts.find(x=>x.id===id);
+    let lo = startStr, hi = lastDay;
+    if(isAuthorPost(p) && p.dateType!=='postmar1') hi = jan31;
+    else if(p.dateType==='premar1') hi = feb28;
+    if(p.dateType==='postmar1') lo = mar2;
+    let aLo = null, aHi = null;
+    for(let k=idx-1;k>=0;k--){ const f = fixedDate(orderedIds[k]); if(f){ aLo = shift(f,1); break; } }
+    for(let k=idx+1;k<orderedIds.length;k++){ const f = fixedDate(orderedIds[k]); if(f){ aHi = shift(f,-1); break; } }
+    const L = aLo && aLo > lo ? aLo : lo, H = aHi && aHi < hi ? aHi : hi;
+    if(L > H) { used.add(it.date); return; }          // can't satisfy both; the date rules win
+    if(it.date >= L && it.date <= H){ used.add(it.date); return; }
+    fix.push({it, L, H, target: it.date < L ? L : H});
+  });
+  fix.forEach(({it,L,H,target})=>{
+    for(let k=0;k<200;k++){
+      for(const v of k ? [shift(target,k), shift(target,-k)] : [target]){
+        if(v >= L && v <= H && !used.has(v)){ used.add(v); it.date = v; return; }
+      }
+    }
+  });
+  proposed.sort((a,b)=>(a.date||'').localeCompare(b.date||''));
+  return proposed;
+}
+function computeProposal(orderedIds, startStr){
 
   // Only FIXED posts keep their date. Everything else on screen gets a date, one sequence in
   // the order on screen: Pre Mar 1 posts in the window before Mar 1, Post Mar 1 posts after it,
@@ -1747,10 +1814,7 @@ function runAutoSchedule(){
   g1.forEach((p,i)=>proposed.push({id:p.id, date:d1[i]||'', title:p.title, dateType:p.dateType}));
   g2.forEach((p,i)=>proposed.push({id:p.id, date:d2[i]||'', title:p.title, dateType:p.dateType}));
   proposed.sort((a,b)=>(a.date||'').localeCompare(b.date||''));
-
-  pendingAutoSchedule = proposed;
-  _mockYear = null; _mockSel = null;
-  renderMockCalendar(proposed);
+  return proposed;
 
 }
 
