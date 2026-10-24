@@ -310,6 +310,7 @@ body{font-family:var(--fb);background:var(--cream);color:var(--black);min-height
   <div class="filter-group" id="listview-row">
     <span class="fg-lbl">Show</span>
     <button class="chip c-lv" data-lv="unposted" onclick="setListView('unposted')">Unscheduled</button>
+    <button class="chip c-lv" data-lv="scheduled" onclick="setListView('scheduled')">Scheduled</button>
     <button class="chip c-lv" data-lv="all-tasks" onclick="setListView('all-tasks')">All Tasks</button>
     <button class="chip c-lv" data-lv="all-posts" onclick="setListView('all-posts')">All Posts</button>
     <button class="chip c-lv" data-lv="by-type" onclick="setListView('by-type')">By Post Type</button>
@@ -965,27 +966,22 @@ function renderMasterList(){
   const filtered = getFiltered();
 
   if(view === 'unposted'){
-    // Default: unscheduled first, then a divider, then scheduled chronologically
-    // Unscheduled = no date yet. Scheduled = has a date (whatever its date type).
-    const unscheduledFlexOrPremar = filtered.filter(p=>!p.date);
-    const scheduled = filtered.filter(p=>p.date).sort((a,b)=>a.date.localeCompare(b.date));
-    // Filter for social posts only in unposted view (default)
-    const socialUnscheduled = unscheduledFlexOrPremar.filter(p=>p.type==='social');
-    const socialScheduled = scheduled.filter(p=>p.type==='social' && new Date(p.date+"T12:00:00") >= today);
+    // Unscheduled = social posts with no date yet, in your arranged order
+    const list = filtered.filter(p=>p.type==='social' && !p.date);
+    el.innerHTML = list.length ? list.map(p=>cardHTML(p, {draggable:arrangeMode})).join('')
+                               : `<div class="empty-msg">Nothing unscheduled. Every post has a date.</div>`;
 
-    let h = '';
-    if(!socialUnscheduled.length && !socialScheduled.length){
-      h = `<div class="empty-msg">No social posts yet</div>`;
-    } else {
-      if(socialUnscheduled.length){
-        h += socialUnscheduled.map(p=>cardHTML(p, {draggable:arrangeMode})).join('');
-      }
-      if(socialScheduled.length){
-        h += `<div class="section-divider"><div class="sd-line"></div><div class="sd-lbl">Scheduled</div><div class="sd-line"></div></div>`;
-        h += socialScheduled.map(p=>cardHTML(p, {draggable:arrangeMode})).join('');
-      }
+  } else if(view === 'scheduled'){
+    // Scheduled = social posts with a date, soonest first; past ones at the bottom
+    const dated = filtered.filter(p=>p.type==='social' && p.date).sort((a,b)=>a.date.localeCompare(b.date));
+    const upcoming = dated.filter(p=>new Date(p.date+"T12:00:00") >= today);
+    const past = dated.filter(p=>new Date(p.date+"T12:00:00") < today);
+    let h = upcoming.map(p=>cardHTML(p, {draggable:arrangeMode})).join('');
+    if(past.length){
+      h += `<div class="section-divider"><div class="sd-line"></div><div class="sd-lbl">Past</div><div class="sd-line"></div></div>`;
+      h += past.map(p=>cardHTML(p, {draggable:arrangeMode})).join('');
     }
-    el.innerHTML = h;
+    el.innerHTML = h || `<div class="empty-msg">Nothing scheduled yet</div>`;
 
   } else if(view === 'all-tasks'){
     const sorted = [...filtered].sort((a,b)=>{
