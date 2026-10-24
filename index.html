@@ -9,7 +9,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Soiree Social">
-<meta name="theme-color" content="#2D3561">
+<meta name="theme-color" content="#FFFFFF">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Soiree Social</title>
 <link rel="manifest" href="./manifest.json">
@@ -36,7 +36,8 @@
 body{font-family:var(--fb);background:var(--cream);color:var(--black);min-height:100dvh;overflow-x:hidden}
 
 /* ── HEADER ── */
-.hdr{background:var(--navy);padding:12px 14px 0;position:sticky;top:0;z-index:100}
+.hdr{background:var(--white);padding:calc(10px + env(safe-area-inset-top,0px)) 14px 0;position:sticky;top:0;z-index:100;border-bottom:1px solid var(--cream-d)}
+.hdr-logo{display:block;height:58px;width:auto;max-width:calc(100% - 90px);object-fit:contain}
 .hdr-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
 .app-title{font-family:var(--fd);font-size:22px;font-weight:400;color:var(--white);line-height:1}
 .app-sub{font-size:10px;font-weight:300;color:rgba(255,255,255,.5);letter-spacing:.12em;text-transform:uppercase;margin-top:2px}
@@ -46,7 +47,7 @@ body{font-family:var(--fb);background:var(--cream);color:var(--black);min-height
 .cd-row{display:flex;gap:8px;padding-bottom:12px;overflow-x:auto;scrollbar-width:none}
 .cd-row::-webkit-scrollbar{display:none}
 .cd-badge{flex-shrink:0;color:var(--white);font-size:11px;font-weight:500;letter-spacing:.04em;padding:6px 14px;border-radius:20px;cursor:pointer;white-space:nowrap;border:none;font-family:var(--fb);opacity:.95}
-.cd-badge span.cd-num{font-family:var(--fd);font-size:18px;font-weight:500;margin-right:4px;vertical-align:middle}
+.cd-badge span.cd-num{font-family:var(--fd);font-size:18px;font-weight:500;margin-right:4px;vertical-align:middle;color:var(--white)}
 
 /* ── FILTER CHIPS ── */
 .filter-bar{background:var(--white);border-bottom:1px solid var(--cream-d);padding:8px 0 6px}
@@ -266,10 +267,7 @@ body{font-family:var(--fb);background:var(--cream);color:var(--black);min-height
 <!-- ── HEADER ── -->
 <div class="hdr">
   <div class="hdr-top">
-    <div>
-      <div class="app-title">Soiree Social</div>
-      <div class="app-sub">Bookish Summer Soirée 2027</div>
-    </div>
+    <img class="hdr-logo" src="./logo.png" alt="Bookish Summer Soirée — Soiree Social">
     <button class="user-pill" onclick="openUserSwitch()">👤 <span id="current-user-display">…</span></button>
   </div>
   <div class="cd-row" id="cd-row"></div>
