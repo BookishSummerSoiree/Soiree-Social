@@ -205,6 +205,13 @@ body{font-family:var(--fb);background:var(--cream);color:var(--black);min-height
 .btn-navy{width:100%;background:var(--navy);color:var(--white);border:none;border-radius:12px;padding:12px;font-family:var(--fb);font-size:12px;font-weight:500;cursor:pointer;margin-top:8px}
 
 /* Drive link section */
+.img-row{display:flex;gap:8px;align-items:center}
+.img-upload-btn{flex:1;display:flex;align-items:center;gap:8px;background:var(--sage-l);color:var(--sage-d);border:1px solid var(--sage);border-radius:10px;padding:9px 12px;cursor:pointer;font-size:12px;font-weight:500}
+.img-clear-btn{background:none;border:1px solid var(--gray);border-radius:10px;padding:9px 10px;font-size:11px;color:#999;cursor:pointer;white-space:nowrap;font-family:var(--fb)}
+#pm-img-preview img{display:block;max-width:180px;width:100%;border-radius:8px;border:1px solid var(--gray);margin-top:8px}
+.img-note{font-size:10px;color:var(--sage-d);margin-top:4px}
+.card-thumb{width:22px;height:22px;border-radius:5px;object-fit:cover;border:1px solid var(--gray);display:block}
+.detail-img{display:block;width:100%;max-width:320px;border-radius:10px;border:1px solid var(--cream-d)}
 .drive-link-hint{font-size:10px;color:#aaa;margin-top:5px;line-height:1.5}
 .drive-link-hint a{color:var(--sage-d);text-decoration:none}
 
@@ -491,7 +498,15 @@ body{font-family:var(--fb);background:var(--cream);color:var(--black);min-height
       </div>
       <!-- Graphic — Drive link (social only) -->
       <div class="ef" id="pm-graphic-section" style="display:none">
-        <label class="ef-lbl">Graphic / Video — Google Drive Link</label>
+        <label class="ef-lbl">Graphic</label>
+        <div class="img-row">
+          <label class="img-upload-btn">🖼 Upload graphic
+            <input type="file" accept="image/*" style="display:none" onchange="handleImageUpload(this)">
+          </label>
+          <button type="button" class="img-clear-btn" id="pm-img-clear" onclick="clearPostImage()">✕ Remove</button>
+        </div>
+        <div id="pm-img-preview"></div>
+        <label class="ef-lbl" style="margin-top:10px">Full-size graphic or video: Google Drive link</label>
         <input class="ef-input" id="pm-drive-link" placeholder="https://drive.google.com/...">
         <div class="drive-link-hint">
           Paste a Drive link to a photo, video, or folder.
@@ -902,6 +917,7 @@ async function loadFromFirestoreAll(){
     migrateAllAuthors();
     syncAuthorIntros();
     setupFirestoreListeners();
+    loadPostImages().catch(()=>{});
   } catch(e){ console.warn('Firestore load failed', e); window._catsLoaded = true; migrateV8(); migrateAuthorIntro(); migrateAllAuthors(); syncAuthorIntros(); }
 }
 function setupFirestoreListeners(){
@@ -1064,7 +1080,7 @@ function cardHTML(post, opts={}){
           <button class="drag-handle" title="Drag to reorder">⠿</button>
           <button class="edit-btn" onclick="event.stopPropagation();openEditPost('${post.id}')">✏️</button>
         </div>
-        <div class="card-side-bot">${catLabel ? `<span class="card-cat-tag">${esc(catLabel)}</span>` : ''}${postTypeBadge}</div>
+        <div class="card-side-bot">${postImages[post.id] ? `<img class="card-thumb" src="${postImages[post.id]}" alt="">` : ''}${catLabel ? `<span class="card-cat-tag">${esc(catLabel)}</span>` : ''}${postTypeBadge}</div>
       </div>
     </div>
     ${opts.draggable ? '' : `<div class="card-tap" onclick="openDetail('${post.id}')"></div>`}
@@ -1782,6 +1798,8 @@ function showPostFields(type, p){
   // Graphic — social only
   document.getElementById('pm-graphic-section').style.display = type==='social' ? '' : 'none';
   if(type==='social') document.getElementById('pm-drive-link').value = p ? (p.driveLink||'') : '';
+  _pendingImg = undefined;
+  showImgPreview(p ? (postImages[p.id]||'') : '');
 }
 
 function renderCatChips(selected){
@@ -1857,6 +1875,56 @@ function getSelectedPostType(){
   return a ? a.textContent.trim() : (_selectedPostType||'');
 }
 
+// ── UPLOADED GRAPHICS ──────────────────────────────────────────────────────
+// Uploads are shrunk to 600px wide (JPEG) and kept in their own shared collection
+// (one small doc per post), so both phones see them without slowing down saves.
+let postImages = {};            // postId -> data URL
+let _pendingImg;                // undefined = untouched, '' = removed, data URL = new upload
+function handleImageUpload(input){
+  const file = input.files && input.files[0];
+  input.value = '';
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = e=>{
+    const img = new Image();
+    img.onload = ()=>{
+      const maxW = 600, scale = img.width > maxW ? maxW/img.width : 1;
+      const c = document.createElement('canvas');
+      c.width = Math.round(img.width*scale); c.height = Math.round(img.height*scale);
+      const ctx = c.getContext('2d');
+      ctx.fillStyle = '#fff'; ctx.fillRect(0,0,c.width,c.height);   // transparent PNGs get a white background
+      ctx.drawImage(img, 0, 0, c.width, c.height);
+      _pendingImg = c.toDataURL('image/jpeg', 0.72);
+      showImgPreview(_pendingImg, true);
+    };
+    img.onerror = ()=>alert("That file couldn't be read as an image.");
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+function showImgPreview(url, fresh){
+  const el = document.getElementById('pm-img-preview');
+  document.getElementById('pm-img-clear').style.display = url ? '' : 'none';
+  if(!url){ el.innerHTML = ''; return; }
+  const kb = Math.round(url.length*0.75/1024);
+  el.innerHTML = `<img src="${url}" alt="">` + (fresh ? `<div class="img-note">✅ Uploaded (saved small, ${kb}KB)</div>` : '');
+}
+function clearPostImage(){ _pendingImg = ''; showImgPreview(''); }
+function storePostImage(id, data){
+  if(data){ postImages[id] = data; } else { delete postImages[id]; }
+  if(!window._firestoreDB) return;
+  const ref = window._fbDoc(window._firestoreDB, 'ss_imgs2', id);
+  (data ? window._fbSetDoc(ref, {id, data, at:Date.now()}) : window._fbDeleteDoc(ref)).catch(()=>{});
+}
+async function loadPostImages(){
+  const docs = await loadFromFirestore('ss_imgs2');
+  if(docs){ postImages = {}; docs.forEach(d=>{ if(d && d.id && d.data) postImages[d.id] = d.data; }); renderMasterList(); }
+  window._fbOnSnapshot(window._fbCollection(window._firestoreDB,'ss_imgs2'), snap=>{
+    postImages = {}; snap.docs.forEach(x=>{ const d=x.data(); if(d && d.id && d.data) postImages[d.id] = d.data; });
+    renderMasterList();
+  });
+}
+
 function savePost(){
   const title = document.getElementById('pm-title').value.trim();
   if(!title){ alert('Please add a title.'); return; }
@@ -1892,12 +1960,16 @@ function savePost(){
     lastUpdatedBy: getCurrentUser(),
   };
 
+  let savedId = editingPostId;
   if(editingPostId){
     const i = posts.findIndex(p=>p.id===editingPostId);
     if(i>=0) posts[i] = {...posts[i], ...data};
   } else {
-    posts.push({id:uid(), ...data});
+    savedId = uid();
+    posts.push({id:savedId, ...data});
   }
+  if(_pendingImg !== undefined) storePostImage(savedId, _pendingImg);
+  _pendingImg = undefined;
   save();
   closeModal('post-modal');
   renderMasterList();
@@ -1921,6 +1993,7 @@ function deletePost(){
   }
   posts = posts.filter(p=>p.id!==editingPostId);
   if(window._firestoreDB) deleteFromFirestore('ss_posts2', editingPostId);
+  if(postImages[editingPostId]) storePostImage(editingPostId, '');
   save();
   closeModal('post-modal');
   renderMasterList();
@@ -1955,8 +2028,11 @@ function openDetail(id){
     if(allTags) h += `<div class="detail-section"><div class="detail-lbl">Hashtags</div><div class="detail-tags">${allTags}</div></div>`;
     h += `<button class="btn-copy" onclick="copyDetailCaption('${id}')">📋 Copy Caption + Hashtags</button>`;
   }
-  if(p.driveLink){
-    h += `<div class="detail-section"><div class="detail-lbl">Graphic / Video</div><a class="detail-drive-btn" href="${p.driveLink}" target="_blank">📁 Open in Drive ↗</a></div>`;
+  if(postImages[p.id] || p.driveLink){
+    h += `<div class="detail-section"><div class="detail-lbl">Graphic / Video</div>`
+      + (postImages[p.id] ? `<img class="detail-img" src="${postImages[p.id]}" alt="">` : '')
+      + (p.driveLink ? `<a class="detail-drive-btn" style="margin-top:8px" href="${esc(p.driveLink)}" target="_blank">📁 Open full size in Drive ↗</a>` : '')
+      + `</div>`;
   }
   if(p.lastUpdated){
     h += `<div style="font-size:10px;color:#aaa;font-style:italic;margin-top:8px">Last updated: ${p.lastUpdated}</div>`;
