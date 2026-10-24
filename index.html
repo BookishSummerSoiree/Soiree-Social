@@ -25,7 +25,7 @@
   --pink:#E8704A;--pink-l:#F5B8A4;--pink-d:#C4522E;
   --fd:'Cormorant Garamond',serif;--fb:'Jost',sans-serif;
   /* Category colors */
-  --cat-author:#3D4A7A;   /* navy-l — Author announcement */
+  --cat-author:#3D4A7A;   /* navy-l — Author Intro */
   --cat-general:#5A7A58;  /* sage-d — General authors */
   --cat-tickets:#E8704A;  /* coral — Tickets */
   --cat-event:#2D3561;    /* navy — Event */
@@ -189,7 +189,7 @@ body{font-family:var(--fb);background:var(--cream);color:var(--black);min-height
 .cat-chip-grid{display:flex;flex-wrap:wrap;gap:6px}
 .cat-chip{border:1px solid var(--gray);background:var(--white);font-family:var(--fb);font-size:11px;font-weight:500;padding:6px 12px;border-radius:20px;cursor:pointer;color:#555;transition:all .15s}
 .cat-chip.active{color:var(--white);border-color:transparent}
-.cat-chip[data-cat="Author announcement"].active{background:var(--cat-author)}
+.cat-chip[data-cat="Author Intro"].active{background:var(--cat-author)}
 .cat-chip[data-cat="General authors"].active{background:var(--cat-general)}
 .cat-chip[data-cat="Tickets"].active{background:var(--cat-tickets)}
 .cat-chip[data-cat="Event"].active{background:var(--cat-event)}
@@ -602,36 +602,36 @@ document.head.appendChild(_fbScript1);
 
 // ── DEFAULTS ──────────────────────────────────────────────────────────────
 const DP = [
-  {id:"bss1",dateType:"fixed",date:"2027-01-15",type:"social",cat:"Author announcement",postType:"Slides",title:"Save the Date — BSS 2027 🌊",purpose:"Official save the date post. Tickets on sale March 1.",caption:"",driveLink:"",htagId:"",extraHtags:"",lastUpdated:"Jan 15 · Nik",lastUpdatedBy:"Nik"},
+  {id:"bss1",dateType:"fixed",date:"2027-01-15",type:"social",cat:"Author Intro",postType:"Slides",title:"Save the Date — BSS 2027 🌊",purpose:"Official save the date post. Tickets on sale March 1.",caption:"",driveLink:"",htagId:"",extraHtags:"",lastUpdated:"Jan 15 · Nik",lastUpdatedBy:"Nik"},
   {id:"bss2",dateType:"premar1",date:"",type:"social",cat:"Tickets",postType:"Reel",title:"Two weeks until tickets go live!",purpose:"Build excitement. Early bird alert.",caption:"",driveLink:"",htagId:"",extraHtags:"",lastUpdated:"Jan 15 · Nik",lastUpdatedBy:"Nik"},
   {id:"bss3",dateType:"fixed",date:"2027-03-01",type:"social",cat:"Tickets",postType:"Slides",title:"🎟️ Tickets On Sale NOW",purpose:"Tickets are live. All the details + buy link.",caption:"",driveLink:"",htagId:"",extraHtags:"",lastUpdated:"Jan 15 · Nik",lastUpdatedBy:"Nik"},
   {id:"bss4",dateType:"fixed",date:"2027-03-01",type:"email",cat:"Tickets",postType:"",title:"Email — Tickets On Sale",purpose:"",subject:"Tickets are live!",caption:"",driveLink:"",htagId:"",extraHtags:"",lastUpdated:"Jan 15 · Nik",lastUpdatedBy:"Nik"},
   {id:"bss5",dateType:"flexible",date:"",type:"social",cat:"Event",postType:"Slides",title:"Venue spotlight 📍",purpose:"Show off where we're hosting.",caption:"",driveLink:"",htagId:"",extraHtags:"",lastUpdated:"Jan 15 · Nik",lastUpdatedBy:"Nik"},
-  {id:"bss6",dateType:"flexible",date:"",type:"social",cat:"Author announcement",postType:"Slides",title:"Speaker / Author lineup reveal",purpose:"Announce featured authors attending.",caption:"",driveLink:"",htagId:"",extraHtags:"",lastUpdated:"Jan 15 · Nik",lastUpdatedBy:"Nik"},
+  {id:"bss6",dateType:"flexible",date:"",type:"social",cat:"Author Intro",postType:"Slides",title:"Speaker / Author lineup reveal",purpose:"Announce featured authors attending.",caption:"",driveLink:"",htagId:"",extraHtags:"",lastUpdated:"Jan 15 · Nik",lastUpdatedBy:"Nik"},
   {id:"bss7",dateType:"flexible",date:"",type:"social",cat:"Event",postType:"Reel",title:"11 days to THE SOIRÉE",purpose:"Countdown post. What to expect.",caption:"",driveLink:"",htagId:"",extraHtags:"",lastUpdated:"Jan 15 · Nik",lastUpdatedBy:"Nik"},
   {id:"bss8",dateType:"fixed",date:"2027-06-11",type:"social",cat:"Event",postType:"Reel",title:"Tomorrow! 🌊",purpose:"Eve of the event. Pure hype.",caption:"",driveLink:"",htagId:"",extraHtags:"",lastUpdated:"Jan 15 · Nik",lastUpdatedBy:"Nik"},
   {id:"bss9",dateType:"fixed",date:"2027-06-12",type:"social",cat:"Event",postType:"Reel",title:"🌊 THE SOIRÉE — It's here!",purpose:"Day-of post. Welcome your guests.",caption:"",driveLink:"",htagId:"",extraHtags:"",lastUpdated:"Jan 15 · Nik",lastUpdatedBy:"Nik"},
   {id:"bss10",dateType:"flexible",date:"",type:"social",cat:"Fun",postType:"Slides",title:"BSS 2027 Recap — thank you!",purpose:"Post-event thank-you. Photos, highlights, gratitude.",caption:"",driveLink:"",htagId:"",extraHtags:"",lastUpdated:"Jan 15 · Nik",lastUpdatedBy:"Nik"},
 ];
 const V8_POSTS = [
-  {id:"v8-auth-01",dateType:"premar1",date:"",type:"social",cat:"Author announcement",postType:"",title:"Author announcement 1",purpose:"",caption:"",driveLink:"",htagId:"",extraHtags:"",lastUpdated:"Oct 24 · Nik",lastUpdatedBy:"Nik"},
-  {id:"v8-auth-02",dateType:"premar1",date:"",type:"social",cat:"Author announcement",postType:"",title:"Author announcement 2",purpose:"",caption:"",driveLink:"",htagId:"",extraHtags:"",lastUpdated:"Oct 24 · Nik",lastUpdatedBy:"Nik"},
-  {id:"v8-auth-03",dateType:"premar1",date:"",type:"social",cat:"Author announcement",postType:"",title:"Author announcement 3",purpose:"",caption:"",driveLink:"",htagId:"",extraHtags:"",lastUpdated:"Oct 24 · Nik",lastUpdatedBy:"Nik"},
-  {id:"v8-auth-04",dateType:"premar1",date:"",type:"social",cat:"Author announcement",postType:"",title:"Author announcement 4",purpose:"",caption:"",driveLink:"",htagId:"",extraHtags:"",lastUpdated:"Oct 24 · Nik",lastUpdatedBy:"Nik"},
-  {id:"v8-auth-05",dateType:"premar1",date:"",type:"social",cat:"Author announcement",postType:"",title:"Author announcement 5",purpose:"",caption:"",driveLink:"",htagId:"",extraHtags:"",lastUpdated:"Oct 24 · Nik",lastUpdatedBy:"Nik"},
-  {id:"v8-auth-06",dateType:"premar1",date:"",type:"social",cat:"Author announcement",postType:"",title:"Author announcement 6",purpose:"",caption:"",driveLink:"",htagId:"",extraHtags:"",lastUpdated:"Oct 24 · Nik",lastUpdatedBy:"Nik"},
-  {id:"v8-auth-07",dateType:"premar1",date:"",type:"social",cat:"Author announcement",postType:"",title:"Author announcement 7",purpose:"",caption:"",driveLink:"",htagId:"",extraHtags:"",lastUpdated:"Oct 24 · Nik",lastUpdatedBy:"Nik"},
-  {id:"v8-auth-08",dateType:"premar1",date:"",type:"social",cat:"Author announcement",postType:"",title:"Author announcement 8",purpose:"",caption:"",driveLink:"",htagId:"",extraHtags:"",lastUpdated:"Oct 24 · Nik",lastUpdatedBy:"Nik"},
-  {id:"v8-auth-09",dateType:"premar1",date:"",type:"social",cat:"Author announcement",postType:"",title:"Author announcement 9",purpose:"",caption:"",driveLink:"",htagId:"",extraHtags:"",lastUpdated:"Oct 24 · Nik",lastUpdatedBy:"Nik"},
-  {id:"v8-auth-10",dateType:"premar1",date:"",type:"social",cat:"Author announcement",postType:"",title:"Author announcement 10",purpose:"",caption:"",driveLink:"",htagId:"",extraHtags:"",lastUpdated:"Oct 24 · Nik",lastUpdatedBy:"Nik"},
-  {id:"v8-auth-11",dateType:"premar1",date:"",type:"social",cat:"Author announcement",postType:"",title:"Author announcement 11",purpose:"",caption:"",driveLink:"",htagId:"",extraHtags:"",lastUpdated:"Oct 24 · Nik",lastUpdatedBy:"Nik"},
-  {id:"v8-auth-12",dateType:"premar1",date:"",type:"social",cat:"Author announcement",postType:"",title:"Author announcement 12",purpose:"",caption:"",driveLink:"",htagId:"",extraHtags:"",lastUpdated:"Oct 24 · Nik",lastUpdatedBy:"Nik"},
-  {id:"v8-auth-13",dateType:"premar1",date:"",type:"social",cat:"Author announcement",postType:"",title:"Author announcement 13",purpose:"",caption:"",driveLink:"",htagId:"",extraHtags:"",lastUpdated:"Oct 24 · Nik",lastUpdatedBy:"Nik"},
-  {id:"v8-auth-14",dateType:"premar1",date:"",type:"social",cat:"Author announcement",postType:"",title:"Author announcement 14",purpose:"",caption:"",driveLink:"",htagId:"",extraHtags:"",lastUpdated:"Oct 24 · Nik",lastUpdatedBy:"Nik"},
-  {id:"v8-auth-15",dateType:"premar1",date:"",type:"social",cat:"Author announcement",postType:"",title:"Author announcement 15",purpose:"",caption:"",driveLink:"",htagId:"",extraHtags:"",lastUpdated:"Oct 24 · Nik",lastUpdatedBy:"Nik"},
-  {id:"v8-auth-16",dateType:"premar1",date:"",type:"social",cat:"Author announcement",postType:"",title:"Author announcement 16",purpose:"",caption:"",driveLink:"",htagId:"",extraHtags:"",lastUpdated:"Oct 24 · Nik",lastUpdatedBy:"Nik"},
-  {id:"v8-auth-17",dateType:"premar1",date:"",type:"social",cat:"Author announcement",postType:"",title:"Author announcement 17",purpose:"",caption:"",driveLink:"",htagId:"",extraHtags:"",lastUpdated:"Oct 24 · Nik",lastUpdatedBy:"Nik"},
-  {id:"v8-auth-18",dateType:"premar1",date:"",type:"social",cat:"Author announcement",postType:"",title:"Author announcement 18",purpose:"",caption:"",driveLink:"",htagId:"",extraHtags:"",lastUpdated:"Oct 24 · Nik",lastUpdatedBy:"Nik"},
+  {id:"v8-auth-01",dateType:"premar1",date:"",type:"social",cat:"Author Intro",postType:"",title:"Author Intro 1",purpose:"",caption:"",driveLink:"",htagId:"",extraHtags:"",lastUpdated:"Oct 24 · Nik",lastUpdatedBy:"Nik"},
+  {id:"v8-auth-02",dateType:"premar1",date:"",type:"social",cat:"Author Intro",postType:"",title:"Author Intro 2",purpose:"",caption:"",driveLink:"",htagId:"",extraHtags:"",lastUpdated:"Oct 24 · Nik",lastUpdatedBy:"Nik"},
+  {id:"v8-auth-03",dateType:"premar1",date:"",type:"social",cat:"Author Intro",postType:"",title:"Author Intro 3",purpose:"",caption:"",driveLink:"",htagId:"",extraHtags:"",lastUpdated:"Oct 24 · Nik",lastUpdatedBy:"Nik"},
+  {id:"v8-auth-04",dateType:"premar1",date:"",type:"social",cat:"Author Intro",postType:"",title:"Author Intro 4",purpose:"",caption:"",driveLink:"",htagId:"",extraHtags:"",lastUpdated:"Oct 24 · Nik",lastUpdatedBy:"Nik"},
+  {id:"v8-auth-05",dateType:"premar1",date:"",type:"social",cat:"Author Intro",postType:"",title:"Author Intro 5",purpose:"",caption:"",driveLink:"",htagId:"",extraHtags:"",lastUpdated:"Oct 24 · Nik",lastUpdatedBy:"Nik"},
+  {id:"v8-auth-06",dateType:"premar1",date:"",type:"social",cat:"Author Intro",postType:"",title:"Author Intro 6",purpose:"",caption:"",driveLink:"",htagId:"",extraHtags:"",lastUpdated:"Oct 24 · Nik",lastUpdatedBy:"Nik"},
+  {id:"v8-auth-07",dateType:"premar1",date:"",type:"social",cat:"Author Intro",postType:"",title:"Author Intro 7",purpose:"",caption:"",driveLink:"",htagId:"",extraHtags:"",lastUpdated:"Oct 24 · Nik",lastUpdatedBy:"Nik"},
+  {id:"v8-auth-08",dateType:"premar1",date:"",type:"social",cat:"Author Intro",postType:"",title:"Author Intro 8",purpose:"",caption:"",driveLink:"",htagId:"",extraHtags:"",lastUpdated:"Oct 24 · Nik",lastUpdatedBy:"Nik"},
+  {id:"v8-auth-09",dateType:"premar1",date:"",type:"social",cat:"Author Intro",postType:"",title:"Author Intro 9",purpose:"",caption:"",driveLink:"",htagId:"",extraHtags:"",lastUpdated:"Oct 24 · Nik",lastUpdatedBy:"Nik"},
+  {id:"v8-auth-10",dateType:"premar1",date:"",type:"social",cat:"Author Intro",postType:"",title:"Author Intro 10",purpose:"",caption:"",driveLink:"",htagId:"",extraHtags:"",lastUpdated:"Oct 24 · Nik",lastUpdatedBy:"Nik"},
+  {id:"v8-auth-11",dateType:"premar1",date:"",type:"social",cat:"Author Intro",postType:"",title:"Author Intro 11",purpose:"",caption:"",driveLink:"",htagId:"",extraHtags:"",lastUpdated:"Oct 24 · Nik",lastUpdatedBy:"Nik"},
+  {id:"v8-auth-12",dateType:"premar1",date:"",type:"social",cat:"Author Intro",postType:"",title:"Author Intro 12",purpose:"",caption:"",driveLink:"",htagId:"",extraHtags:"",lastUpdated:"Oct 24 · Nik",lastUpdatedBy:"Nik"},
+  {id:"v8-auth-13",dateType:"premar1",date:"",type:"social",cat:"Author Intro",postType:"",title:"Author Intro 13",purpose:"",caption:"",driveLink:"",htagId:"",extraHtags:"",lastUpdated:"Oct 24 · Nik",lastUpdatedBy:"Nik"},
+  {id:"v8-auth-14",dateType:"premar1",date:"",type:"social",cat:"Author Intro",postType:"",title:"Author Intro 14",purpose:"",caption:"",driveLink:"",htagId:"",extraHtags:"",lastUpdated:"Oct 24 · Nik",lastUpdatedBy:"Nik"},
+  {id:"v8-auth-15",dateType:"premar1",date:"",type:"social",cat:"Author Intro",postType:"",title:"Author Intro 15",purpose:"",caption:"",driveLink:"",htagId:"",extraHtags:"",lastUpdated:"Oct 24 · Nik",lastUpdatedBy:"Nik"},
+  {id:"v8-auth-16",dateType:"premar1",date:"",type:"social",cat:"Author Intro",postType:"",title:"Author Intro 16",purpose:"",caption:"",driveLink:"",htagId:"",extraHtags:"",lastUpdated:"Oct 24 · Nik",lastUpdatedBy:"Nik"},
+  {id:"v8-auth-17",dateType:"premar1",date:"",type:"social",cat:"Author Intro",postType:"",title:"Author Intro 17",purpose:"",caption:"",driveLink:"",htagId:"",extraHtags:"",lastUpdated:"Oct 24 · Nik",lastUpdatedBy:"Nik"},
+  {id:"v8-auth-18",dateType:"premar1",date:"",type:"social",cat:"Author Intro",postType:"",title:"Author Intro 18",purpose:"",caption:"",driveLink:"",htagId:"",extraHtags:"",lastUpdated:"Oct 24 · Nik",lastUpdatedBy:"Nik"},
   {id:"v8-pre-1",dateType:"premar1",date:"",type:"social",cat:"Tickets",postType:"",title:"Ticket sale date",purpose:"",caption:"",driveLink:"",htagId:"",extraHtags:"",lastUpdated:"Oct 24 · Nik",lastUpdatedBy:"Nik"},
   {id:"v8-pre-2",dateType:"premar1",date:"",type:"social",cat:"Tickets",postType:"",title:"Ticket price",purpose:"",caption:"",driveLink:"",htagId:"",extraHtags:"",lastUpdated:"Oct 24 · Nik",lastUpdatedBy:"Nik"},
   {id:"v8-pre-3",dateType:"premar1",date:"",type:"social",cat:"Tickets",postType:"",title:"What's included with tickets",purpose:"",caption:"",driveLink:"",htagId:"",extraHtags:"",lastUpdated:"Oct 24 · Nik",lastUpdatedBy:"Nik"},
@@ -664,11 +664,27 @@ function migrateV8(){
   save(); renderAll();
   return true;
 }
+// "Author announcement" was renamed "Author Intro" (category, and the numbered idea titles).
+// Safe to run on every load: it only changes posts that still use the old name.
+function migrateAuthorIntro(){
+  const OLD = 'Author ' + 'announcement';
+  let changed = false;
+  posts.forEach(p=>{
+    if(p.cat === OLD){ p.cat = 'Author Intro'; changed = true; }
+    const m = /^Author announcement (\d+)$/.exec(p.title||'');
+    if(m){ p.title = 'Author Intro ' + m[1]; changed = true; }
+  });
+  const i = cats.indexOf(OLD);
+  if(i > -1){ if(cats.includes('Author Intro')) cats.splice(i,1); else cats[i] = 'Author Intro'; changed = true; }
+  if(activeCatFilters && activeCatFilters.has && activeCatFilters.has(OLD)){ activeCatFilters.delete(OLD); activeCatFilters.add('Author Intro'); }
+  if(changed){ save(); renderAll(); }
+  return changed;
+}
 const DC = [
   {id:"cd1",label:"Tickets On Sale",date:"2027-03-01",color:"#E8704A"},
   {id:"cd2",label:"THE SOIRÉE",date:"2027-06-12",color:"#2D3561"},
 ];
-const DCATS = ["Author announcement","General authors","Tickets","Event","Fun"];
+const DCATS = ["Author Intro","General authors","Tickets","Event","Fun"];
 const DHTAGS = [
   {id:"h1",name:"BSS General",tags:"#bookishsummersoiree #bss2027 #bookish #booklover #bookstagram #booktok #authorevent #indiebooks #romancereader #summerreads"},
   {id:"h2",name:"Author Promo",tags:"#indieauthor #selfpublished #writingcommunity #authorlife #booklaunch #newrelease #romancebooks #romantasy #cleanromance"},
@@ -792,15 +808,16 @@ async function loadFromFirestoreAll(){
       renderAll();
     }
     migrateV8();
+    migrateAuthorIntro();
     setupFirestoreListeners();
-  } catch(e){ console.warn('Firestore load failed', e); migrateV8(); }
+  } catch(e){ console.warn('Firestore load failed', e); migrateV8(); migrateAuthorIntro(); }
 }
 function setupFirestoreListeners(){
   if(!window._firestoreDB || window._fsListenersActive2) return;
   window._fsListenersActive2 = true;
   window._fbOnSnapshot(window._fbCollection(window._firestoreDB,'ss_posts2'), snap=>{
     const data = snap.docs.map(d=>d.data());
-    if(data.length > 0){ posts = sortByOrder(data); if(migrateV8()) return; localStorage.setItem('ss_p2',JSON.stringify(posts)); renderAll(); }
+    if(data.length > 0){ posts = sortByOrder(data); if(migrateV8()) return; if(migrateAuthorIntro()) return; localStorage.setItem('ss_p2',JSON.stringify(posts)); renderAll(); }
   });
   window._fbOnSnapshot(window._fbCollection(window._firestoreDB,'ss_cds2'), snap=>{
     const data = snap.docs.map(d=>d.data());
@@ -826,7 +843,7 @@ function save(){
 function catClass(cat){
   if(!cat) return 'cat-misc';
   const map = {
-    'Author announcement':'cat-author',
+    'Author Intro':'cat-author',
     'General authors':'cat-general',
     'Tickets':'cat-tickets',
     'Event':'cat-event',
@@ -1059,7 +1076,7 @@ let _calSelectedDay = null; // 'YYYY-MM-DD'
 function renderCalendarView(){
   const el = document.getElementById('master-list-content');
   const catColors = {
-    'Author announcement':'#3D4A7A','General authors':'#5A7A58',
+    'Author Intro':'#3D4A7A','General authors':'#5A7A58',
     'Tickets':'#E8704A','Event':'#2D3561','Fun':'#C8AA88'
   };
   function postColor(p){
@@ -1359,7 +1376,7 @@ function renderMockCalendar(proposed){
   document.querySelectorAll('[data-mv]').forEach(b=>b.classList.toggle('active', b.dataset.mv===_mockView));
   const cal = document.getElementById('as-mock-cal');
   if(!proposed.length){ cal.innerHTML='<div style="padding:14px;color:#aaa;font-style:italic">No posts to schedule</div>'; return; }
-  const catColors = {'Author announcement':'#3D4A7A','General authors':'#5A7A58','Tickets':'#E8704A','Event':'#2D3561','Fun':'#C8AA88'};
+  const catColors = {'Author Intro':'#3D4A7A','General authors':'#5A7A58','Tickets':'#E8704A','Event':'#2D3561','Fun':'#C8AA88'};
   const colorOf = item=>{ const p = posts.find(x=>x.id===item.id); return p ? (p.type==='email'?'#C4522E':p.type==='other'?'#aaa':(catColors[p.cat]||'#8BA888')) : '#8BA888'; };
 
   if(_mockView === 'calendar'){
