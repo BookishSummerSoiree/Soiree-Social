@@ -190,11 +190,12 @@ body{font-family:var(--fb);background:var(--cream);color:var(--black);min-height
 .cat-chip-grid{display:flex;flex-wrap:wrap;gap:6px}
 .cat-chip{border:1px solid var(--gray);background:var(--white);font-family:var(--fb);font-size:11px;font-weight:500;padding:6px 12px;border-radius:20px;cursor:pointer;color:#555;transition:all .15s}
 .cat-chip.active{color:var(--white);border-color:transparent}
-.cat-chip[data-cat="Author Intro"].active{background:var(--cat-author);border-color:var(--cat-author);color:var(--navy)}
-.cat-chip[data-cat="All authors"].active{background:var(--cat-general)}
-.cat-chip[data-cat="Tickets"].active{background:var(--cat-tickets)}
-.cat-chip[data-cat="Event"].active{background:var(--cat-event)}
-.cat-chip[data-cat="Fun"].active{background:var(--cat-fun)}
+.cat-chip.active.cat-author{background:var(--cat-author);border-color:var(--cat-author);color:var(--navy)}
+.cat-chip.active.cat-general{background:var(--cat-general)}
+.cat-chip.active.cat-tickets{background:var(--cat-tickets)}
+.cat-chip.active.cat-event{background:var(--cat-event)}
+.cat-chip.active.cat-fun{background:var(--cat-fun)}
+.cat-chip.active.cat-other{background:var(--cat-other)}
 .cat-chip[data-cat-custom].active{background:var(--cat-other)}
 
 /* Save/Delete buttons */
@@ -247,6 +248,9 @@ body{font-family:var(--fb);background:var(--cream);color:var(--black);min-height
 .settings-hdr{padding:11px 14px;border-bottom:1px solid var(--cream-d);display:flex;align-items:center;justify-content:space-between}
 .settings-title{font-family:var(--fd);font-size:16px;font-weight:500}
 .settings-add{background:var(--sage);color:var(--white);border:none;border-radius:20px;padding:4px 12px;font-size:11px;font-family:var(--fb);cursor:pointer}
+.si-dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:8px;vertical-align:0;background:var(--cat-other)}
+.si-dot.cat-author{background:var(--cat-author)}.si-dot.cat-general{background:var(--cat-general)}.si-dot.cat-tickets{background:var(--cat-tickets)}.si-dot.cat-event{background:var(--cat-event)}.si-dot.cat-fun{background:var(--cat-fun)}
+.si-btn:disabled{opacity:.3;cursor:default}
 .settings-item{padding:10px 14px;border-bottom:1px solid var(--cream-d);display:flex;align-items:center;justify-content:space-between}
 .settings-item:last-child{border-bottom:none}
 .si-label{font-size:13px}
@@ -679,7 +683,7 @@ function migrateV8(){
 // Safe to run on every load: it only changes posts that still use the old name.
 // "General authors" was renamed "All authors". Safe to run on every load.
 function migrateAllAuthors(){
-  const OLD = 'General ' + 'authors', NEW = 'All authors';
+  const OLD = 'General ' + 'authors', NEW = catName('All authors');
   let changed = false;
   posts.forEach(p=>{ if(p.cat === OLD){ p.cat = NEW; changed = true; } });
   // A brief update removed this category and moved my three suggested posts to Event.
@@ -693,7 +697,7 @@ function migrateAllAuthors(){
   // bring the category back once on this device (after that, Settings decides)
   let restored = false; try{ restored = localStorage.getItem('ss_allauthors_v1')==='1'; }catch(e){}
   if(!restored){
-    if(!cats.includes(NEW)){ const at = cats.indexOf('Author Intro'); cats.splice(at>-1 ? at+1 : 0, 0, NEW); changed = true; }
+    if(!cats.includes(NEW)){ const at = cats.indexOf(catName('Author Intro')); cats.splice(at>-1 ? at+1 : 0, 0, NEW); changed = true; }
     try{ localStorage.setItem('ss_allauthors_v1','1'); }catch(e){}
   }
   if(activeCatFilters.has(OLD)){ activeCatFilters.delete(OLD); activeCatFilters.add(NEW); }
@@ -704,13 +708,13 @@ function migrateAuthorIntro(){
   const OLD = 'Author ' + 'announcement';
   let changed = false;
   posts.forEach(p=>{
-    if(p.cat === OLD){ p.cat = 'Author Intro'; changed = true; }
+    if(p.cat === OLD){ p.cat = catName('Author Intro'); changed = true; }
     const m = /^Author announcement (\d+)$/.exec(p.title||'');
     if(m){ p.title = 'Author Intro ' + m[1]; changed = true; }
   });
   const i = cats.indexOf(OLD);
-  if(i > -1){ if(cats.includes('Author Intro')) cats.splice(i,1); else cats[i] = 'Author Intro'; changed = true; }
-  if(activeCatFilters && activeCatFilters.has && activeCatFilters.has(OLD)){ activeCatFilters.delete(OLD); activeCatFilters.add('Author Intro'); }
+  if(i > -1){ if(cats.includes(catName('Author Intro'))) cats.splice(i,1); else cats[i] = catName('Author Intro'); changed = true; }
+  if(activeCatFilters && activeCatFilters.has && activeCatFilters.has(OLD)){ activeCatFilters.delete(OLD); activeCatFilters.add(catName('Author Intro')); }
   if(changed){ save(); renderAll(); }
   return changed;
 }
@@ -753,7 +757,7 @@ async function syncAuthorIntros(){
     if(post){
       post.title = want; post.hqAuthorId = String(a.id);
     } else {
-      posts.push({id:'intro-'+a.id, dateType:'premar1', date:'', type:'social', cat:'Author Intro', postType:'', title:want,
+      posts.push({id:'intro-'+a.id, dateType:'premar1', date:'', type:'social', cat:catName('Author Intro'), postType:'', title:want,
         purpose:'', caption:'', driveLink:'', htagId:'', extraHtags:'', hqAuthorId:String(a.id)});
     }
     changed = true;
@@ -876,11 +880,16 @@ async function loadFromFirestoreAll(){
     return;
   }
   try {
-    const [fsPosts, fsCDs] = await Promise.all([
+    const [fsPosts, fsCDs, fsMeta] = await Promise.all([
       loadFromFirestore('ss_posts2'),
       loadFromFirestore('ss_cds2'),
+      loadFromFirestore('ss_meta'),
     ]);
     let changed = false;
+    const metaCats = (fsMeta||[]).find(d=>d.id==='cats');
+    if(adoptCats(metaCats)) changed = true;
+    window._catsLoaded = true;
+    if(!metaCats) saveCats();   // first phone to get this version shares its list
     if(fsPosts && fsPosts.length > 0){ posts = sortByOrder(fsPosts); changed = true; }
     if(fsCDs && fsCDs.length > 0){ countdowns = fsCDs; changed = true; }
     if(changed){
@@ -893,7 +902,7 @@ async function loadFromFirestoreAll(){
     migrateAllAuthors();
     syncAuthorIntros();
     setupFirestoreListeners();
-  } catch(e){ console.warn('Firestore load failed', e); migrateV8(); migrateAuthorIntro(); migrateAllAuthors(); syncAuthorIntros(); }
+  } catch(e){ console.warn('Firestore load failed', e); window._catsLoaded = true; migrateV8(); migrateAuthorIntro(); migrateAllAuthors(); syncAuthorIntros(); }
 }
 function setupFirestoreListeners(){
   if(!window._firestoreDB || window._fsListenersActive2) return;
@@ -902,6 +911,10 @@ function setupFirestoreListeners(){
     const data = snap.docs.map(d=>d.data());
     if(data.length > 0){ posts = sortByOrder(data); if(migrateV8()) return; if(migrateAuthorIntro()) return; if(migrateAllAuthors()) return; localStorage.setItem('ss_p2',JSON.stringify(posts)); renderAll(); }
   });
+  window._fbOnSnapshot(window._fbCollection(window._firestoreDB,'ss_meta'), snap=>{
+    const d = snap.docs.map(x=>x.data()).find(x=>x.id==='cats');
+    if(adoptCats(d)){ renderCatFilters(); renderSettingsPage(); renderMasterList(); }
+  });
   window._fbOnSnapshot(window._fbCollection(window._firestoreDB,'ss_cds2'), snap=>{
     const data = snap.docs.map(d=>d.data());
     if(data.length > 0){ countdowns = data; localStorage.setItem('ss_c2',JSON.stringify(countdowns)); renderCountdowns(); }
@@ -909,6 +922,21 @@ function setupFirestoreListeners(){
 }
 function sortByOrder(arr){
   return arr.map((p,i)=>[p,i]).sort((a,b)=>((a[0].order??1e6+a[1]) - (b[0].order??1e6+b[1]))).map(x=>x[0]);
+}
+function saveCats(){
+  localStorage.setItem('ss_cats2', JSON.stringify(cats));
+  try{ localStorage.setItem('ss_catalias', JSON.stringify(catAlias)); }catch(e){}
+  if(window._firestoreDB && window._catsLoaded){
+    window._fbSetDoc(window._fbDoc(window._firestoreDB,'ss_meta','cats'), {id:'cats', list:cats, alias:catAlias, at:Date.now()}).catch(()=>{});
+  }
+}
+function adoptCats(d){
+  if(!d || !Array.isArray(d.list) || !d.list.length) return false;
+  if(JSON.stringify(d.list)===JSON.stringify(cats) && JSON.stringify(d.alias||{})===JSON.stringify(catAlias)) return false;
+  cats = d.list; catAlias = d.alias || {};
+  localStorage.setItem('ss_cats2', JSON.stringify(cats));
+  try{ localStorage.setItem('ss_catalias', JSON.stringify(catAlias)); }catch(e){}
+  return true;
 }
 function save(){
   posts.forEach((p,i)=>{ p.order = i; });
@@ -920,19 +948,21 @@ function save(){
     saveToFirestore('ss_posts2', posts).catch(()=>{});
     saveToFirestore('ss_cds2', countdowns).catch(()=>{});
   }
+  saveCats();
 }
 
 // ── CATEGORY → CSS class map ───────────────────────────────────────────────
+// Built-in categories keep their color and rules when renamed. catAlias maps a
+// current name to the built-in it came from, e.g. {"Meet the Authors":"Author Intro"}.
+const BASE_CAT_CLASS = {'Author Intro':'cat-author','All authors':'cat-general','Tickets':'cat-tickets','Event':'cat-event','Fun':'cat-fun'};
+const BASE_CAT_COLOR = {'Author Intro':'#E5B33E','All authors':'#5A7A58','Tickets':'#E8704A','Event':'#2D3561','Fun':'#C8AA88'};
+let catAlias = (()=>{ try{ return JSON.parse(localStorage.getItem('ss_catalias')||'{}'); }catch(e){ return {}; } })();
+function catKey(cat){ return catAlias[cat] || cat; }                       // current name -> built-in name
+function catName(base){ return Object.keys(catAlias).find(k=>catAlias[k]===base) || base; } // built-in -> current name
+function catColor(cat){ return BASE_CAT_COLOR[catKey(cat)] || '#8BA888'; }
 function catClass(cat){
   if(!cat) return 'cat-misc';
-  const map = {
-    'Author Intro':'cat-author',
-    'All authors':'cat-general',
-    'Tickets':'cat-tickets',
-    'Event':'cat-event',
-    'Fun':'cat-fun',
-  };
-  return map[cat] || 'cat-other';
+  return BASE_CAT_CLASS[catKey(cat)] || 'cat-other';
 }
 function emailClass(){ return 'cat-email'; }
 
@@ -1159,14 +1189,10 @@ let _calSelectedDay = null; // 'YYYY-MM-DD'
 
 function renderCalendarView(){
   const el = document.getElementById('master-list-content');
-  const catColors = {
-    'Author Intro':'#E5B33E','All authors':'#5A7A58',
-    'Tickets':'#E8704A','Event':'#2D3561','Fun':'#C8AA88'
-  };
   function postColor(p){
     if(p.type==='email') return '#C4522E';
     if(p.type==='other') return '#aaa';
-    return catColors[p.cat]||'#8BA888';
+    return catColor(p.cat);
   }
 
   const yr = _calYear, mo = _calMonth;
@@ -1456,7 +1482,7 @@ const TICKETS_DATE = '2027-03-01';
 // Author Intro posts must go out before Feb 1 so fans have time to get ready for tickets
 const AUTHOR_CAT = 'Author Intro';
 const AUTHOR_DEADLINE = '2027-02-01';   // last allowed day is Jan 31
-const isAuthorPost = p => p && p.cat === AUTHOR_CAT;
+const isAuthorPost = p => p && catKey(p.cat) === AUTHOR_CAT;
 
 let _asMode = 'order';
 function openAutoSchedule(mode){
@@ -1584,8 +1610,7 @@ function renderMockCalendar(proposed){
   document.querySelectorAll('[data-mv]').forEach(b=>b.classList.toggle('active', b.dataset.mv===_mockView));
   const cal = document.getElementById('as-mock-cal');
   if(!proposed.length){ cal.innerHTML='<div style="padding:14px;color:#aaa;font-style:italic">No posts to schedule</div>'; return; }
-  const catColors = {'Author Intro':'#E5B33E','All authors':'#5A7A58','Tickets':'#E8704A','Event':'#2D3561','Fun':'#C8AA88'};
-  const colorOf = item=>{ const p = posts.find(x=>x.id===item.id); return p ? (p.type==='email'?'#C4522E':p.type==='other'?'#aaa':(catColors[p.cat]||'#8BA888')) : '#8BA888'; };
+  const colorOf = item=>{ const p = posts.find(x=>x.id===item.id); return p ? (p.type==='email'?'#C4522E':p.type==='other'?'#aaa':catColor(p.cat)) : '#8BA888'; };
 
   if(_mockView === 'calendar'){
     const dated = proposed.filter(i=>i.date);
@@ -1762,7 +1787,7 @@ function showPostFields(type, p){
 function renderCatChips(selected){
   const wrap = document.getElementById('pm-cat-chips');
   wrap.innerHTML = cats.map(cat=>
-    `<button class="cat-chip${selected===cat?' active':''}" data-cat="${cat}" onclick="selectCat('${cat}',this)">${cat}</button>`
+    `<button class="cat-chip ${catClass(cat)}${selected===cat?' active':''}" data-cat="${esc(cat)}" onclick="selectCat(this.dataset.cat,this)">${esc(cat)}</button>`
   ).join('') + `<button class="cat-chip" data-cat-custom onclick="promptAddCatInline()">+ Category</button>`;
 }
 
@@ -1774,7 +1799,7 @@ function selectCat(cat, btn){
 function syncAuthorDateLimit(){
   const input = document.getElementById('pm-date'), hint = document.getElementById('pm-date-hint');
   const typeMax = document.getElementById('dp-premarx').classList.contains('active') ? '2027-02-28' : '';
-  const author = getSelectedCat()===AUTHOR_CAT;
+  const author = catKey(getSelectedCat())===AUTHOR_CAT;
   input.max = author ? '2027-01-31' : typeMax;
   const note = 'Author Intros go out by Jan 31.';
   hint.textContent = hint.textContent.replace(' '+note,'') + (author ? ' '+note : '');
@@ -1845,7 +1870,7 @@ function savePost(){
   if(dateType==='fixed' && !date){ alert('Pick a date, or choose Flexible to keep it unscheduled.'); return; }
   if(dateType==='premar1' && date && date >= TICKETS_DATE){ alert('Pre Mar 1 posts need a date before March 1.'); return; }
   if(dateType==='postmar1' && date && date < TICKETS_DATE){ alert('Post Mar 1 posts need a date on or after March 1.'); return; }
-  if(getSelectedCat()===AUTHOR_CAT && date && date >= AUTHOR_DEADLINE){ alert('Author Intro posts need to go out by January 31 so fans have time to get ready for tickets.'); return; }
+  if(catKey(getSelectedCat())===AUTHOR_CAT && date && date >= AUTHOR_DEADLINE){ alert('Author Intro posts need to go out by January 31 so fans have time to get ready for tickets.'); return; }
 
   const type = editingPostType;
   const purpose = document.getElementById('pm-purpose').value.trim();
@@ -2032,16 +2057,14 @@ function promptAddCat(){
   if(!name||!name.trim()) return;
   const n = name.trim();
   if(!cats.includes(n)) cats.push(n);
-  localStorage.setItem('ss_cats2', JSON.stringify(cats));
-  renderCatFilters(); renderSettingsPage();
+  catsChanged();
 }
 function promptAddCatInline(){
   const name = prompt('New category name:');
   if(!name||!name.trim()) return;
   const n = name.trim();
   if(!cats.includes(n)) cats.push(n);
-  localStorage.setItem('ss_cats2', JSON.stringify(cats));
-  renderCatFilters();
+  saveCats(); renderCatFilters();
   const selected = document.querySelector('#pm-cat-chips .cat-chip.active')?.dataset.cat||'';
   renderCatChips(selected);
 }
@@ -2086,8 +2109,11 @@ function renderSettingsPage(){
   // Categories
   document.getElementById('cat-settings-list').innerHTML = cats.map((cat,i)=>`
     <div class="settings-item">
-      <div class="si-label">${cat}</div>
+      <div class="si-label"><span class="si-dot ${catClass(cat)}"></span>${esc(cat)}</div>
       <div class="si-actions">
+        <button class="si-btn" title="Move up" ${i===0?'disabled':''} onclick="moveCat(${i},-1)">↑</button>
+        <button class="si-btn" title="Move down" ${i===cats.length-1?'disabled':''} onclick="moveCat(${i},1)">↓</button>
+        <button class="si-btn" onclick="renameCat(${i})">Rename</button>
         <button class="si-btn del" onclick="removeCat(${i})">Remove</button>
       </div>
     </div>`).join('') || `<div style="padding:14px;color:#bbb;font-style:italic;font-size:12px">No categories</div>`;
@@ -2098,10 +2124,39 @@ function removeCDFromSettings(id){
   if(window._firestoreDB) deleteFromFirestore('ss_cds2', id);
   save(); renderCountdowns(); renderSettingsPage();
 }
+function catsChanged(){
+  saveCats();
+  renderCatFilters(); renderSettingsPage(); renderMasterList();
+}
+function moveCat(i, dir){
+  const j = i + dir;
+  if(j < 0 || j >= cats.length) return;
+  [cats[i], cats[j]] = [cats[j], cats[i]];
+  catsChanged();
+}
+function renameCat(i){
+  const old = cats[i];
+  const name = (prompt('Rename "'+old+'" to:', old) || '').trim();
+  if(!name || name === old) return;
+  if(cats.includes(name)){ alert('There is already a category called "'+name+'".'); return; }
+  cats[i] = name;
+  // remember which built-in it was so it keeps its color (and the Author Intro date rule)
+  const base = catKey(old);
+  delete catAlias[old];
+  if(base !== name) catAlias[name] = base;
+  let n = 0;
+  posts.forEach(p=>{ if(p.cat === old){ p.cat = name; p.lastUpdated = formatUserStamp(); p.lastUpdatedBy = getCurrentUser(); n++; } });
+  if(activeCatFilters.has(old)){ activeCatFilters.delete(old); activeCatFilters.add(name); }
+  save();
+  catsChanged();
+}
 function removeCat(i){
+  const cat = cats[i];
+  const used = posts.filter(p=>p.cat===cat).length;
+  if(used && !confirm('Remove "'+cat+'"? '+used+' post'+(used===1?'':'s')+' use it and will have no category.')) return;
   cats.splice(i,1);
-  localStorage.setItem('ss_cats2', JSON.stringify(cats));
-  renderCatFilters(); renderSettingsPage();
+  delete catAlias[cat];
+  catsChanged();
 }
 
 function confirmReset(){
