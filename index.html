@@ -1,0 +1,1598 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1MTIgNTEyIj4KICA8Y2lyY2xlIGN4PSIyNTYiIGN5PSIyNTYiIHI9IjI1NiIgZmlsbD0iIzJEMzU2MSIvPgogIDxwYXRoIGQ9Ik0xMjAgMzAwIFExNzAgMjYwIDIyMCAzMDAgUTI3MCAzNDAgMzIwIDMwMCBRMzcwIDI2MCA0MDAgMjg1IiBzdHJva2U9IiNFODcwNEEiIHN0cm9rZS13aWR0aD0iMTgiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgZmlsbD0ibm9uZSIvPgogIDxwYXRoIGQ9Ik0xMDAgMzQwIFExNTAgMzAwIDIwMCAzNDAgUTI1MCAzODAgMzAwIDM0MCBRMzUwIDMwMCA0MTAgMzI1IiBzdHJva2U9IiNFODcwNEEiIHN0cm9rZS13aWR0aD0iMTQiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgZmlsbD0ibm9uZSIgb3BhY2l0eT0iLjYiLz4KICA8dGV4dCB4PSIyNTYiIHk9IjIxMCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1mYW1pbHk9Ikdlb3JnaWEsc2VyaWYiIGZvbnQtc2l6ZT0iOTAiIGZvbnQtd2VpZ2h0PSJib2xkIiBmaWxsPSIjZmZmIiBsZXR0ZXItc3BhY2luZz0iLTIiPkJTUzwvdGV4dD4KICA8dGV4dCB4PSIyNTYiIHk9IjI0NSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1mYW1pbHk9Ikdlb3JnaWEsc2VyaWYiIGZvbnQtc2l6ZT0iMjYiIGZpbGw9IiNDOEQ5QzYiIGxldHRlci1zcGFjaW5nPSIyIj4yMDI3PC90ZXh0Pgo8L3N2Zz4=">
+<link rel="apple-touch-icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1MTIgNTEyIj4KICA8Y2lyY2xlIGN4PSIyNTYiIGN5PSIyNTYiIHI9IjI1NiIgZmlsbD0iIzJEMzU2MSIvPgogIDxwYXRoIGQ9Ik0xMjAgMzAwIFExNzAgMjYwIDIyMCAzMDAgUTI3MCAzNDAgMzIwIDMwMCBRMzcwIDI2MCA0MDAgMjg1IiBzdHJva2U9IiNFODcwNEEiIHN0cm9rZS13aWR0aD0iMTgiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgZmlsbD0ibm9uZSIvPgogIDxwYXRoIGQ9Ik0xMDAgMzQwIFExNTAgMzAwIDIwMCAzNDAgUTI1MCAzODAgMzAwIDM0MCBRMzUwIDMwMCA0MTAgMzI1IiBzdHJva2U9IiNFODcwNEEiIHN0cm9rZS13aWR0aD0iMTQiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgZmlsbD0ibm9uZSIgb3BhY2l0eT0iLjYiLz4KICA8dGV4dCB4PSIyNTYiIHk9IjIxMCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1mYW1pbHk9Ikdlb3JnaWEsc2VyaWYiIGZvbnQtc2l6ZT0iOTAiIGZvbnQtd2VpZ2h0PSJib2xkIiBmaWxsPSIjZmZmIiBsZXR0ZXItc3BhY2luZz0iLTIiPkJTUzwvdGV4dD4KICA8dGV4dCB4PSIyNTYiIHk9IjI0NSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1mYW1pbHk9Ikdlb3JnaWEsc2VyaWYiIGZvbnQtc2l6ZT0iMjYiIGZpbGw9IiNDOEQ5QzYiIGxldHRlci1zcGFjaW5nPSIyIj4yMDI3PC90ZXh0Pgo8L3N2Zz4=">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Soiree Social">
+<meta name="theme-color" content="#2D3561">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Soiree Social</title>
+<link rel="manifest" href="./manifest.json">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --black:#1A1A2E;--gray:#D9D9D9;--white:#fff;
+  --navy:#2D3561;--navy-l:#3D4A7A;--navy-d:#1E2444;
+  --coral:#E8704A;--coral-l:#F5B8A4;--coral-d:#C4522E;
+  --sage:#8BA888;--sage-l:#C8D9C6;--sage-d:#5A7A58;
+  --cream:#F5F0E8;--cream-d:#EDE5D8;
+  --tan:#C8AA88;--tan-l:#EDE0CF;
+  --pink:#E8704A;--pink-l:#F5B8A4;--pink-d:#C4522E;
+  --fd:'Cormorant Garamond',serif;--fb:'Jost',sans-serif;
+  /* Category colors */
+  --cat-author:#3D4A7A;   /* navy-l — Author announcement */
+  --cat-general:#5A7A58;  /* sage-d — General authors */
+  --cat-tickets:#E8704A;  /* coral — Tickets */
+  --cat-event:#2D3561;    /* navy — Event */
+  --cat-fun:#C8AA88;      /* tan — Fun */
+  --cat-other:#8BA888;    /* sage — other/custom */
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:var(--fb);background:var(--cream);color:var(--black);min-height:100dvh;overflow-x:hidden}
+
+/* ── HEADER ── */
+.hdr{background:var(--navy);padding:12px 14px 0;position:sticky;top:0;z-index:100}
+.hdr-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.app-title{font-family:var(--fd);font-size:22px;font-weight:400;color:var(--white);line-height:1}
+.app-sub{font-size:10px;font-weight:300;color:rgba(255,255,255,.5);letter-spacing:.12em;text-transform:uppercase;margin-top:2px}
+.user-pill{font-size:11px;font-weight:500;color:var(--navy);background:var(--sage-l);border-radius:20px;padding:4px 12px;cursor:pointer;border:none;font-family:var(--fb)}
+
+/* countdown badges row */
+.cd-row{display:flex;gap:8px;padding-bottom:12px;overflow-x:auto;scrollbar-width:none}
+.cd-row::-webkit-scrollbar{display:none}
+.cd-badge{flex-shrink:0;color:var(--white);font-size:11px;font-weight:500;letter-spacing:.04em;padding:6px 14px;border-radius:20px;cursor:pointer;white-space:nowrap;border:none;font-family:var(--fb);opacity:.95}
+.cd-badge span.cd-num{font-family:var(--fd);font-size:18px;font-weight:500;margin-right:4px;vertical-align:middle}
+
+/* ── FILTER CHIPS ── */
+.filter-bar{background:var(--white);border-bottom:1px solid var(--cream-d);padding:8px 0 6px}
+.filter-group{display:flex;align-items:center;padding:3px 14px;gap:6px;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none}
+.filter-group::-webkit-scrollbar{display:none}
+.fg-lbl{font-size:9px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:#bbb;flex-shrink:0}
+.chip{border:1px solid var(--gray);background:var(--white);font-family:var(--fb);font-size:10px;font-weight:500;letter-spacing:.04em;padding:4px 11px;border-radius:20px;cursor:pointer;color:#666;transition:all .15s;white-space:nowrap;user-select:none;flex-shrink:0}
+.chip.active{background:var(--navy);border-color:var(--navy);color:var(--white)}
+.chip.active.c-cat{background:var(--sage-d);border-color:var(--sage-d)}
+.chip.active.c-type{background:var(--coral-d);border-color:var(--coral-d)}
+.chip.active.c-date{background:var(--tan);border-color:var(--tan);color:var(--white)}
+.chip-add{border:1px dashed var(--gray);background:transparent;font-family:var(--fb);font-size:10px;padding:4px 10px;border-radius:20px;cursor:pointer;color:#aaa;white-space:nowrap;flex-shrink:0}
+
+/* ── MAIN ── */
+.main{padding:12px 14px 100px}
+.page{display:none}.page.active{display:block}
+
+/* ── MASTER LIST ── */
+.list-top-bar{display:flex;align-items:center;gap:8px;margin-bottom:12px}
+.view-select{flex:1;border:1px solid var(--gray);border-radius:8px;padding:7px 10px;font-family:var(--fb);font-size:12px;background:var(--white);color:var(--black);outline:none;-webkit-appearance:none}
+.arrange-btn{background:var(--navy);color:var(--white);border:none;border-radius:8px;padding:8px 14px;font-family:var(--fb);font-size:11px;font-weight:500;cursor:pointer;white-space:nowrap;flex-shrink:0}
+.arrange-btn.active{background:var(--coral-d)}
+
+/* Section divider between unscheduled and scheduled */
+.section-divider{display:flex;align-items:center;gap:8px;margin:14px 0 10px}
+.sd-line{flex:1;height:1px;background:var(--gray)}
+.sd-lbl{font-family:var(--fd);font-size:12px;font-style:italic;color:var(--tan);white-space:nowrap;flex-shrink:0}
+
+/* ── CARD ── */
+.card{background:var(--white);border-radius:12px;overflow:hidden;margin-bottom:7px;border:1px solid var(--cream-d);display:flex;position:relative;transition:transform .1s}
+.card:active{transform:scale(.98)}
+.card.past-post{opacity:.5}
+.card.dragging{opacity:.5;transform:scale(.97)}
+.card.drag-over{border-color:var(--sage);border-width:2px}
+
+/* category left stripe */
+.card-stripe{width:5px;flex-shrink:0}
+.cat-author .card-stripe{background:var(--cat-author)}
+.cat-general .card-stripe{background:var(--cat-general)}
+.cat-tickets .card-stripe{background:var(--cat-tickets)}
+.cat-event .card-stripe{background:var(--cat-event)}
+.cat-fun .card-stripe{background:var(--cat-fun)}
+.cat-other .card-stripe{background:var(--cat-other)}
+.cat-email .card-stripe{background:var(--coral-d)}
+.cat-misc .card-stripe{background:var(--gray)}
+
+.card-date{width:54px;flex-shrink:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:8px 4px;gap:1px;background:var(--cream)}
+.cd-day{font-size:9px;font-weight:500;letter-spacing:.06em;text-transform:uppercase;color:#888}
+.cd-num{font-family:var(--fd);font-size:20px;font-weight:300;line-height:1;color:var(--black)}
+.cd-mon{font-size:8px;font-weight:300;letter-spacing:.07em;text-transform:uppercase;opacity:.65}
+.card-date.unscheduled{background:var(--cream-d);display:flex;align-items:center;justify-content:center}
+.card-date.unscheduled .sch-lbl{font-size:8px;font-weight:500;color:#aaa;text-transform:uppercase;letter-spacing:.05em;text-align:center;line-height:1.3}
+
+.card-body{flex:1;padding:9px 38px 9px 10px;min-width:0}
+.card-cat-tag{display:inline-flex;align-items:center;font-size:9px;font-weight:500;letter-spacing:.05em;text-transform:uppercase;padding:2px 7px;border-radius:9px;margin-bottom:4px;color:var(--white)}
+.cat-author .card-cat-tag{background:var(--cat-author)}
+.cat-general .card-cat-tag{background:var(--cat-general)}
+.cat-tickets .card-cat-tag{background:var(--cat-tickets)}
+.cat-event .card-cat-tag{background:var(--cat-event)}
+.cat-fun .card-cat-tag{background:var(--cat-fun)}
+.cat-other .card-cat-tag{background:var(--cat-other)}
+.cat-email .card-cat-tag{background:var(--coral-d)}
+.cat-misc .card-cat-tag{background:#aaa}
+.post-type-badge{display:inline-flex;align-items:center;font-size:9px;padding:2px 6px;border-radius:9px;border:1px solid var(--gray);color:#888;margin-left:4px;font-weight:400}
+.card-title{font-family:var(--fd);font-size:14px;font-weight:500;line-height:1.3;margin-bottom:2px}
+.card-desc{font-size:10px;font-weight:300;color:#666;line-height:1.5;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.card-stamp{font-size:9px;color:var(--sage-d);margin-top:3px;font-style:italic;opacity:.8}
+
+.card-actions{position:absolute;bottom:0;right:0;top:0;display:flex;flex-direction:column;justify-content:center;padding:0 6px;gap:4px}
+.edit-btn{width:26px;height:26px;border-radius:50%;background:var(--cream);border:none;cursor:pointer;font-size:11px;display:flex;align-items:center;justify-content:center}
+.drag-handle{width:26px;height:26px;border-radius:50%;background:transparent;border:none;cursor:grab;font-size:14px;display:flex;align-items:center;justify-content:center;color:#ccc;display:none}
+.arrange-mode .drag-handle{display:flex}
+.arrange-mode .edit-btn{display:none}
+.card-tap{position:absolute;inset:0;z-index:1}
+.arrange-mode .card-tap{pointer-events:none}
+
+/* Arrange overlay bar */
+.arrange-bar{background:var(--cream-d);border-radius:12px;padding:12px 14px;margin-bottom:10px;display:none}
+.arrange-bar.visible{display:block}
+.arrange-bar-title{font-family:var(--fd);font-size:15px;font-style:italic;margin-bottom:10px;color:var(--navy)}
+.arrange-pills{display:flex;gap:8px;flex-wrap:wrap}
+.arrange-pill{flex:1;min-width:120px;border:none;border-radius:20px;padding:10px 14px;font-family:var(--fb);font-size:12px;font-weight:500;cursor:pointer;text-align:center}
+.arrange-pill.manual{background:var(--sage-l);color:var(--sage-d)}
+.arrange-pill.auto{background:var(--navy);color:var(--white)}
+
+/* ── MODALS ── */
+.modal-ov{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:200;display:flex;align-items:flex-end;opacity:0;pointer-events:none;transition:opacity .25s}
+.modal-ov.open{opacity:1;pointer-events:all}
+.modal{background:var(--cream);border-radius:20px 20px 0 0;width:100%;max-height:90vh;overflow-y:auto;padding:14px 14px 50px;transform:translateY(100%);transition:transform .3s cubic-bezier(.32,.72,0,1)}
+.modal-ov.open .modal{transform:translateY(0)}
+.modal-handle{width:36px;height:4px;background:var(--gray);border-radius:2px;margin:0 auto 14px}
+.modal-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.modal-title{font-family:var(--fd);font-size:19px;font-weight:500}
+.modal-close-btn{border:none;background:var(--cream-d);border-radius:50%;width:28px;height:28px;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center}
+
+/* ── FORM ── */
+.ef{margin-bottom:14px}
+.ef-lbl{font-size:10px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:#888;margin-bottom:5px;display:block}
+.ef-input{width:100%;border:1px solid var(--gray);border-radius:8px;padding:9px 12px;font-family:var(--fb);font-size:13px;background:var(--white);color:var(--black);outline:none}
+.ef-input:focus{border-color:var(--sage)}
+.ef-textarea{width:100%;border:1px solid var(--gray);border-radius:8px;padding:9px 12px;font-family:var(--fb);font-size:13px;background:var(--white);color:var(--black);outline:none;resize:vertical;min-height:80px}
+.ef-textarea:focus{border-color:var(--sage)}
+
+/* Date pill group */
+.date-pills{display:flex;gap:6px;flex-wrap:wrap}
+.date-pill{flex:1;min-width:90px;border:1px solid var(--gray);background:var(--white);font-family:var(--fb);font-size:11px;font-weight:500;padding:9px 8px;border-radius:10px;cursor:pointer;color:#555;transition:all .15s;text-align:center}
+.date-pill.active{background:var(--navy);border-color:var(--navy);color:var(--white)}
+
+/* Type picker */
+.type-pick-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:4px}
+.type-pick-btn{border:1px solid var(--gray);background:var(--white);font-family:var(--fb);font-size:12px;font-weight:500;padding:12px 8px;border-radius:12px;cursor:pointer;color:#444;transition:all .2s;text-align:center}
+.type-pick-btn.active{background:var(--navy);border-color:var(--navy);color:var(--white)}
+
+/* Category chips in form */
+.cat-chip-grid{display:flex;flex-wrap:wrap;gap:6px}
+.cat-chip{border:1px solid var(--gray);background:var(--white);font-family:var(--fb);font-size:11px;font-weight:500;padding:6px 12px;border-radius:20px;cursor:pointer;color:#555;transition:all .15s}
+.cat-chip.active{color:var(--white);border-color:transparent}
+.cat-chip[data-cat="Author announcement"].active{background:var(--cat-author)}
+.cat-chip[data-cat="General authors"].active{background:var(--cat-general)}
+.cat-chip[data-cat="Tickets"].active{background:var(--cat-tickets)}
+.cat-chip[data-cat="Event"].active{background:var(--cat-event)}
+.cat-chip[data-cat="Fun"].active{background:var(--cat-fun)}
+.cat-chip[data-cat-custom].active{background:var(--cat-other)}
+
+/* Save/Delete buttons */
+.btn-save{width:100%;background:var(--sage-d);color:var(--white);border:none;border-radius:12px;padding:13px;font-family:var(--fb);font-size:13px;font-weight:500;cursor:pointer;margin-top:4px}
+.btn-del{width:100%;background:transparent;color:var(--coral-d);border:1px solid var(--coral-d);border-radius:12px;padding:11px;font-family:var(--fb);font-size:12px;cursor:pointer;margin-top:8px}
+.btn-ghost{width:100%;background:transparent;color:#888;border:1px solid var(--gray);border-radius:12px;padding:11px;font-family:var(--fb);font-size:12px;cursor:pointer;margin-top:8px}
+.btn-navy{width:100%;background:var(--navy);color:var(--white);border:none;border-radius:12px;padding:12px;font-family:var(--fb);font-size:12px;font-weight:500;cursor:pointer;margin-top:8px}
+
+/* Drive link section */
+.drive-link-hint{font-size:10px;color:#aaa;margin-top:5px;line-height:1.5}
+.drive-link-hint a{color:var(--sage-d);text-decoration:none}
+
+/* Hashtag preview */
+.htag-preview{font-size:10px;color:var(--tan);margin-top:5px;line-height:1.6;word-break:break-word}
+
+/* Copy caption button */
+.btn-copy{width:100%;background:var(--coral-d);color:var(--white);border:none;border-radius:10px;padding:10px;font-family:var(--fb);font-size:12px;cursor:pointer;margin-top:0;margin-bottom:8px}
+
+/* ── DETAIL / QR MODAL ── */
+.detail-hero{background:var(--navy);border-radius:12px;padding:16px;margin-bottom:14px}
+.detail-cat{font-size:10px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,255,255,.6);margin-bottom:4px}
+.detail-title{font-family:var(--fd);font-size:22px;font-weight:500;color:var(--white);line-height:1.2}
+.detail-date{font-size:11px;color:rgba(255,255,255,.65);margin-top:6px}
+.detail-section{margin-bottom:14px}
+.detail-lbl{font-size:9px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:#aaa;margin-bottom:5px}
+.detail-text{font-size:13px;color:var(--black);line-height:1.6}
+.detail-caption{background:var(--white);border-radius:10px;padding:12px;font-size:13px;line-height:1.6;color:var(--black);border:1px solid var(--cream-d)}
+.detail-tags{font-size:11px;color:var(--tan);line-height:1.7;word-break:break-word}
+.detail-drive-btn{display:inline-flex;align-items:center;gap:8px;background:var(--sage-l);color:var(--sage-d);border:1px solid var(--sage);border-radius:10px;padding:9px 14px;font-size:12px;font-weight:500;text-decoration:none;font-family:var(--fb)}
+
+/* ── AUTO-SCHEDULE MODAL ── */
+.sched-step{display:none}.sched-step.active{display:block}
+.mock-cal{background:var(--white);border-radius:12px;border:1px solid var(--cream-d);overflow:hidden;margin-bottom:12px}
+.mock-cal-header{background:var(--navy);color:var(--white);padding:10px 14px;font-family:var(--fd);font-size:16px;font-style:italic}
+.mock-cal-row{display:flex;border-bottom:1px solid var(--cream-d);align-items:stretch}
+.mock-cal-row:last-child{border-bottom:none}
+.mock-cal-date{width:54px;flex-shrink:0;padding:8px;text-align:center;background:var(--cream);border-right:1px solid var(--cream-d)}
+.mock-cal-date .mn{font-size:8px;text-transform:uppercase;color:#aaa;letter-spacing:.05em}
+.mock-cal-date .dd{font-family:var(--fd);font-size:18px;line-height:1;color:var(--black)}
+.mock-cal-items{flex:1;padding:8px 10px;display:flex;flex-direction:column;gap:4px}
+.mock-pill{font-size:10px;padding:3px 8px;border-radius:6px;color:var(--white);font-weight:500;cursor:pointer}
+
+/* ── SETTINGS ── */
+.settings-section{background:var(--white);border-radius:12px;margin-bottom:12px;overflow:hidden;border:1px solid var(--cream-d)}
+.settings-hdr{padding:11px 14px;border-bottom:1px solid var(--cream-d);display:flex;align-items:center;justify-content:space-between}
+.settings-title{font-family:var(--fd);font-size:16px;font-weight:500}
+.settings-add{background:var(--sage);color:var(--white);border:none;border-radius:20px;padding:4px 12px;font-size:11px;font-family:var(--fb);cursor:pointer}
+.settings-item{padding:10px 14px;border-bottom:1px solid var(--cream-d);display:flex;align-items:center;justify-content:space-between}
+.settings-item:last-child{border-bottom:none}
+.si-label{font-size:13px}
+.si-sub{font-size:10px;color:#aaa;margin-top:1px}
+.si-actions{display:flex;gap:6px;align-items:center;flex-shrink:0}
+.si-btn{border:none;background:var(--cream);border-radius:6px;padding:4px 8px;font-size:11px;cursor:pointer;font-family:var(--fb);white-space:nowrap}
+.si-btn.del{color:var(--coral-d)}
+
+/* ── COUNTDOWN MODAL FORM ── */
+.cd-form-ef{margin-bottom:12px}
+
+/* ── BOTTOM NAV ── */
+.bnav{position:fixed;bottom:0;left:0;right:0;background:var(--white);border-top:1px solid var(--gray);display:flex;padding:8px 0;padding-bottom:calc(8px + env(safe-area-inset-bottom));z-index:150}
+.nav-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;padding:3px 0;border:none;background:none;font-family:var(--fb)}
+.nav-icon{font-size:19px;line-height:1}
+.nav-lbl{font-size:9px;font-weight:500;letter-spacing:.05em;text-transform:uppercase;color:#bbb}
+.nav-item.active .nav-lbl{color:var(--navy)}
+.nav-item.new-post-btn .nav-icon{font-size:24px}
+.nav-item.new-post-btn .nav-lbl{color:var(--coral-d)}
+.empty-msg{text-align:center;padding:40px 20px;color:#bbb;font-family:var(--fd);font-style:italic;font-size:17px}
+</style>
+</head>
+<body>
+
+<!-- ── HEADER ── -->
+<div class="hdr">
+  <div class="hdr-top">
+    <div>
+      <div class="app-title">Soiree Social</div>
+      <div class="app-sub">Bookish Summer Soirée 2027</div>
+    </div>
+    <button class="user-pill" onclick="openUserSwitch()">👤 <span id="current-user-display">…</span></button>
+  </div>
+  <div class="cd-row" id="cd-row"></div>
+</div>
+
+<!-- ── FILTER BAR ── -->
+<div class="filter-bar" id="filter-bar">
+  <div class="filter-group" id="cat-filter-row">
+    <span class="fg-lbl">Category</span>
+    <!-- chips injected -->
+  </div>
+  <div class="filter-group" style="margin-top:4px" id="type-filter-row">
+    <span class="fg-lbl">Type</span>
+    <button class="chip c-type" data-ftype="Reel" onclick="toggleFilter('type','Reel',this)">Reel</button>
+    <button class="chip c-type" data-ftype="Slides" onclick="toggleFilter('type','Slides',this)">Slides</button>
+    <span class="fg-lbl" style="margin-left:6px">Date</span>
+    <button class="chip c-date" data-fdate="Flexible" onclick="toggleFilter('date','Flexible',this)">Flexible</button>
+    <button class="chip c-date" data-fdate="Fixed" onclick="toggleFilter('date','Fixed',this)">Fixed</button>
+    <button class="chip c-date" data-fdate="Pre Mar 1" onclick="toggleFilter('date','Pre Mar 1',this)">Pre Mar 1</button>
+  </div>
+</div>
+
+<!-- ── MAIN ── -->
+<div class="main">
+  <!-- Master List page -->
+  <div class="page active" id="page-list">
+    <div class="list-top-bar">
+      <select class="view-select" id="view-select" onchange="renderMasterList()">
+        <option value="unposted">Unposted (default)</option>
+        <option value="all-tasks">All Tasks (posts + emails + others)</option>
+        <option value="all-posts">All Posts</option>
+        <option value="by-type">By Post Type</option>
+        <option value="by-cat">By Category</option>
+        <option value="emails">Emails Only</option>
+        <option value="others">Others Only</option>
+      </select>
+      <button class="arrange-btn" id="arrange-btn" onclick="toggleArrange()">Arrange</button>
+    </div>
+    <!-- Arrange bar -->
+    <div class="arrange-bar" id="arrange-bar">
+      <div class="arrange-bar-title">Drag posts to reorder, then:</div>
+      <div class="arrange-pills">
+        <button class="arrange-pill manual" onclick="doneArrange('manual')">I'll set dates myself</button>
+        <button class="arrange-pill auto" onclick="doneArrange('auto')">Schedule them for me ✨</button>
+      </div>
+    </div>
+    <div id="master-list-content"></div>
+  </div>
+
+  <!-- Settings page -->
+  <div class="page" id="page-settings">
+    <div class="settings-section">
+      <div class="settings-hdr"><div class="settings-title">Countdowns</div><button class="settings-add" onclick="openAddCountdown()">+ Add</button></div>
+      <div id="cd-settings-list"></div>
+    </div>
+    <div class="settings-section">
+      <div class="settings-hdr"><div class="settings-title">Categories</div><button class="settings-add" onclick="promptAddCat()">+ Add</button></div>
+      <div id="cat-settings-list"></div>
+    </div>
+    <div class="settings-section">
+      <div class="settings-hdr"><div class="settings-title">Hashtag Groups</div><button class="settings-add" onclick="addHtagGroup()">+ Add</button></div>
+      <div id="htag-settings-list"></div>
+    </div>
+    <div class="settings-section">
+      <div class="settings-hdr"><div class="settings-title">User</div></div>
+      <div class="settings-item">
+        <div><div class="si-label">Current user: <span id="settings-user-display" style="font-weight:600"></span></div><div class="si-sub">Nik or Hill</div></div>
+        <button class="si-btn" onclick="openUserSwitch()">Switch</button>
+      </div>
+    </div>
+    <button class="btn-ghost" style="margin-top:4px" onclick="confirmReset()">Reset to defaults</button>
+  </div>
+</div>
+
+<!-- ── BOTTOM NAV ── -->
+<div class="bnav">
+  <button class="nav-item active" data-nav="list" onclick="switchNav('list')">
+    <div class="nav-icon">📋</div><div class="nav-lbl">Master List</div>
+  </button>
+  <button class="nav-item new-post-btn" onclick="openNewPost(null)">
+    <div class="nav-icon">＋</div><div class="nav-lbl">New Post</div>
+  </button>
+  <button class="nav-item" data-nav="settings" onclick="switchNav('settings')">
+    <div class="nav-icon">⚙️</div><div class="nav-lbl">Settings</div>
+  </button>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     MODALS
+══════════════════════════════════════════════ -->
+
+<!-- New/Edit Post Modal -->
+<div class="modal-ov" id="post-modal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-top">
+      <div class="modal-title" id="post-modal-title">New Post</div>
+      <button class="modal-close-btn" onclick="closeModal('post-modal')">✕</button>
+    </div>
+    <!-- Type picker (hidden when editing) -->
+    <div id="pm-type-section">
+      <div class="ef">
+        <label class="ef-lbl">What kind of item?</label>
+        <div class="type-pick-row">
+          <button class="type-pick-btn" id="tp-social" onclick="selectPostType('social')">📸 Social Post</button>
+          <button class="type-pick-btn" id="tp-email" onclick="selectPostType('email')">✉️ Email</button>
+          <button class="type-pick-btn" style="grid-column:span 2" id="tp-other" onclick="selectPostType('other')">📝 Other / Note</button>
+        </div>
+      </div>
+    </div>
+    <!-- Fields (shown after type selected or when editing) -->
+    <div id="pm-fields" style="display:none">
+      <div class="ef">
+        <label class="ef-lbl">Name / Title</label>
+        <input class="ef-input" id="pm-title" placeholder="e.g. Tickets are LIVE! 🎟️">
+      </div>
+      <!-- Date section -->
+      <div class="ef" id="pm-date-section">
+        <label class="ef-lbl" id="pm-date-lbl">Date</label>
+        <div class="date-pills" id="pm-date-pills">
+          <button class="date-pill" id="dp-fixed" onclick="selectDatePill('fixed')">📅 Fixed date</button>
+          <button class="date-pill" id="dp-flexible" onclick="selectDatePill('flexible')">🔄 Flexible</button>
+          <button class="date-pill" id="dp-premarx" onclick="selectDatePill('premar1')">🎟️ Pre Mar 1</button>
+        </div>
+        <div id="pm-date-input-wrap" style="margin-top:8px;display:none">
+          <input class="ef-input" id="pm-date" type="date">
+          <div id="pm-date-change-opt" style="margin-top:5px;display:none">
+            <button class="chip" onclick="selectDatePill('flexible')" style="font-size:10px">Pick a different scheduling option</button>
+          </div>
+        </div>
+      </div>
+      <!-- Category (social/other only) -->
+      <div class="ef" id="pm-cat-section">
+        <label class="ef-lbl">Category</label>
+        <div class="cat-chip-grid" id="pm-cat-chips"></div>
+      </div>
+      <!-- Post type (Reel / Slides) — social only -->
+      <div class="ef" id="pm-posttype-section" style="display:none">
+        <label class="ef-lbl">Post Type</label>
+        <div style="display:flex;gap:6px">
+          <button class="chip c-type" id="pt-reel" onclick="togglePostType('Reel',this)">Reel</button>
+          <button class="chip c-type" id="pt-slides" onclick="togglePostType('Slides',this)">Slides</button>
+        </div>
+      </div>
+      <!-- Hashtag group (social only) -->
+      <div class="ef" id="pm-htag-section" style="display:none">
+        <label class="ef-lbl">Hashtag Group</label>
+        <select class="ef-input" id="pm-htag" onchange="previewHtags()">
+          <option value="">— None —</option>
+        </select>
+        <div class="htag-preview" id="pm-htag-preview"></div>
+      </div>
+      <!-- Extra hashtags (social only) -->
+      <div class="ef" id="pm-extra-htag-section" style="display:none">
+        <label class="ef-lbl">Extra hashtags for this post</label>
+        <input class="ef-input" id="pm-extra-htags" placeholder="#bss2027 #bookish">
+      </div>
+      <!-- Purpose / Subject -->
+      <div class="ef">
+        <label class="ef-lbl" id="pm-purpose-lbl">Purpose of post</label>
+        <input class="ef-input" id="pm-purpose" placeholder="e.g. Build excitement for ticket launch">
+      </div>
+      <!-- Caption (social only) -->
+      <div class="ef" id="pm-caption-section" style="display:none">
+        <label class="ef-lbl">Caption</label>
+        <textarea class="ef-textarea" id="pm-caption" placeholder="Write your caption here..."></textarea>
+      </div>
+      <!-- Copy caption button (social only) -->
+      <div id="pm-copy-section" style="display:none;margin-bottom:14px">
+        <button class="btn-copy" onclick="copyCaption()">📋 Copy Caption + Hashtags</button>
+      </div>
+      <!-- Graphic — Drive link (social only) -->
+      <div class="ef" id="pm-graphic-section" style="display:none">
+        <label class="ef-lbl">Graphic / Video — Google Drive Link</label>
+        <input class="ef-input" id="pm-drive-link" placeholder="https://drive.google.com/...">
+        <div class="drive-link-hint">
+          Paste a Drive link to a photo, video, or folder.
+          <a href="https://drive.google.com/drive/folders/1IbNCtzjYzWfMMm9AUt1Nay_lixhD__Xq?usp=share_link" target="_blank">Open BSS Drive folder ↗</a>
+        </div>
+      </div>
+      <!-- Save / Delete -->
+      <button class="btn-save" onclick="savePost()">Save</button>
+      <button class="btn-del" id="pm-del-btn" style="display:none" onclick="deletePost()">Remove Post</button>
+    </div>
+  </div>
+</div>
+
+<!-- Post Detail Modal -->
+<div class="modal-ov" id="detail-modal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div id="detail-content"></div>
+    <div style="display:flex;gap:8px;margin-top:4px">
+      <button class="btn-ghost" style="margin-top:0;flex:1" onclick="closeModal('detail-modal')">Close</button>
+      <button class="btn-save" style="margin-top:0;flex:1" id="detail-edit-btn" onclick="openEditFromDetail()">Edit</button>
+    </div>
+  </div>
+</div>
+
+<!-- Countdown Edit Modal -->
+<div class="modal-ov" id="cd-modal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-top">
+      <div class="modal-title" id="cd-modal-title">Countdown</div>
+      <button class="modal-close-btn" onclick="closeModal('cd-modal')">✕</button>
+    </div>
+    <div class="ef"><label class="ef-lbl">Label</label><input class="ef-input" id="cd-label"></div>
+    <div class="ef"><label class="ef-lbl">Date</label><input class="ef-input" id="cd-date" type="date"></div>
+    <div class="ef"><label class="ef-lbl">Color</label>
+      <select class="ef-input" id="cd-color">
+        <option value="#2D3561">Navy</option>
+        <option value="#E8704A">Coral</option>
+        <option value="#5A7A58">Sage</option>
+        <option value="#1E2444">Dark Navy</option>
+        <option value="#C4522E">Dark Coral</option>
+      </select>
+    </div>
+    <button class="btn-save" onclick="saveCountdown()">Save</button>
+    <button class="btn-del" id="cd-del-btn" style="display:none" onclick="deleteCountdown()">Remove</button>
+  </div>
+</div>
+
+<!-- Auto-Schedule Modal -->
+<div class="modal-ov" id="autosched-modal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-top">
+      <div class="modal-title">Auto-Schedule Posts</div>
+      <button class="modal-close-btn" onclick="closeModal('autosched-modal')">✕</button>
+    </div>
+
+    <!-- Step 1: pick start date -->
+    <div class="sched-step active" id="as-step1">
+      <p style="font-size:12px;color:#666;margin-bottom:14px;line-height:1.6">
+        I'll spread your flexible posts evenly between a start date and Jun 12, 2027. Fixed-date posts stay put. Pre-Mar-1 posts stay before March 1.
+      </p>
+      <div class="ef">
+        <label class="ef-lbl">Start date for scheduling</label>
+        <input class="ef-input" id="as-start-date" type="date">
+      </div>
+      <button class="btn-navy" onclick="runAutoSchedule()">Generate Schedule</button>
+      <button class="btn-ghost" onclick="closeModal('autosched-modal')">Cancel</button>
+    </div>
+
+    <!-- Step 2: preview -->
+    <div class="sched-step" id="as-step2">
+      <p style="font-size:12px;color:#666;margin-bottom:12px">Here's the proposed schedule. Tap a post to change its date.</p>
+      <div class="mock-cal" id="as-mock-cal"></div>
+      <div style="display:flex;gap:8px;margin-top:4px">
+        <button class="btn-ghost" style="flex:1;margin-top:0" onclick="closeModal('autosched-modal')">Cancel</button>
+        <button class="btn-navy" style="flex:1;margin-top:0" onclick="applyAutoSchedule()">Use This Schedule ✓</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     FIREBASE + APP SCRIPT
+══════════════════════════════════════════════ -->
+<script>
+// ── FIREBASE ──────────────────────────────────────────────────────────────
+const _fbScript1 = document.createElement('script');
+_fbScript1.type = 'module';
+_fbScript1.textContent = `
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import { getFirestore, collection, doc, setDoc, getDocs, onSnapshot, deleteDoc }
+  from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+const firebaseConfig = {
+  apiKey: "AIzaSyCqB0IkXZw40SER3eoV6hEXCDmRhrSrSLk",
+  authDomain: "soiree-social.firebaseapp.com",
+  projectId: "soiree-social",
+  storageBucket: "soiree-social.firebasestorage.app",
+  messagingSenderId: "178882272207",
+  appId: "1:178882272207:web:7668c6de3aac6cf73490ba"
+};
+const _fbApp = initializeApp(firebaseConfig);
+const _db = getFirestore(_fbApp);
+window._firestoreDB = _db;
+window._fbCollection = collection;
+window._fbDoc = doc;
+window._fbSetDoc = setDoc;
+window._fbGetDocs = getDocs;
+window._fbOnSnapshot = onSnapshot;
+window._fbDeleteDoc = deleteDoc;
+window._firebaseReady = true;
+window.dispatchEvent(new Event('firebase-ready'));
+`;
+document.head.appendChild(_fbScript1);
+
+// ── DEFAULTS ──────────────────────────────────────────────────────────────
+const DP = [
+  {id:"bss1",dateType:"fixed",date:"2027-01-15",type:"social",cat:"Author announcement",postType:"Slides",title:"Save the Date — BSS 2027 🌊",purpose:"Official save the date post. Tickets on sale March 1.",caption:"",driveLink:"",htagId:"",extraHtags:"",lastUpdated:"Jan 15 · Nik",lastUpdatedBy:"Nik"},
+  {id:"bss2",dateType:"premar1",date:"2027-02-15",type:"social",cat:"Tickets",postType:"Reel",title:"Two weeks until tickets go live!",purpose:"Build excitement. Early bird alert.",caption:"",driveLink:"",htagId:"",extraHtags:"",lastUpdated:"Jan 15 · Nik",lastUpdatedBy:"Nik"},
+  {id:"bss3",dateType:"fixed",date:"2027-03-01",type:"social",cat:"Tickets",postType:"Slides",title:"🎟️ Tickets On Sale NOW",purpose:"Tickets are live. All the details + buy link.",caption:"",driveLink:"",htagId:"",extraHtags:"",lastUpdated:"Jan 15 · Nik",lastUpdatedBy:"Nik"},
+  {id:"bss4",dateType:"fixed",date:"2027-03-01",type:"email",cat:"Tickets",postType:"",title:"Email — Tickets On Sale",purpose:"",subject:"Tickets are live!",caption:"",driveLink:"",htagId:"",extraHtags:"",lastUpdated:"Jan 15 · Nik",lastUpdatedBy:"Nik"},
+  {id:"bss5",dateType:"flexible",date:"2027-04-10",type:"social",cat:"Event",postType:"Slides",title:"Venue spotlight 📍",purpose:"Show off where we're hosting.",caption:"",driveLink:"",htagId:"",extraHtags:"",lastUpdated:"Jan 15 · Nik",lastUpdatedBy:"Nik"},
+  {id:"bss6",dateType:"flexible",date:"2027-05-01",type:"social",cat:"Author announcement",postType:"Slides",title:"Speaker / Author lineup reveal",purpose:"Announce featured authors attending.",caption:"",driveLink:"",htagId:"",extraHtags:"",lastUpdated:"Jan 15 · Nik",lastUpdatedBy:"Nik"},
+  {id:"bss7",dateType:"flexible",date:"2027-06-01",type:"social",cat:"Event",postType:"Reel",title:"11 days to THE SOIRÉE",purpose:"Countdown post. What to expect.",caption:"",driveLink:"",htagId:"",extraHtags:"",lastUpdated:"Jan 15 · Nik",lastUpdatedBy:"Nik"},
+  {id:"bss8",dateType:"fixed",date:"2027-06-11",type:"social",cat:"Event",postType:"Reel",title:"Tomorrow! 🌊",purpose:"Eve of the event. Pure hype.",caption:"",driveLink:"",htagId:"",extraHtags:"",lastUpdated:"Jan 15 · Nik",lastUpdatedBy:"Nik"},
+  {id:"bss9",dateType:"fixed",date:"2027-06-12",type:"social",cat:"Event",postType:"Reel",title:"🌊 THE SOIRÉE — It's here!",purpose:"Day-of post. Welcome your guests.",caption:"",driveLink:"",htagId:"",extraHtags:"",lastUpdated:"Jan 15 · Nik",lastUpdatedBy:"Nik"},
+  {id:"bss10",dateType:"flexible",date:"2027-06-13",type:"social",cat:"Fun",postType:"Slides",title:"BSS 2027 Recap — thank you!",purpose:"Post-event thank-you. Photos, highlights, gratitude.",caption:"",driveLink:"",htagId:"",extraHtags:"",lastUpdated:"Jan 15 · Nik",lastUpdatedBy:"Nik"},
+];
+const DC = [
+  {id:"cd1",label:"Tickets On Sale",date:"2027-03-01",color:"#E8704A"},
+  {id:"cd2",label:"THE SOIRÉE",date:"2027-06-12",color:"#2D3561"},
+];
+const DCATS = ["Author announcement","General authors","Tickets","Event","Fun"];
+const DHTAGS = [
+  {id:"h1",name:"BSS General",tags:"#bookishsummersoiree #bss2027 #bookish #booklover #bookstagram #booktok #authorevent #indiebooks #romancereader #summerreads"},
+  {id:"h2",name:"Author Promo",tags:"#indieauthor #selfpublished #writingcommunity #authorlife #booklaunch #newrelease #romancebooks #romantasy #cleanromance"},
+  {id:"h3",name:"Event Hype",tags:"#bookevent #authorpanel #readersofinstagram #bookclub #bibliophile #booklovers #amreading #tbr #bookstagram"},
+];
+
+// ── STATE ─────────────────────────────────────────────────────────────────
+let posts, countdowns, cats, hashtagGroups;
+let currentUser = localStorage.getItem('ss_user') || null;
+let activeCatFilters = new Set();
+let activeTypeFilters = new Set(); // Reel, Slides
+let activeDateFilters = new Set(); // Flexible, Fixed, Pre Mar 1
+let arrangeMode = false;
+let pendingAutoSchedule = null; // array of {id, date} to apply
+let editingPostId = null;
+let editingPostType = null; // 'social','email','other'
+let editingCdId = null;
+let viewingPostId = null;
+
+const today = new Date(); today.setHours(0,0,0,0);
+const DAYS = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+const MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+
+function uid(){ return Math.random().toString(36).slice(2,9); }
+function dateDiff(ds){ return Math.ceil((new Date(ds+"T12:00:00") - today)/86400000); }
+function fmtDate(ds){
+  if(!ds) return '';
+  const d = new Date(ds+"T12:00:00");
+  return `${DAYS[d.getDay()]}, ${MONTHS[d.getMonth()].slice(0,3)} ${d.getDate()}, ${d.getFullYear()}`;
+}
+function fmtShort(ds){
+  if(!ds) return '';
+  const d = new Date(ds+"T12:00:00");
+  return `${MONTHS[d.getMonth()].slice(0,3)} ${d.getDate()}`;
+}
+
+// ── USER SYSTEM ────────────────────────────────────────────────────────────
+function getCurrentUser(){ return currentUser || 'Nik'; }
+function formatUserStamp(){
+  const now = new Date();
+  const m = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+  return `${m[now.getMonth()]} ${now.getDate()} · ${getCurrentUser()}`;
+}
+function showUserPicker(onSelect){
+  const ov = document.createElement('div');
+  ov.style.cssText = 'position:fixed;inset:0;background:var(--navy);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;padding:30px';
+  ov.innerHTML = `
+    <div style="font-family:var(--fd);font-size:32px;color:var(--white);text-align:center">Soiree Social</div>
+    <div style="font-size:12px;color:rgba(255,255,255,.6);letter-spacing:.1em;text-transform:uppercase;margin-bottom:10px">Who's using the app?</div>
+    <button onclick="window._su('Nik',this.closest('div[style*=fixed]'))" style="width:200px;padding:16px;border:none;border-radius:16px;background:var(--coral);color:var(--white);font-family:var(--fd);font-size:22px;cursor:pointer">Nik</button>
+    <button onclick="window._su('Hill',this.closest('div[style*=fixed]'))" style="width:200px;padding:16px;border:none;border-radius:16px;background:var(--sage-d);color:var(--white);font-family:var(--fd);font-size:22px;cursor:pointer">Hill</button>
+  `;
+  document.body.appendChild(ov);
+  window._su = function(name, overlay){
+    currentUser = name;
+    localStorage.setItem('ss_user', name);
+    document.getElementById('current-user-display').textContent = name;
+    const sud = document.getElementById('settings-user-display');
+    if(sud) sud.textContent = name;
+    overlay.remove();
+    if(onSelect) onSelect(name);
+  };
+}
+function openUserSwitch(){ showUserPicker(()=>{}); }
+if(!currentUser){ document.addEventListener('DOMContentLoaded', ()=>setTimeout(()=>showUserPicker(()=>{}), 300)); }
+
+// ── FIREBASE ──────────────────────────────────────────────────────────────
+let _fsReady = false;
+window.addEventListener('firebase-ready', ()=>{ _fsReady = true; });
+
+async function saveToFirestore(colName, data){
+  if(!window._firestoreDB) return;
+  try {
+    for(const item of data){
+      const d = window._fbDoc(window._firestoreDB, colName, item.id || ('doc_'+Math.random().toString(36).slice(2)));
+      await window._fbSetDoc(d, item);
+    }
+  } catch(e){ console.warn('Firestore save error', e); }
+}
+async function loadFromFirestore(colName){
+  if(!window._firestoreDB) return null;
+  try {
+    const snap = await window._fbGetDocs(window._fbCollection(window._firestoreDB, colName));
+    return snap.docs.map(d=>d.data());
+  } catch(e){ return null; }
+}
+async function deleteFromFirestore(colName, id){
+  if(!window._firestoreDB) return;
+  try { await window._fbDeleteDoc(window._fbDoc(window._firestoreDB, colName, id)); } catch(e){}
+}
+
+// ── LOAD / SAVE ────────────────────────────────────────────────────────────
+function load(){
+  const g = (k,d) => { try{ const v=localStorage.getItem(k); return v?JSON.parse(v):JSON.parse(JSON.stringify(d)); }catch(e){ return JSON.parse(JSON.stringify(d)); } };
+  posts      = g('ss_p2', DP);
+  countdowns = g('ss_c2', DC);
+  cats       = g('ss_cats2', DCATS);
+  hashtagGroups = g('ss_htags2', DHTAGS);
+  const ud = document.getElementById('current-user-display');
+  if(ud) ud.textContent = getCurrentUser();
+  const sud = document.getElementById('settings-user-display');
+  if(sud) sud.textContent = getCurrentUser();
+  loadFromFirestoreAll();
+}
+async function loadFromFirestoreAll(){
+  if(!window._firestoreDB){
+    window.addEventListener('firebase-ready', ()=>loadFromFirestoreAll(), {once:true});
+    return;
+  }
+  try {
+    const [fsPosts, fsCDs] = await Promise.all([
+      loadFromFirestore('ss_posts2'),
+      loadFromFirestore('ss_cds2'),
+    ]);
+    let changed = false;
+    if(fsPosts && fsPosts.length > 0){ posts = fsPosts; changed = true; }
+    if(fsCDs && fsCDs.length > 0){ countdowns = fsCDs; changed = true; }
+    if(changed){
+      localStorage.setItem('ss_p2', JSON.stringify(posts));
+      localStorage.setItem('ss_c2', JSON.stringify(countdowns));
+      renderAll();
+    }
+    setupFirestoreListeners();
+  } catch(e){ console.warn('Firestore load failed', e); }
+}
+function setupFirestoreListeners(){
+  if(!window._firestoreDB || window._fsListenersActive2) return;
+  window._fsListenersActive2 = true;
+  window._fbOnSnapshot(window._fbCollection(window._firestoreDB,'ss_posts2'), snap=>{
+    const data = snap.docs.map(d=>d.data());
+    if(data.length > 0){ posts = data; localStorage.setItem('ss_p2',JSON.stringify(posts)); renderAll(); }
+  });
+  window._fbOnSnapshot(window._fbCollection(window._firestoreDB,'ss_cds2'), snap=>{
+    const data = snap.docs.map(d=>d.data());
+    if(data.length > 0){ countdowns = data; localStorage.setItem('ss_c2',JSON.stringify(countdowns)); renderCountdowns(); }
+  });
+}
+function save(){
+  localStorage.setItem('ss_p2', JSON.stringify(posts));
+  localStorage.setItem('ss_c2', JSON.stringify(countdowns));
+  localStorage.setItem('ss_cats2', JSON.stringify(cats));
+  localStorage.setItem('ss_htags2', JSON.stringify(hashtagGroups));
+  if(window._firestoreDB){
+    saveToFirestore('ss_posts2', posts).catch(()=>{});
+    saveToFirestore('ss_cds2', countdowns).catch(()=>{});
+  }
+}
+
+// ── CATEGORY → CSS class map ───────────────────────────────────────────────
+function catClass(cat){
+  if(!cat) return 'cat-misc';
+  const map = {
+    'Author announcement':'cat-author',
+    'General authors':'cat-general',
+    'Tickets':'cat-tickets',
+    'Event':'cat-event',
+    'Fun':'cat-fun',
+  };
+  return map[cat] || 'cat-other';
+}
+function emailClass(){ return 'cat-email'; }
+
+// ── FILTER LOGIC ───────────────────────────────────────────────────────────
+function getFiltered(all=false){
+  let items = [...posts];
+  // Category filter
+  if(activeCatFilters.size) items = items.filter(p=>activeCatFilters.has(p.cat));
+  // Type filter (Reel / Slides)
+  if(activeTypeFilters.size) items = items.filter(p=>activeTypeFilters.has(p.postType));
+  // Date filter
+  if(activeDateFilters.size) items = items.filter(p=>{
+    if(activeDateFilters.has('Flexible') && p.dateType==='flexible') return true;
+    if(activeDateFilters.has('Fixed') && p.dateType==='fixed') return true;
+    if(activeDateFilters.has('Pre Mar 1') && p.dateType==='premar1') return true;
+    return false;
+  });
+  return items;
+}
+
+function toggleFilter(group, value, btn){
+  if(group==='cat'){
+    if(activeCatFilters.has(value)) activeCatFilters.delete(value); else activeCatFilters.add(value);
+  } else if(group==='type'){
+    if(activeTypeFilters.has(value)) activeTypeFilters.delete(value); else activeTypeFilters.add(value);
+  } else if(group==='date'){
+    if(activeDateFilters.has(value)) activeDateFilters.delete(value); else activeDateFilters.add(value);
+  }
+  btn.classList.toggle('active');
+  renderMasterList();
+}
+
+// ── COUNTDOWNS ─────────────────────────────────────────────────────────────
+function renderCountdowns(){
+  const row = document.getElementById('cd-row');
+  row.innerHTML = countdowns.map(cd=>{
+    const d = dateDiff(cd.date);
+    const numPart = d > 0 ? `<span class="cd-num">${d}</span>` : '';
+    const lbl = d > 0 ? `days to ${cd.label}` : d===0 ? `🎉 ${cd.label} Today!` : `${cd.label} has passed`;
+    return `<button class="cd-badge" style="background:${cd.color}" onclick="openEditCountdown('${cd.id}')">${numPart}${lbl}</button>`;
+  }).join('');
+}
+
+// ── CATEGORY FILTER CHIPS ──────────────────────────────────────────────────
+function renderCatFilters(){
+  const row = document.getElementById('cat-filter-row');
+  const lbl = row.querySelector('.fg-lbl');
+  const chips = cats.map(cat=>{
+    const active = activeCatFilters.has(cat) ? ' active c-cat' : '';
+    return `<button class="chip${active}" data-fcat="${cat}" onclick="toggleFilter('cat','${cat}',this)">${cat}</button>`;
+  }).join('');
+  row.innerHTML = '';
+  row.appendChild(lbl || Object.assign(document.createElement('span'),{className:'fg-lbl',textContent:'Category'}));
+  row.insertAdjacentHTML('beforeend', chips + `<button class="chip-add" onclick="promptAddCat()">+ Category</button>`);
+}
+
+// ── CARD HTML ──────────────────────────────────────────────────────────────
+function cardHTML(post, opts={}){
+  const isEmail = post.type === 'email';
+  const isOther = post.type === 'other';
+  const cls = isEmail ? 'cat-email' : isOther ? 'cat-misc' : catClass(post.cat);
+  const catLabel = isEmail ? 'Email' : isOther ? 'Other' : (post.cat || '');
+  const postTypeBadge = post.postType ? `<span class="post-type-badge">${post.postType}</span>` : '';
+  const isPast = post.date && new Date(post.date+"T12:00:00") < today;
+  const pastCls = isPast && post.dateType==='fixed' ? ' past-post' : '';
+  const dragAttr = opts.draggable ? 'draggable="true"' : '';
+
+  let datePart = '';
+  if(post.dateType === 'flexible'){
+    datePart = `<div class="card-date unscheduled"><span class="sch-lbl">Flex-<br>ible</span></div>`;
+  } else if(post.dateType === 'premar1'){
+    datePart = `<div class="card-date unscheduled"><span class="sch-lbl">Pre<br>Mar 1</span></div>`;
+  } else if(post.date){
+    const d = new Date(post.date+"T12:00:00");
+    datePart = `<div class="card-date">
+      <span class="cd-day">${DAYS[d.getDay()].slice(0,2)}</span>
+      <span class="cd-num">${d.getDate()}</span>
+      <span class="cd-mon">${MONTHS[d.getMonth()].slice(0,3)}</span>
+    </div>`;
+  } else {
+    datePart = `<div class="card-date unscheduled"><span class="sch-lbl">No<br>date</span></div>`;
+  }
+
+  return `<div class="card ${cls}${pastCls}" data-id="${post.id}" ${dragAttr}>
+    <div class="card-stripe"></div>
+    ${datePart}
+    <div class="card-body">
+      <div><span class="card-cat-tag">${catLabel}</span>${postTypeBadge}</div>
+      <div class="card-title">${post.title||'Untitled'}</div>
+      ${post.purpose||post.subject ? `<div class="card-desc">${post.purpose||post.subject||''}</div>` : ''}
+      ${post.lastUpdated ? `<div class="card-stamp">${post.lastUpdated}</div>` : ''}
+    </div>
+    <div class="card-actions">
+      <button class="drag-handle" title="Drag to reorder">⠿</button>
+      <button class="edit-btn" onclick="event.stopPropagation();openEditPost('${post.id}')">✏️</button>
+    </div>
+    ${opts.draggable ? '' : `<div class="card-tap" onclick="openDetail('${post.id}')"></div>`}
+  </div>`;
+}
+
+// ── MASTER LIST ────────────────────────────────────────────────────────────
+function renderMasterList(){
+  const el = document.getElementById('master-list-content');
+  const view = document.getElementById('view-select').value;
+  const filtered = getFiltered();
+
+  if(view === 'unposted'){
+    // Default: unscheduled first, then a divider, then scheduled chronologically
+    const unscheduled = filtered.filter(p=>p.dateType!=='fixed'||(p.dateType==='fixed'&&!p.date));
+    const unscheduledFlexOrPremar = filtered.filter(p=>p.dateType==='flexible'||p.dateType==='premar1');
+    const scheduled = filtered.filter(p=>p.dateType==='fixed'&&p.date).sort((a,b)=>a.date.localeCompare(b.date));
+    // Filter for social posts only in unposted view (default)
+    const socialUnscheduled = unscheduledFlexOrPremar.filter(p=>p.type==='social');
+    const socialScheduled = scheduled.filter(p=>p.type==='social' && new Date(p.date+"T12:00:00") >= today);
+
+    let h = '';
+    if(!socialUnscheduled.length && !socialScheduled.length){
+      h = `<div class="empty-msg">No unposted social posts</div>`;
+    } else {
+      if(socialUnscheduled.length){
+        h += socialUnscheduled.map(p=>cardHTML(p, {draggable:arrangeMode})).join('');
+      }
+      if(socialScheduled.length){
+        h += `<div class="section-divider"><div class="sd-line"></div><div class="sd-lbl">Scheduled</div><div class="sd-line"></div></div>`;
+        h += socialScheduled.map(p=>cardHTML(p, {draggable:arrangeMode})).join('');
+      }
+    }
+    el.innerHTML = h;
+
+  } else if(view === 'all-tasks'){
+    const sorted = [...filtered].sort((a,b)=>{
+      // unscheduled first, then by date
+      const aD = a.dateType==='fixed'&&a.date ? a.date : '0000';
+      const bD = b.dateType==='fixed'&&b.date ? b.date : '0000';
+      if(aD==='0000'&&bD!=='0000') return -1;
+      if(aD!=='0000'&&bD==='0000') return 1;
+      return aD.localeCompare(bD);
+    });
+    el.innerHTML = sorted.length ? sorted.map(p=>cardHTML(p,{draggable:arrangeMode})).join('') : `<div class="empty-msg">Nothing here</div>`;
+
+  } else if(view === 'all-posts'){
+    const social = filtered.filter(p=>p.type==='social');
+    const past = social.filter(p=>p.date&&new Date(p.date+"T12:00:00")<today).sort((a,b)=>a.date.localeCompare(b.date));
+    const upcoming = social.filter(p=>!p.date||new Date(p.date+"T12:00:00")>=today).sort((a,b)=>(a.date||'').localeCompare(b.date||''));
+    let h = '';
+    if(past.length){
+      h += `<div class="section-divider"><div class="sd-line"></div><div class="sd-lbl">Past</div><div class="sd-line"></div></div>`;
+      h += past.map(p=>cardHTML(p,{draggable:arrangeMode})).join('');
+    }
+    if(upcoming.length){
+      h += `<div class="section-divider"><div class="sd-line"></div><div class="sd-lbl">Upcoming</div><div class="sd-line"></div></div>`;
+      h += upcoming.map(p=>cardHTML(p,{draggable:arrangeMode})).join('');
+    }
+    if(!h) h = `<div class="empty-msg">No posts yet</div>`;
+    el.innerHTML = h;
+
+  } else if(view === 'by-type'){
+    const types = ['Reel','Slides',''];
+    let h = '';
+    types.forEach(t=>{
+      const group = filtered.filter(p=>p.type==='social'&&(p.postType||'')===(t));
+      if(!group.length) return;
+      const lbl = t||'No type';
+      h += `<div class="section-divider"><div class="sd-line"></div><div class="sd-lbl">${lbl}</div><div class="sd-line"></div></div>`;
+      h += group.sort((a,b)=>(a.date||'').localeCompare(b.date||'')).map(p=>cardHTML(p,{draggable:arrangeMode})).join('');
+    });
+    el.innerHTML = h || `<div class="empty-msg">No posts</div>`;
+
+  } else if(view === 'by-cat'){
+    let h = '';
+    cats.forEach(cat=>{
+      const group = filtered.filter(p=>p.cat===cat);
+      if(!group.length) return;
+      h += `<div class="section-divider"><div class="sd-line"></div><div class="sd-lbl">${cat}</div><div class="sd-line"></div></div>`;
+      h += group.sort((a,b)=>(a.date||'').localeCompare(b.date||'')).map(p=>cardHTML(p,{draggable:arrangeMode})).join('');
+    });
+    el.innerHTML = h || `<div class="empty-msg">No posts</div>`;
+
+  } else if(view === 'emails'){
+    const emails = filtered.filter(p=>p.type==='email').sort((a,b)=>(a.date||'').localeCompare(b.date||''));
+    el.innerHTML = emails.length ? emails.map(p=>cardHTML(p,{draggable:arrangeMode})).join('') : `<div class="empty-msg">No emails</div>`;
+
+  } else if(view === 'others'){
+    const others = filtered.filter(p=>p.type==='other').sort((a,b)=>(a.date||'').localeCompare(b.date||''));
+    el.innerHTML = others.length ? others.map(p=>cardHTML(p,{draggable:arrangeMode})).join('') : `<div class="empty-msg">No others</div>`;
+  }
+
+  if(arrangeMode) setupDragDrop();
+}
+
+// ── ARRANGE / DRAG ─────────────────────────────────────────────────────────
+function toggleArrange(){
+  arrangeMode = !arrangeMode;
+  const btn = document.getElementById('arrange-btn');
+  const bar = document.getElementById('arrange-bar');
+  const listEl = document.getElementById('master-list-content');
+  btn.textContent = arrangeMode ? 'Cancel' : 'Arrange';
+  btn.classList.toggle('active', arrangeMode);
+  bar.classList.toggle('visible', arrangeMode);
+  listEl.classList.toggle('arrange-mode', arrangeMode);
+  renderMasterList();
+}
+
+function doneArrange(mode){
+  if(mode === 'manual'){
+    arrangeMode = false;
+    document.getElementById('arrange-btn').textContent = 'Arrange';
+    document.getElementById('arrange-btn').classList.remove('active');
+    document.getElementById('arrange-bar').classList.remove('visible');
+    document.getElementById('master-list-content').classList.remove('arrange-mode');
+    // Save the new order
+    const cards = document.querySelectorAll('#master-list-content .card[data-id]');
+    const newOrder = Array.from(cards).map(c=>c.dataset.id);
+    const reordered = newOrder.map(id=>posts.find(p=>p.id===id)).filter(Boolean);
+    // Add back any posts not in view
+    const inView = new Set(newOrder);
+    posts.filter(p=>!inView.has(p.id)).forEach(p=>reordered.push(p));
+    posts = reordered;
+    save(); renderMasterList();
+  } else {
+    // Auto-schedule
+    openAutoSchedule();
+  }
+}
+
+// Touch drag for iOS
+let _dragSrc = null;
+function setupDragDrop(){
+  const cards = document.querySelectorAll('#master-list-content .card[data-id]');
+  cards.forEach(card=>{
+    card.addEventListener('dragstart', e=>{
+      _dragSrc = card;
+      card.classList.add('dragging');
+      e.dataTransfer.effectAllowed = 'move';
+    });
+    card.addEventListener('dragend', ()=>{
+      card.classList.remove('dragging');
+      document.querySelectorAll('.card.drag-over').forEach(c=>c.classList.remove('drag-over'));
+    });
+    card.addEventListener('dragover', e=>{
+      e.preventDefault();
+      if(card !== _dragSrc){ card.classList.add('drag-over'); }
+    });
+    card.addEventListener('dragleave', ()=>card.classList.remove('drag-over'));
+    card.addEventListener('drop', e=>{
+      e.preventDefault();
+      card.classList.remove('drag-over');
+      if(_dragSrc && _dragSrc !== card){
+        const parent = card.parentNode;
+        const allCards = [...parent.querySelectorAll('.card[data-id]')];
+        const srcIdx = allCards.indexOf(_dragSrc);
+        const tgtIdx = allCards.indexOf(card);
+        if(srcIdx < tgtIdx) parent.insertBefore(_dragSrc, card.nextSibling);
+        else parent.insertBefore(_dragSrc, card);
+      }
+    });
+    // Touch support
+    setupTouchDrag(card);
+  });
+}
+
+function setupTouchDrag(el){
+  let startY, startX, clone, origIdx;
+  const cards = ()=>[...document.querySelectorAll('#master-list-content .card[data-id]')];
+
+  el.addEventListener('touchstart', e=>{
+    if(!arrangeMode) return;
+    const t = e.touches[0];
+    startY = t.clientY; startX = t.clientX;
+    el.classList.add('dragging');
+    origIdx = cards().indexOf(el);
+  },{passive:true});
+
+  el.addEventListener('touchmove', e=>{
+    if(!arrangeMode || !el.classList.contains('dragging')) return;
+    e.preventDefault();
+    const t = e.touches[0];
+    const dy = t.clientY - startY;
+    el.style.transform = `translateY(${dy}px)`;
+    // Find target
+    const all = cards();
+    const myRect = el.getBoundingClientRect();
+    all.forEach(c=>{
+      if(c===el) return;
+      const r = c.getBoundingClientRect();
+      if(t.clientY > r.top && t.clientY < r.bottom) c.classList.add('drag-over');
+      else c.classList.remove('drag-over');
+    });
+  },{passive:false});
+
+  el.addEventListener('touchend', e=>{
+    if(!arrangeMode) return;
+    el.style.transform = '';
+    el.classList.remove('dragging');
+    const target = document.querySelector('#master-list-content .card.drag-over');
+    if(target && target !== el){
+      const parent = el.parentNode;
+      const all = [...parent.querySelectorAll('.card[data-id]')];
+      const si = all.indexOf(el), ti = all.indexOf(target);
+      target.classList.remove('drag-over');
+      if(si < ti) parent.insertBefore(el, target.nextSibling);
+      else parent.insertBefore(el, target);
+    }
+    document.querySelectorAll('.card.drag-over').forEach(c=>c.classList.remove('drag-over'));
+  },{passive:true});
+}
+
+// ── AUTO-SCHEDULE ──────────────────────────────────────────────────────────
+const SOIREE_DATE = '2027-06-12';
+const TICKETS_DATE = '2027-03-01';
+
+function openAutoSchedule(){
+  const today_str = today.toISOString().slice(0,10);
+  document.getElementById('as-start-date').value = today_str;
+  document.getElementById('as-step1').classList.add('active');
+  document.getElementById('as-step2').classList.remove('active');
+  openModal('autosched-modal');
+}
+
+function runAutoSchedule(){
+  const startStr = document.getElementById('as-start-date').value;
+  if(!startStr){ alert('Please pick a start date.'); return; }
+
+  // Gather current card order from DOM (reflects user's drag ordering)
+  const domCards = [...document.querySelectorAll('#master-list-content .card[data-id]')];
+  const orderedIds = domCards.map(c=>c.dataset.id);
+
+  // Categorize
+  const fixed = [], premar = [], flexible = [];
+  orderedIds.forEach(id=>{
+    const p = posts.find(x=>x.id===id);
+    if(!p) return;
+    if(p.dateType==='fixed') fixed.push(p);
+    else if(p.dateType==='premar1') premar.push(p);
+    else flexible.push(p);
+  });
+
+  // Schedule Pre-Mar-1 posts: spread between startStr and TICKETS_DATE
+  const preStart = new Date(startStr+"T12:00:00");
+  const preCutoff = new Date(TICKETS_DATE+"T12:00:00");
+  preCutoff.setDate(preCutoff.getDate()-1); // day before Mar 1
+  const preDates = spreadDates(preStart, preCutoff, premar.length);
+
+  // Schedule Flexible posts: spread between startStr and SOIREE_DATE
+  const flexStart = new Date(startStr+"T12:00:00");
+  const soireeDate = new Date(SOIREE_DATE+"T12:00:00");
+  const flexDates = spreadDates(flexStart, soireeDate, flexible.length);
+
+  // Build proposed schedule
+  const proposed = [];
+  fixed.forEach(p=>proposed.push({id:p.id, date:p.date, title:p.title, dateType:'fixed'}));
+  premar.forEach((p,i)=>proposed.push({id:p.id, date:preDates[i]||'', title:p.title, dateType:'premar1'}));
+  flexible.forEach((p,i)=>proposed.push({id:p.id, date:flexDates[i]||'', title:p.title, dateType:'flexible'}));
+  proposed.sort((a,b)=>(a.date||'').localeCompare(b.date||''));
+
+  pendingAutoSchedule = proposed;
+  renderMockCalendar(proposed);
+
+  document.getElementById('as-step1').classList.remove('active');
+  document.getElementById('as-step2').classList.add('active');
+}
+
+function spreadDates(startDate, endDate, count){
+  if(count === 0) return [];
+  if(count === 1){
+    const mid = new Date((startDate.getTime()+endDate.getTime())/2);
+    return [mid.toISOString().slice(0,10)];
+  }
+  const dates = [];
+  const range = endDate - startDate;
+  for(let i=0;i<count;i++){
+    const t = count===1 ? 0.5 : i/(count-1);
+    const d = new Date(startDate.getTime() + range*t);
+    dates.push(d.toISOString().slice(0,10));
+  }
+  return dates;
+}
+
+function renderMockCalendar(proposed){
+  const cal = document.getElementById('as-mock-cal');
+  if(!proposed.length){ cal.innerHTML='<div style="padding:14px;color:#aaa;font-style:italic">No posts to schedule</div>'; return; }
+  const catColors = {'Author announcement':getComputedStyle(document.documentElement).getPropertyValue('--cat-author').trim(),'General authors':'#5A7A58','Tickets':'#E8704A','Event':'#2D3561','Fun':'#C8AA88'};
+  cal.innerHTML = `<div class="mock-cal-header">Proposed Schedule</div>` +
+    proposed.map(item=>{
+      const p = posts.find(x=>x.id===item.id);
+      const bg = p ? (catColors[p.cat]||'#8BA888') : '#8BA888';
+      const ds = item.date;
+      let dateLbl = 'TBD';
+      if(ds){
+        const d = new Date(ds+"T12:00:00");
+        dateLbl = `${MONTHS[d.getMonth()].slice(0,3)} ${d.getDate()}`;
+      }
+      const fixedNote = item.dateType==='fixed' ? ' 📌' : '';
+      return `<div class="mock-cal-row">
+        <div class="mock-cal-date"><div class="mn">${ds?MONTHS[new Date(ds+"T12:00:00").getMonth()].slice(0,3):''}</div><div class="dd">${ds?new Date(ds+"T12:00:00").getDate():'-'}</div></div>
+        <div class="mock-cal-items"><div class="mock-pill" style="background:${bg}">${item.title}${fixedNote}</div></div>
+      </div>`;
+    }).join('');
+}
+
+function applyAutoSchedule(){
+  if(!pendingAutoSchedule) return;
+  pendingAutoSchedule.forEach(item=>{
+    const p = posts.find(x=>x.id===item.id);
+    if(p && item.date){ p.date = item.date; p.lastUpdated = formatUserStamp(); p.lastUpdatedBy = getCurrentUser(); }
+  });
+  pendingAutoSchedule = null;
+  arrangeMode = false;
+  document.getElementById('arrange-btn').textContent = 'Arrange';
+  document.getElementById('arrange-btn').classList.remove('active');
+  document.getElementById('arrange-bar').classList.remove('visible');
+  document.getElementById('master-list-content').classList.remove('arrange-mode');
+  save();
+  closeModal('autosched-modal');
+  renderMasterList();
+}
+
+// ── NEW / EDIT POST ────────────────────────────────────────────────────────
+let _prefillDate = null;
+
+function openNewPost(prefillDate){
+  _prefillDate = prefillDate || null;
+  editingPostId = null;
+  editingPostType = null;
+  document.getElementById('post-modal-title').textContent = 'New Post';
+  document.getElementById('pm-type-section').style.display = '';
+  document.getElementById('pm-fields').style.display = 'none';
+  document.getElementById('pm-del-btn').style.display = 'none';
+  // Reset type buttons
+  ['tp-social','tp-email','tp-other'].forEach(id=>document.getElementById(id).classList.remove('active'));
+  openModal('post-modal');
+}
+
+function selectPostType(type){
+  editingPostType = type;
+  document.getElementById('pm-type-section').style.display = 'none';
+  showPostFields(type, null);
+}
+
+function openEditPost(id){
+  const p = posts.find(x=>x.id===id);
+  if(!p) return;
+  editingPostId = id;
+  editingPostType = p.type;
+  _prefillDate = null;
+  document.getElementById('post-modal-title').textContent = 'Edit Post';
+  document.getElementById('pm-type-section').style.display = 'none';
+  document.getElementById('pm-del-btn').style.display = '';
+  showPostFields(p.type, p);
+  openModal('post-modal');
+}
+
+function openEditFromDetail(){
+  closeModal('detail-modal');
+  if(viewingPostId) openEditPost(viewingPostId);
+}
+
+function showPostFields(type, p){
+  document.getElementById('pm-fields').style.display = '';
+  // Title
+  document.getElementById('pm-title').value = p ? (p.title||'') : '';
+
+  // Date pills
+  const dateType = p ? (p.dateType||'fixed') : (_prefillDate ? 'fixed' : '');
+  const pills = document.querySelectorAll('.date-pill');
+  pills.forEach(pill=>pill.classList.remove('active'));
+  if(dateType==='fixed') document.getElementById('dp-fixed').classList.add('active');
+  else if(dateType==='flexible') document.getElementById('dp-flexible').classList.add('active');
+  else if(dateType==='premar1') document.getElementById('dp-premarx').classList.add('active');
+  const dateInput = document.getElementById('pm-date');
+  const dateWrap = document.getElementById('pm-date-input-wrap');
+  if(dateType==='fixed'){
+    dateWrap.style.display='';
+    dateInput.value = p ? (p.date||'') : (_prefillDate||'');
+    document.getElementById('pm-date-change-opt').style.display = _prefillDate ? '' : 'none';
+  } else {
+    dateWrap.style.display='none';
+  }
+
+  // Category
+  const catSection = document.getElementById('pm-cat-section');
+  catSection.style.display = type==='email' ? 'none' : '';
+  renderCatChips(p ? (p.cat||'') : '');
+
+  // Post type (Reel/Slides) — social only
+  const ptSection = document.getElementById('pm-posttype-section');
+  ptSection.style.display = type==='social' ? '' : 'none';
+  if(type==='social'){
+    const pt = p ? (p.postType||'') : '';
+    document.getElementById('pt-reel').classList.toggle('active', pt==='Reel');
+    document.getElementById('pt-slides').classList.toggle('active', pt==='Slides');
+  }
+
+  // Hashtags — social only
+  document.getElementById('pm-htag-section').style.display = type==='social' ? '' : 'none';
+  document.getElementById('pm-extra-htag-section').style.display = type==='social' ? '' : 'none';
+  if(type==='social'){
+    renderHtagDropdown();
+    document.getElementById('pm-htag').value = p ? (p.htagId||'') : '';
+    previewHtags();
+    document.getElementById('pm-extra-htags').value = p ? (p.extraHtags||'') : '';
+  }
+
+  // Purpose label
+  document.getElementById('pm-purpose-lbl').textContent = type==='email' ? 'Subject line' : 'Purpose of post';
+  document.getElementById('pm-purpose').value = p ? (p.purpose||p.subject||'') : '';
+
+  // Caption — social only
+  document.getElementById('pm-caption-section').style.display = type==='social' ? '' : 'none';
+  document.getElementById('pm-copy-section').style.display = type==='social' ? '' : 'none';
+  if(type==='social') document.getElementById('pm-caption').value = p ? (p.caption||'') : '';
+
+  // Graphic — social only
+  document.getElementById('pm-graphic-section').style.display = type==='social' ? '' : 'none';
+  if(type==='social') document.getElementById('pm-drive-link').value = p ? (p.driveLink||'') : '';
+}
+
+function renderCatChips(selected){
+  const wrap = document.getElementById('pm-cat-chips');
+  wrap.innerHTML = cats.map(cat=>
+    `<button class="cat-chip${selected===cat?' active':''}" data-cat="${cat}" onclick="selectCat('${cat}',this)">${cat}</button>`
+  ).join('') + `<button class="cat-chip" data-cat-custom onclick="promptAddCatInline()">+ Category</button>`;
+}
+
+function selectCat(cat, btn){
+  document.querySelectorAll('#pm-cat-chips .cat-chip').forEach(c=>c.classList.remove('active'));
+  btn.classList.add('active');
+}
+function getSelectedCat(){
+  const active = document.querySelector('#pm-cat-chips .cat-chip.active');
+  return active ? (active.dataset.cat||active.textContent.trim()) : '';
+}
+
+function selectDatePill(type){
+  ['dp-fixed','dp-flexible','dp-premarx'].forEach(id=>document.getElementById(id).classList.remove('active'));
+  const dateWrap = document.getElementById('pm-date-input-wrap');
+  if(type==='fixed'){
+    document.getElementById('dp-fixed').classList.add('active');
+    dateWrap.style.display='';
+    document.getElementById('pm-date-change-opt').style.display='none';
+    if(_prefillDate) document.getElementById('pm-date').value=_prefillDate;
+  } else {
+    if(type==='flexible') document.getElementById('dp-flexible').classList.add('active');
+    else document.getElementById('dp-premarx').classList.add('active');
+    dateWrap.style.display='none';
+  }
+}
+
+let _selectedPostType = '';
+function togglePostType(pt, btn){
+  if(btn.classList.contains('active')){ btn.classList.remove('active'); _selectedPostType=''; return; }
+  document.querySelectorAll('#pm-posttype-section .chip').forEach(c=>c.classList.remove('active'));
+  btn.classList.add('active');
+  _selectedPostType = pt;
+}
+function getSelectedPostType(){
+  const a = document.querySelector('#pm-posttype-section .chip.active');
+  return a ? a.textContent.trim() : (_selectedPostType||'');
+}
+
+function savePost(){
+  const title = document.getElementById('pm-title').value.trim();
+  if(!title){ alert('Please add a title.'); return; }
+
+  // Date
+  let dateType = 'flexible';
+  if(document.getElementById('dp-fixed').classList.contains('active')) dateType='fixed';
+  else if(document.getElementById('dp-premarx').classList.contains('active')) dateType='premar1';
+  const date = dateType==='fixed' ? (document.getElementById('pm-date').value||'') : '';
+
+  const type = editingPostType;
+  const purpose = document.getElementById('pm-purpose').value.trim();
+
+  const data = {
+    title,
+    dateType,
+    date,
+    type,
+    purpose: type==='email' ? '' : purpose,
+    subject: type==='email' ? purpose : '',
+    cat: type==='email' ? '' : getSelectedCat(),
+    postType: type==='social' ? getSelectedPostType() : '',
+    htagId: type==='social' ? document.getElementById('pm-htag').value : '',
+    extraHtags: type==='social' ? document.getElementById('pm-extra-htags').value.trim() : '',
+    caption: type==='social' ? document.getElementById('pm-caption').value.trim() : '',
+    driveLink: type==='social' ? document.getElementById('pm-drive-link').value.trim() : '',
+    lastUpdated: formatUserStamp(),
+    lastUpdatedBy: getCurrentUser(),
+  };
+
+  if(editingPostId){
+    const i = posts.findIndex(p=>p.id===editingPostId);
+    if(i>=0) posts[i] = {...posts[i], ...data};
+  } else {
+    posts.push({id:uid(), ...data});
+  }
+  save();
+  closeModal('post-modal');
+  renderMasterList();
+}
+
+function deletePost(){
+  if(!editingPostId) return;
+  // Two-tap iOS safe
+  const btn = document.getElementById('pm-del-btn');
+  if(!btn.classList.contains('confirming')){
+    btn.classList.add('confirming');
+    btn.textContent = 'Tap again to confirm remove';
+    btn.style.background = 'var(--coral-d)';
+    btn.style.color = 'white';
+    setTimeout(()=>{
+      btn.classList.remove('confirming');
+      btn.textContent = 'Remove Post';
+      btn.style.background='';btn.style.color='';
+    }, 3000);
+    return;
+  }
+  posts = posts.filter(p=>p.id!==editingPostId);
+  if(window._firestoreDB) deleteFromFirestore('ss_posts2', editingPostId);
+  save();
+  closeModal('post-modal');
+  renderMasterList();
+}
+
+// ── POST DETAIL ────────────────────────────────────────────────────────────
+function openDetail(id){
+  const p = posts.find(x=>x.id===id);
+  if(!p) return;
+  viewingPostId = id;
+  const isEmail = p.type==='email';
+  const isOther = p.type==='other';
+  const catLabel = isEmail ? 'Email' : isOther ? 'Other' : (p.cat||'');
+  let dateLbl = '';
+  if(p.dateType==='flexible') dateLbl='Flexible date';
+  else if(p.dateType==='premar1') dateLbl='Before Mar 1';
+  else if(p.date) dateLbl=fmtDate(p.date);
+
+  let h = `
+    <div class="detail-hero">
+      <div class="detail-cat">${catLabel}${p.postType?` · ${p.postType}`:''}</div>
+      <div class="detail-title">${p.title||'Untitled'}</div>
+      <div class="detail-date">${dateLbl}</div>
+    </div>`;
+
+  if(p.purpose||p.subject){
+    h += `<div class="detail-section"><div class="detail-lbl">${isEmail?'Subject line':'Purpose'}</div><div class="detail-text">${p.purpose||p.subject||''}</div></div>`;
+  }
+  if(p.caption){
+    const g = p.htagId ? hashtagGroups.find(x=>x.id===p.htagId) : null;
+    const allTags = [g?g.tags:'', p.extraHtags||''].filter(Boolean).join(' ');
+    h += `<div class="detail-section"><div class="detail-lbl">Caption</div><div class="detail-caption">${p.caption}</div></div>`;
+    if(allTags) h += `<div class="detail-section"><div class="detail-lbl">Hashtags</div><div class="detail-tags">${allTags}</div></div>`;
+    h += `<button class="btn-copy" onclick="copyDetailCaption('${id}')">📋 Copy Caption + Hashtags</button>`;
+  }
+  if(p.driveLink){
+    h += `<div class="detail-section"><div class="detail-lbl">Graphic / Video</div><a class="detail-drive-btn" href="${p.driveLink}" target="_blank">📁 Open in Drive ↗</a></div>`;
+  }
+  if(p.lastUpdated){
+    h += `<div style="font-size:10px;color:#aaa;font-style:italic;margin-top:8px">Last updated: ${p.lastUpdated}</div>`;
+  }
+
+  document.getElementById('detail-content').innerHTML = h;
+  openModal('detail-modal');
+}
+
+function copyDetailCaption(id){
+  const p = posts.find(x=>x.id===id); if(!p) return;
+  const g = p.htagId ? hashtagGroups.find(x=>x.id===p.htagId) : null;
+  const tags = [g?g.tags:'', p.extraHtags||''].filter(Boolean).join(' ');
+  const full = [p.caption||'', tags].filter(Boolean).join('\n\n');
+  if(!full){ return; }
+  navigator.clipboard.writeText(full).then(()=>{
+    const btn = document.querySelector('#detail-content .btn-copy');
+    if(btn){ const orig=btn.textContent; btn.textContent='✅ Copied!'; setTimeout(()=>btn.textContent=orig,2000); }
+  }).catch(()=>{
+    const ta=document.createElement('textarea');ta.value=full;document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);
+  });
+}
+
+// ── HASHTAGS ───────────────────────────────────────────────────────────────
+function renderHtagDropdown(){
+  const sel = document.getElementById('pm-htag');
+  sel.innerHTML = `<option value="">— No hashtag group —</option>` +
+    hashtagGroups.map(g=>`<option value="${g.id}">${g.name}</option>`).join('');
+}
+function previewHtags(){
+  const id = document.getElementById('pm-htag').value;
+  const g = hashtagGroups.find(x=>x.id===id);
+  document.getElementById('pm-htag-preview').textContent = g ? g.tags : '';
+}
+function copyCaption(){
+  const caption = document.getElementById('pm-caption').value;
+  const htagId = document.getElementById('pm-htag').value;
+  const extra = document.getElementById('pm-extra-htags').value;
+  const g = hashtagGroups.find(x=>x.id===htagId);
+  const tags = [g?g.tags:'', extra].filter(Boolean).join(' ');
+  const full = [caption, tags].filter(Boolean).join('\n\n');
+  if(!full){ return; }
+  navigator.clipboard.writeText(full).then(()=>{
+    const btn = document.querySelector("button[onclick='copyCaption()']");
+    if(btn){ const o=btn.textContent; btn.textContent='✅ Copied!'; setTimeout(()=>btn.textContent=o,2000); }
+  }).catch(()=>{ const ta=document.createElement('textarea');ta.value=full;document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta); });
+}
+
+// ── COUNTDOWN ─────────────────────────────────────────────────────────────
+function openAddCountdown(){
+  editingCdId = null;
+  document.getElementById('cd-modal-title').textContent = 'Add Countdown';
+  document.getElementById('cd-label').value = '';
+  document.getElementById('cd-date').value = '';
+  document.getElementById('cd-color').value = '#2D3561';
+  document.getElementById('cd-del-btn').style.display = 'none';
+  openModal('cd-modal');
+}
+function openEditCountdown(id){
+  const cd = countdowns.find(c=>c.id===id); if(!cd) return;
+  editingCdId = id;
+  document.getElementById('cd-modal-title').textContent = 'Edit Countdown';
+  document.getElementById('cd-label').value = cd.label;
+  document.getElementById('cd-date').value = cd.date;
+  document.getElementById('cd-color').value = cd.color;
+  document.getElementById('cd-del-btn').style.display = '';
+  openModal('cd-modal');
+}
+function saveCountdown(){
+  const d = {label:document.getElementById('cd-label').value, date:document.getElementById('cd-date').value, color:document.getElementById('cd-color').value};
+  if(!d.label||!d.date) return;
+  if(editingCdId){ const i=countdowns.findIndex(c=>c.id===editingCdId); countdowns[i]={...countdowns[i],...d}; }
+  else countdowns.push({...d, id:uid()});
+  save(); closeModal('cd-modal'); renderCountdowns(); renderSettingsPage();
+}
+function deleteCountdown(){
+  const btn = document.getElementById('cd-del-btn');
+  if(!btn.classList.contains('confirming')){
+    btn.classList.add('confirming'); btn.textContent='Tap again to confirm';
+    setTimeout(()=>{btn.classList.remove('confirming');btn.textContent='Remove';},3000); return;
+  }
+  countdowns = countdowns.filter(c=>c.id!==editingCdId);
+  if(window._firestoreDB) deleteFromFirestore('ss_cds2', editingCdId);
+  save(); closeModal('cd-modal'); renderCountdowns(); renderSettingsPage();
+}
+
+// ── CATEGORIES ─────────────────────────────────────────────────────────────
+function promptAddCat(){
+  const name = prompt('New category name:');
+  if(!name||!name.trim()) return;
+  const n = name.trim();
+  if(!cats.includes(n)) cats.push(n);
+  localStorage.setItem('ss_cats2', JSON.stringify(cats));
+  renderCatFilters(); renderSettingsPage();
+}
+function promptAddCatInline(){
+  const name = prompt('New category name:');
+  if(!name||!name.trim()) return;
+  const n = name.trim();
+  if(!cats.includes(n)) cats.push(n);
+  localStorage.setItem('ss_cats2', JSON.stringify(cats));
+  renderCatFilters();
+  const selected = document.querySelector('#pm-cat-chips .cat-chip.active')?.dataset.cat||'';
+  renderCatChips(selected);
+}
+
+// ── HASHTAG SETTINGS ───────────────────────────────────────────────────────
+function renderHtagSettings(){
+  const el = document.getElementById('htag-settings-list'); if(!el) return;
+  el.innerHTML = hashtagGroups.map((g,i)=>`
+    <div style="padding:12px 14px;border-bottom:1px solid var(--cream-d)">
+      <div style="display:flex;gap:8px;margin-bottom:8px">
+        <input class="ef-input" style="flex:1;font-size:13px;font-weight:500" value="${g.name}" onchange="hashtagGroups[${i}].name=this.value;localStorage.setItem('ss_htags2',JSON.stringify(hashtagGroups))">
+        <button class="si-btn del" onclick="deleteHtagGroup('${g.id}')">✕</button>
+      </div>
+      <textarea class="ef-textarea" style="font-size:11px;min-height:60px;line-height:1.6" onchange="hashtagGroups[${i}].tags=this.value;localStorage.setItem('ss_htags2',JSON.stringify(hashtagGroups))">${g.tags}</textarea>
+      <div style="font-size:10px;color:#aaa;margin-top:4px">${g.tags.split(' ').filter(t=>t.startsWith('#')).length} hashtags</div>
+    </div>`).join('') + `<div style="padding:12px 14px"><button class="btn-save" onclick="addHtagGroup()" style="margin-top:0">+ New Group</button></div>`;
+}
+function addHtagGroup(){
+  hashtagGroups.push({id:'h'+Date.now(), name:'New Group', tags:''});
+  localStorage.setItem('ss_htags2', JSON.stringify(hashtagGroups));
+  renderHtagSettings();
+}
+function deleteHtagGroup(id){
+  const btn = event.target;
+  if(!btn.classList.contains('confirming')){ btn.classList.add('confirming'); btn.textContent='Sure?'; setTimeout(()=>{btn.classList.remove('confirming');btn.textContent='✕';},3000); return; }
+  hashtagGroups = hashtagGroups.filter(g=>g.id!==id);
+  localStorage.setItem('ss_htags2', JSON.stringify(hashtagGroups));
+  renderHtagSettings();
+}
+
+// ── SETTINGS PAGE ──────────────────────────────────────────────────────────
+function renderSettingsPage(){
+  // Countdowns
+  document.getElementById('cd-settings-list').innerHTML = countdowns.map(cd=>`
+    <div class="settings-item">
+      <div><div class="si-label">${cd.label}</div><div class="si-sub">${cd.date}</div></div>
+      <div class="si-actions">
+        <button class="si-btn" onclick="openEditCountdown('${cd.id}')">Edit</button>
+        <button class="si-btn del" onclick="removeCDFromSettings('${cd.id}')">✕</button>
+      </div>
+    </div>`).join('');
+  // Categories
+  document.getElementById('cat-settings-list').innerHTML = cats.map((cat,i)=>`
+    <div class="settings-item">
+      <div class="si-label">${cat}</div>
+      <div class="si-actions">
+        <button class="si-btn del" onclick="removeCat(${i})">Remove</button>
+      </div>
+    </div>`).join('') || `<div style="padding:14px;color:#bbb;font-style:italic;font-size:12px">No categories</div>`;
+  renderHtagSettings();
+}
+function removeCDFromSettings(id){
+  countdowns = countdowns.filter(c=>c.id!==id);
+  if(window._firestoreDB) deleteFromFirestore('ss_cds2', id);
+  save(); renderCountdowns(); renderSettingsPage();
+}
+function removeCat(i){
+  cats.splice(i,1);
+  localStorage.setItem('ss_cats2', JSON.stringify(cats));
+  renderCatFilters(); renderSettingsPage();
+}
+
+function confirmReset(){
+  const btn = document.querySelector(".btn-ghost[onclick='confirmReset()']");
+  if(!btn.classList.contains('confirming')){
+    btn.classList.add('confirming'); btn.textContent='Tap again to reset ALL data';
+    btn.style.background='var(--coral-d)';btn.style.color='white';btn.style.border='none';
+    setTimeout(()=>{btn.classList.remove('confirming');btn.textContent='Reset to defaults';btn.style.background='';btn.style.color='';btn.style.border='';},4000);
+    return;
+  }
+  ['ss_p2','ss_c2','ss_cats2','ss_htags2'].forEach(k=>localStorage.removeItem(k));
+  location.reload();
+}
+
+// ── NAV ────────────────────────────────────────────────────────────────────
+function switchNav(nav){
+  document.querySelectorAll('.nav-item[data-nav]').forEach(n=>{
+    n.classList.toggle('active', n.dataset.nav===nav);
+  });
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById('filter-bar').style.display = nav==='list' ? '' : 'none';
+  if(nav==='list'){
+    document.getElementById('page-list').classList.add('active');
+    renderMasterList();
+  } else {
+    document.getElementById('page-settings').classList.add('active');
+    renderSettingsPage();
+  }
+}
+
+// ── MODAL HELPERS ──────────────────────────────────────────────────────────
+function openModal(id){ document.getElementById(id).classList.add('open'); }
+function closeModal(id){ document.getElementById(id).classList.remove('open'); }
+document.querySelectorAll('.modal-ov').forEach(ov=>{
+  ov.addEventListener('click', e=>{ if(e.target===ov) ov.classList.remove('open'); });
+});
+
+// ── RENDER ALL ─────────────────────────────────────────────────────────────
+function renderAll(){
+  renderCountdowns();
+  renderCatFilters();
+  renderMasterList();
+}
+
+// ── INIT ───────────────────────────────────────────────────────────────────
+load();
+renderAll();
+</script>
+
+<script>
+// ── SERVICE WORKER ────────────────────────────────────────────────────────
+if('serviceWorker' in navigator){
+  window.addEventListener('load', ()=>{
+    navigator.serviceWorker.register('./sw.js', {scope:'./'})
+      .then(reg=>console.log('SW:', reg.scope))
+      .catch(err=>console.warn('SW failed:', err));
+  });
+}
+// URL shortcut: ?action=newpost
+window.addEventListener('load', ()=>{
+  const action = new URLSearchParams(window.location.search).get('action');
+  if(action==='newpost') setTimeout(()=>openNewPost(null), 800);
+});
+</script>
+</body>
+</html>

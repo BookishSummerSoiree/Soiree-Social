@@ -1,0 +1,36 @@
+{
+  "name": "Soiree Social",
+  "short_name": "Soiree Social",
+  "description": "Bookish Summer Soirée 2027 — social media & email planning hub for Nik and Hill.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#2D3561",
+  "theme_color": "#2D3561",
+  "categories": ["productivity", "lifestyle"],
+  "icons": [
+    {
+      "src": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1MTIgNTEyIj4KICA8Y2lyY2xlIGN4PSIyNTYiIGN5PSIyNTYiIHI9IjI1NiIgZmlsbD0iIzJEMzU2MSIvPgogIDxwYXRoIGQ9Ik0xMjAgMzAwIFExNzAgMjYwIDIyMCAzMDAgUTI3MCAzNDAgMzIwIDMwMCBRMzcwIDI2MCA0MDAgMjg1IiBzdHJva2U9IiNFODcwNEEiIHN0cm9rZS13aWR0aD0iMTgiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgZmlsbD0ibm9uZSIvPgogIDxwYXRoIGQ9Ik0xMDAgMzQwIFExNTAgMzAwIDIwMCAzNDAgUTI1MCAzODAgMzAwIDM0MCBRMzUwIDMwMCA0MTAgMzI1IiBzdHJva2U9IiNFODcwNEEiIHN0cm9rZS13aWR0aD0iMTQiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgZmlsbD0ibm9uZSIgb3BhY2l0eT0iLjYiLz4KICA8dGV4dCB4PSIyNTYiIHk9IjIxMCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1mYW1pbHk9Ikdlb3JnaWEsc2VyaWYiIGZvbnQtc2l6ZT0iOTAiIGZvbnQtd2VpZ2h0PSJib2xkIiBmaWxsPSIjZmZmIiBsZXR0ZXItc3BhY2luZz0iLTIiPkJTUzwvdGV4dD4KICA8dGV4dCB4PSIyNTYiIHk9IjI0NSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1mYW1pbHk9Ikdlb3JnaWEsc2VyaWYiIGZvbnQtc2l6ZT0iMjYiIGZpbGw9IiNDOEQ5QzYiIGxldHRlci1zcGFjaW5nPSIyIj4yMDI3PC90ZXh0Pgo8L3N2Zz4=",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "7 Day Check-Up",
+      "short_name": "Check-Up",
+      "description": "See what needs attention this week",
+      "url": "./?action=checkin",
+      "icons": [{ "src": "data:image/png;base64,iVBORw0KGgo=", "sizes": "96x96" }]
+    },
+    {
+      "name": "Add New Post",
+      "short_name": "New Post",
+      "description": "Add a new social media post",
+      "url": "./?action=newpost",
+      "icons": [{ "src": "data:image/png;base64,iVBORw0KGgo=", "sizes": "96x96" }]
+    }
+  ]
+}
