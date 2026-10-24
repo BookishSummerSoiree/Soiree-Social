@@ -154,14 +154,22 @@ mark.hit{background:#F6E2A6;color:inherit;border-radius:2px;padding:0 1px}
 .arrange-mode .card-tap{pointer-events:none}
 
 /* Arrange overlay bar */
-.arrange-bar{background:var(--cream-d);border-radius:10px;padding:6px 8px 6px 12px;margin-bottom:8px;display:none;align-items:center;gap:6px;flex-wrap:wrap}
-.arrange-bar.visible{display:flex}
-.arrange-bar-title{font-family:var(--fd);font-size:13px;font-style:italic;color:var(--navy);margin-right:auto}
-.arrange-pills{display:flex;gap:5px}
-.arrange-note{flex-basis:100%;font-size:9.5px;color:#888;line-height:1.3}
-.arrange-pill{border:none;border-radius:14px;padding:5px 10px;font-family:var(--fb);font-size:10.5px;font-weight:500;cursor:pointer;white-space:nowrap}
-.arrange-pill.manual{background:var(--sage-l);color:var(--sage-d)}
-.arrange-pill.auto{background:var(--navy);color:var(--white)}
+.arrange-bar{background:var(--cream-d);border-radius:12px;padding:10px;margin-bottom:8px;display:none}
+.arrange-bar.visible{display:block}
+.arrange-q{font-family:var(--fd);font-size:15px;font-style:italic;color:var(--navy);margin:0 2px 8px}
+.arrange-choices{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.arrange-choice{border:1px solid var(--gray);background:var(--white);border-radius:12px;padding:10px;text-align:left;cursor:pointer;font-family:var(--fb);color:var(--black);display:flex;flex-direction:column;gap:3px}
+.arrange-choice b{font-size:12px;font-weight:600;color:var(--navy);line-height:1.3}
+.arrange-choice span{font-size:10px;color:#888;line-height:1.35}
+.arrange-choice:hover{border-color:var(--navy)}
+.arrange-choice.shuffle b{color:var(--sage-d)}
+.arrange-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.arrange-row .arrange-q{margin:0 auto 0 2px}
+.arrange-done{border:none;border-radius:16px;padding:8px 14px;background:var(--navy);color:var(--white);font-family:var(--fb);font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap}
+.arrange-note{font-size:10px;color:#888;line-height:1.35;margin:8px 2px 0}
+.arrange-note button{background:none;border:none;padding:0;color:var(--navy);text-decoration:underline;font:inherit;cursor:pointer}
+.toast{position:fixed;left:50%;bottom:calc(84px + env(safe-area-inset-bottom));transform:translateX(-50%);background:var(--navy);color:var(--white);font-family:var(--fb);font-size:12px;padding:10px 14px;border-radius:12px;box-shadow:0 6px 20px rgba(0,0,0,.2);z-index:400;display:flex;gap:12px;align-items:center;max-width:calc(100% - 32px)}
+.toast button{background:none;border:none;color:var(--coral-l);font-family:var(--fb);font-size:12px;font-weight:600;cursor:pointer;padding:0}
 
 /* ── MODALS ── */
 .modal-ov{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:200;display:flex;align-items:flex-end;opacity:0;pointer-events:none;transition:opacity .25s}
@@ -375,14 +383,7 @@ mark.hit{background:#F6E2A6;color:inherit;border-radius:2px;padding:0 1px}
   <!-- Master List page -->
   <div class="page active" id="page-list">
     <!-- Arrange bar -->
-    <div class="arrange-bar" id="arrange-bar">
-      <div class="arrange-bar-title">Drag to reorder, or</div>
-      <div class="arrange-pills">
-        <button class="arrange-pill manual" onclick="shuffleAndPreview()">🔀 Shuffle for me</button>
-        <button class="arrange-pill auto" onclick="arrangeDone()">Done ✓</button>
-      </div>
-      <div class="arrange-note">Shuffling mixes up the categories. Anything that already has a date stays put.</div>
-    </div>
+    <div class="arrange-bar" id="arrange-bar"></div>
     <div id="master-list-content"></div>
   </div>
 
@@ -572,20 +573,6 @@ mark.hit{background:#F6E2A6;color:inherit;border-radius:2px;padding:0 1px}
 </div>
 
 <!-- Auto-Schedule Modal -->
-<div class="modal-ov" id="arrange-confirm">
-  <div class="modal" style="padding-bottom:28px">
-    <div class="modal-handle"></div>
-    <div class="modal-title" style="margin-bottom:10px">Schedule them?</div>
-    <p style="font-size:13px;color:#555;line-height:1.5;margin-bottom:6px">Do you want me to space out and schedule the posts in this order?</p>
-    <p style="font-size:11px;color:#999;line-height:1.4;margin-bottom:4px">Posts that already have a date stay put. Pre Mar 1 posts land before March 1 and Post Mar 1 posts land after it.</p>
-    <div style="display:flex;gap:8px">
-      <button class="btn-ghost" style="flex:1" onclick="closeModal('arrange-confirm')">No, keep editing</button>
-      <button class="btn-navy" style="flex:1" onclick="closeModal('arrange-confirm');openAutoSchedule('order')">Yes, schedule them</button>
-    </div>
-    <button class="link-btn" onclick="closeModal('arrange-confirm');saveArrangeOrder(true)">Just save this order. I'll set the dates myself.</button>
-  </div>
-</div>
-
 <!-- Auto-Schedule preview -->
 <div class="modal-ov" id="autosched-modal">
   <div class="modal">
@@ -606,7 +593,7 @@ mark.hit{background:#F6E2A6;color:inherit;border-radius:2px;padding:0 1px}
     <div class="mock-cal" id="as-mock-cal"></div>
     <button class="btn-ghost" id="as-reshuffle" style="margin-top:0;margin-bottom:8px" onclick="shuffleAndPreview(true)">🔀 Shuffle again</button>
     <div style="display:flex;gap:8px">
-      <button class="btn-ghost" style="flex:1;margin-top:0" onclick="closeModal('autosched-modal')" id="as-cancel">Cancel</button>
+      <button class="btn-ghost" style="flex:1;margin-top:0" onclick="closeModal('autosched-modal'); if(_asMode==='shuffle') setArrangeStage('manual');" id="as-cancel">Cancel</button>
       <button class="btn-navy" style="flex:1;margin-top:0" onclick="applyAutoSchedule()">Use This Schedule ✓</button>
     </div>
   </div>
@@ -1206,7 +1193,7 @@ function renderMasterList(){
   if(view === 'unposted'){
     // Unscheduled = social posts with no date yet, in your arranged order
     const list = filtered.filter(p=>p.type==='social' && !p.date);
-    el.innerHTML = list.length ? list.map(p=>cardHTML(p, {draggable:arrangeMode})).join('')
+    el.innerHTML = list.length ? list.map(p=>cardHTML(p, {draggable:canDrag()})).join('')
                                : `<div class="empty-msg">Nothing unscheduled. Every post has a date.</div>`;
 
   } else if(view === 'scheduled'){
@@ -1214,10 +1201,10 @@ function renderMasterList(){
     const dated = filtered.filter(p=>p.type==='social' && p.date).sort((a,b)=>a.date.localeCompare(b.date));
     const upcoming = dated.filter(p=>new Date(p.date+"T12:00:00") >= today);
     const past = dated.filter(p=>new Date(p.date+"T12:00:00") < today);
-    let h = upcoming.map(p=>cardHTML(p, {draggable:arrangeMode})).join('');
+    let h = upcoming.map(p=>cardHTML(p, {draggable:canDrag()})).join('');
     if(past.length){
       h += `<div class="section-divider"><div class="sd-line"></div><div class="sd-lbl">Past</div><div class="sd-line"></div></div>`;
-      h += past.map(p=>cardHTML(p, {draggable:arrangeMode})).join('');
+      h += past.map(p=>cardHTML(p, {draggable:canDrag()})).join('');
     }
     el.innerHTML = h || `<div class="empty-msg">Nothing scheduled yet</div>`;
 
@@ -1230,7 +1217,7 @@ function renderMasterList(){
       if(aD!=='0000'&&bD==='0000') return 1;
       return aD.localeCompare(bD);
     });
-    el.innerHTML = sorted.length ? sorted.map(p=>cardHTML(p,{draggable:arrangeMode})).join('') : `<div class="empty-msg">Nothing here</div>`;
+    el.innerHTML = sorted.length ? sorted.map(p=>cardHTML(p,{draggable:canDrag()})).join('') : `<div class="empty-msg">Nothing here</div>`;
 
   } else if(view === 'all-posts'){
     const social = filtered.filter(p=>p.type==='social');
@@ -1239,11 +1226,11 @@ function renderMasterList(){
     let h = '';
     if(past.length){
       h += `<div class="section-divider"><div class="sd-line"></div><div class="sd-lbl">Past</div><div class="sd-line"></div></div>`;
-      h += past.map(p=>cardHTML(p,{draggable:arrangeMode})).join('');
+      h += past.map(p=>cardHTML(p,{draggable:canDrag()})).join('');
     }
     if(upcoming.length){
       h += `<div class="section-divider"><div class="sd-line"></div><div class="sd-lbl">Upcoming</div><div class="sd-line"></div></div>`;
-      h += upcoming.map(p=>cardHTML(p,{draggable:arrangeMode})).join('');
+      h += upcoming.map(p=>cardHTML(p,{draggable:canDrag()})).join('');
     }
     if(!h) h = `<div class="empty-msg">No posts yet</div>`;
     el.innerHTML = h;
@@ -1256,7 +1243,7 @@ function renderMasterList(){
       if(!group.length) return;
       const lbl = t||'No type';
       h += `<div class="section-divider"><div class="sd-line"></div><div class="sd-lbl">${lbl}</div><div class="sd-line"></div></div>`;
-      h += group.sort((a,b)=>(a.date||'').localeCompare(b.date||'')).map(p=>cardHTML(p,{draggable:arrangeMode})).join('');
+      h += group.sort((a,b)=>(a.date||'').localeCompare(b.date||'')).map(p=>cardHTML(p,{draggable:canDrag()})).join('');
     });
     el.innerHTML = h || `<div class="empty-msg">No posts</div>`;
 
@@ -1266,21 +1253,21 @@ function renderMasterList(){
       const group = filtered.filter(p=>p.cat===cat);
       if(!group.length) return;
       h += `<div class="section-divider"><div class="sd-line"></div><div class="sd-lbl">${cat}</div><div class="sd-line"></div></div>`;
-      h += group.sort((a,b)=>(a.date||'').localeCompare(b.date||'')).map(p=>cardHTML(p,{draggable:arrangeMode})).join('');
+      h += group.sort((a,b)=>(a.date||'').localeCompare(b.date||'')).map(p=>cardHTML(p,{draggable:canDrag()})).join('');
     });
     el.innerHTML = h || `<div class="empty-msg">No posts</div>`;
 
   } else if(view === 'emails'){
     const emails = filtered.filter(p=>p.type==='email').sort((a,b)=>(a.date||'').localeCompare(b.date||''));
-    el.innerHTML = emails.length ? emails.map(p=>cardHTML(p,{draggable:arrangeMode})).join('') : `<div class="empty-msg">No emails</div>`;
+    el.innerHTML = emails.length ? emails.map(p=>cardHTML(p,{draggable:canDrag()})).join('') : `<div class="empty-msg">No emails</div>`;
 
   } else if(view === 'others'){
     const others = filtered.filter(p=>p.type==='other').sort((a,b)=>(a.date||'').localeCompare(b.date||''));
-    el.innerHTML = others.length ? others.map(p=>cardHTML(p,{draggable:arrangeMode})).join('') : `<div class="empty-msg">No others</div>`;
+    el.innerHTML = others.length ? others.map(p=>cardHTML(p,{draggable:canDrag()})).join('') : `<div class="empty-msg">No others</div>`;
   }
 
   if(view === 'calendar') renderCalendarView();
-  else if(arrangeMode) setupDragDrop();
+  else if(canDrag()) setupDragDrop();
 }
 
 // ── CALENDAR VIEW ──────────────────────────────────────────────────────────
@@ -1383,24 +1370,76 @@ function calDayTap(ds){
 }
 
 // ── ARRANGE / DRAG ─────────────────────────────────────────────────────────
+// Arrange has two steps: first you pick how ('choose'), then for your own order you drag ('manual').
+let arrangeStage = 'choose';
+const canDrag = ()=> arrangeMode && arrangeStage === 'manual';
 function toggleArrange(){
-  arrangeMode = !arrangeMode;
+  if(arrangeMode){ exitArrangeMode(); renderMasterList(); return; }
+  arrangeMode = true; arrangeStage = 'choose';
+  syncArrangeUI(); renderMasterList();
+}
+function setArrangeStage(stage){
+  if(stage === 'manual') applyScreenOrder();   // keep whatever order is on screen (e.g. after a shuffle)
+  arrangeStage = stage; syncArrangeUI(); renderMasterList();
+}
+function syncArrangeUI(){
   const btn = document.getElementById('arrange-btn');
-  const bar = document.getElementById('arrange-bar');
-  const listEl = document.getElementById('master-list-content');
   btn.textContent = arrangeMode ? 'Cancel' : 'Arrange';
   btn.classList.toggle('active', arrangeMode);
-  bar.classList.toggle('visible', arrangeMode);
-  listEl.classList.toggle('arrange-mode', arrangeMode);
-  renderMasterList();
+  document.getElementById('arrange-bar').classList.toggle('visible', arrangeMode);
+  document.getElementById('master-list-content').classList.toggle('arrange-mode', canDrag());
+  renderArrangeBar();
 }
-
+function renderArrangeBar(){
+  const bar = document.getElementById('arrange-bar');
+  if(!arrangeMode){ bar.innerHTML = ''; return; }
+  if(arrangeStage === 'choose'){
+    bar.innerHTML = `
+      <div class="arrange-q">How do you want to schedule these?</div>
+      <div class="arrange-choices">
+        <button class="arrange-choice" onclick="setArrangeStage('manual')">
+          <b>✋ I'll arrange the posts in the order I want, then you space them out</b>
+          <span>Drag them into order, then tap "I'm done arranging them."</span>
+        </button>
+        <button class="arrange-choice shuffle" onclick="shuffleAndPreview()">
+          <b>🔀 Please shuffle the posts and space them out for me</b>
+          <span>You'll see the calendar first, before anything is scheduled.</span>
+        </button>
+      </div>
+      <div class="arrange-note">Posts that already have a date never move. Author Intros land by Jan 31, Pre Mar 1 posts before March 1, Post Mar 1 posts after it.</div>`;
+  } else {
+    bar.innerHTML = `
+      <div class="arrange-row">
+        <div class="arrange-q">Drag the posts into the order you want.</div>
+        <button class="arrange-done" onclick="doneArranging()">✓ I'm done arranging them</button>
+      </div>
+      <div class="arrange-note">When you tap done, I'll space them out and schedule them in this order, starting today.
+        <button onclick="setArrangeStage('choose')">Back</button> ·
+        <button onclick="saveArrangeOrder(true)">Just save the order, no dates</button></div>`;
+  }
+}
 function exitArrangeMode(){
-  arrangeMode = false;
-  document.getElementById('arrange-btn').textContent = 'Arrange';
-  document.getElementById('arrange-btn').classList.remove('active');
-  document.getElementById('arrange-bar').classList.remove('visible');
-  document.getElementById('master-list-content').classList.remove('arrange-mode');
+  arrangeMode = false; arrangeStage = 'choose';
+  syncArrangeUI();
+}
+// "I'm done arranging them": space out and schedule in the order on screen, straight away.
+function doneArranging(){
+  const before = JSON.parse(JSON.stringify(posts));
+  document.getElementById('as-start-date').value = today.toISOString().slice(0,10);
+  runAutoSchedule();
+  const n = (pendingAutoSchedule||[]).filter(i=>i.date && !i.kept).length;
+  if(!n){ pendingAutoSchedule = null; alert('There are no unscheduled posts here to space out.'); return; }
+  applyAutoSchedule();
+  showToast(`Scheduled ${n} post${n===1?'':'s'} in your order.`, 'Undo', ()=>{ posts = before; save(); renderAll(); });
+}
+let _toastTimer = null;
+function showToast(msg, actionLabel, action){
+  document.querySelectorAll('.toast').forEach(t=>t.remove());
+  const t = document.createElement('div'); t.className = 'toast';
+  t.innerHTML = `<span>${esc(msg)}</span>` + (actionLabel ? `<button>${esc(actionLabel)}</button>` : '');
+  if(actionLabel) t.querySelector('button').onclick = ()=>{ t.remove(); action(); };
+  document.body.appendChild(t);
+  clearTimeout(_toastTimer); _toastTimer = setTimeout(()=>t.remove(), 8000);
 }
 // Put the posts array in the order shown on screen (posts not on screen keep their place at the end)
 function applyScreenOrder(){
@@ -1413,7 +1452,6 @@ function saveArrangeOrder(leave){
   if(leave) exitArrangeMode();
   save(); renderMasterList();
 }
-function arrangeDone(){ openModal('arrange-confirm'); }
 
 // Shuffle: spread each category evenly so the same kind of post isn't bunched up.
 // Only posts with no date move. Pre Mar 1 ideas go first, then Flexible, then Post Mar 1,
@@ -1530,8 +1568,8 @@ function setupDragDrop(){
   const list = document.getElementById('master-list-content');
   if(!list._dndBound){
     list._dndBound = true;
-    list.addEventListener('dragover', e=>{ if(!arrangeMode||!_dragSrc) return; e.preventDefault(); _showDropLine(e.clientY); });
-    list.addEventListener('drop', e=>{ if(!arrangeMode||!_dragSrc) return; e.preventDefault(); _dropAtLine(); });
+    list.addEventListener('dragover', e=>{ if(!canDrag()||!_dragSrc) return; e.preventDefault(); _showDropLine(e.clientY); });
+    list.addEventListener('drop', e=>{ if(!canDrag()||!_dragSrc) return; e.preventDefault(); _dropAtLine(); });
   }
   _listCards().forEach(card=>{
     card.addEventListener('dragstart', e=>{
@@ -1551,14 +1589,14 @@ function setupDragDrop(){
 function setupTouchDrag(el){
   let startY;
   el.addEventListener('touchstart', e=>{
-    if(!arrangeMode) return;
+    if(!canDrag()) return;
     startY = e.touches[0].clientY;
     _dragSrc = el;
     el.classList.add('dragging');
   },{passive:true});
 
   el.addEventListener('touchmove', e=>{
-    if(!arrangeMode || _dragSrc!==el) return;
+    if(!canDrag() || _dragSrc!==el) return;
     e.preventDefault();
     const y = e.touches[0].clientY;
     el.style.transform = `translateY(${y - startY}px)`;
@@ -1593,7 +1631,7 @@ function openAutoSchedule(mode){
     ? "I mixed up the order so the categories are spread out, then spaced them out from your start date. Posts that already have a date didn't move."
     : "Here's your order, spaced out from your start date. Posts that already have a date didn't move.";
   document.getElementById('as-reshuffle').style.display = _asMode==='shuffle' ? '' : 'none';
-  document.getElementById('as-cancel').textContent = _asMode==='shuffle' ? 'Back to editing' : 'Cancel';
+  document.getElementById('as-cancel').textContent = _asMode==='shuffle' ? 'Let me adjust the order' : 'Cancel';
   runAutoSchedule();
   openModal('autosched-modal');
 }
