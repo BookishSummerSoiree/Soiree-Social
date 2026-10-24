@@ -173,6 +173,11 @@ body{font-family:var(--fb);background:var(--cream);color:var(--black);min-height
 .date-pills{display:flex;gap:6px;flex-wrap:wrap}
 .date-pill{flex:1;min-width:90px;border:1px solid var(--gray);background:var(--white);font-family:var(--fb);font-size:11px;font-weight:500;padding:9px 8px;border-radius:10px;cursor:pointer;color:#555;transition:all .15s;text-align:center}
 .date-pill.active{background:var(--navy);border-color:var(--navy);color:var(--white)}
+.pm-date-lbl{font-size:10px;color:#888;margin-bottom:4px}
+.pm-date-row{display:flex;gap:6px;align-items:center}
+.pm-date-row .ef-input{flex:1;min-width:0}
+.unsched-btn{flex-shrink:0;border:1px solid var(--gray);background:var(--white);color:var(--coral-d);font-family:var(--fb);font-size:11px;font-weight:500;padding:8px 10px;border-radius:10px;cursor:pointer;white-space:nowrap}
+.pm-date-hint{font-size:10px;color:#999;margin-top:4px;line-height:1.4}
 
 /* Type picker */
 .type-pick-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:4px}
@@ -304,7 +309,7 @@ body{font-family:var(--fb);background:var(--cream);color:var(--black);min-height
   </div>
   <div class="filter-group" id="listview-row">
     <span class="fg-lbl">Show</span>
-    <button class="chip c-lv" data-lv="unposted" onclick="setListView('unposted')">Unposted</button>
+    <button class="chip c-lv" data-lv="unposted" onclick="setListView('unposted')">Unscheduled</button>
     <button class="chip c-lv" data-lv="all-tasks" onclick="setListView('all-tasks')">All Tasks</button>
     <button class="chip c-lv" data-lv="all-posts" onclick="setListView('all-posts')">All Posts</button>
     <button class="chip c-lv" data-lv="by-type" onclick="setListView('by-type')">By Post Type</button>
@@ -417,11 +422,14 @@ body{font-family:var(--fb);background:var(--cream);color:var(--black);min-height
           <button class="date-pill" id="dp-flexible" onclick="selectDatePill('flexible')">🔄 Flexible</button>
           <button class="date-pill" id="dp-premarx" onclick="selectDatePill('premar1')">🎟️ Pre Mar 1</button>
         </div>
-        <div id="pm-date-input-wrap" style="margin-top:8px;display:none">
-          <input class="ef-input" id="pm-date" type="date">
-          <div id="pm-date-change-opt" style="margin-top:5px;display:none">
-            <button class="chip" onclick="selectDatePill('flexible')" style="font-size:10px">Pick a different scheduling option</button>
+        <div id="pm-date-input-wrap" style="margin-top:8px">
+          <div class="pm-date-lbl" id="pm-date-sublbl">Post on</div>
+          <div class="pm-date-row">
+            <input class="ef-input" id="pm-date" type="date" oninput="syncUnschedBtn()">
+            <button type="button" class="unsched-btn" id="pm-unsched" onclick="clearPostDate()">✕ Remove date</button>
           </div>
+          <div class="pm-date-hint" id="pm-date-hint"></div>
+          <div id="pm-date-change-opt" style="display:none"></div>
         </div>
       </div>
       <!-- Category (social/other only) -->
@@ -899,16 +907,16 @@ function renderMasterList(){
 
   if(view === 'unposted'){
     // Default: unscheduled first, then a divider, then scheduled chronologically
-    const unscheduled = filtered.filter(p=>p.dateType!=='fixed'||(p.dateType==='fixed'&&!p.date));
-    const unscheduledFlexOrPremar = filtered.filter(p=>p.dateType==='flexible'||p.dateType==='premar1');
-    const scheduled = filtered.filter(p=>p.dateType==='fixed'&&p.date).sort((a,b)=>a.date.localeCompare(b.date));
+    // Unscheduled = no date yet. Scheduled = has a date (whatever its date type).
+    const unscheduledFlexOrPremar = filtered.filter(p=>!p.date);
+    const scheduled = filtered.filter(p=>p.date).sort((a,b)=>a.date.localeCompare(b.date));
     // Filter for social posts only in unposted view (default)
     const socialUnscheduled = unscheduledFlexOrPremar.filter(p=>p.type==='social');
     const socialScheduled = scheduled.filter(p=>p.type==='social' && new Date(p.date+"T12:00:00") >= today);
 
     let h = '';
     if(!socialUnscheduled.length && !socialScheduled.length){
-      h = `<div class="empty-msg">No unposted social posts</div>`;
+      h = `<div class="empty-msg">No social posts yet</div>`;
     } else {
       if(socialUnscheduled.length){
         h += socialUnscheduled.map(p=>cardHTML(p, {draggable:arrangeMode})).join('');
@@ -1412,15 +1420,8 @@ function showPostFields(type, p){
   if(dateType==='fixed') document.getElementById('dp-fixed').classList.add('active');
   else if(dateType==='flexible') document.getElementById('dp-flexible').classList.add('active');
   else if(dateType==='premar1') document.getElementById('dp-premarx').classList.add('active');
-  const dateInput = document.getElementById('pm-date');
-  const dateWrap = document.getElementById('pm-date-input-wrap');
-  if(dateType==='fixed'){
-    dateWrap.style.display='';
-    dateInput.value = p ? (p.date||'') : (_prefillDate||'');
-    document.getElementById('pm-date-change-opt').style.display = _prefillDate ? '' : 'none';
-  } else {
-    dateWrap.style.display='none';
-  }
+  document.getElementById('pm-date').value = p ? (p.date||'') : (_prefillDate||'');
+  updateDateRow(dateType);
 
   // Category
   const catSection = document.getElementById('pm-cat-section');
@@ -1478,17 +1479,34 @@ function getSelectedCat(){
 
 function selectDatePill(type){
   ['dp-fixed','dp-flexible','dp-premarx'].forEach(id=>document.getElementById(id).classList.remove('active'));
-  const dateWrap = document.getElementById('pm-date-input-wrap');
+  document.getElementById(type==='fixed'?'dp-fixed':type==='premar1'?'dp-premarx':'dp-flexible').classList.add('active');
+  if(type==='fixed' && _prefillDate && !document.getElementById('pm-date').value) document.getElementById('pm-date').value=_prefillDate;
+  updateDateRow(type);
+}
+function updateDateRow(type){
+  const input = document.getElementById('pm-date');
+  const sub = document.getElementById('pm-date-sublbl');
+  const hint = document.getElementById('pm-date-hint');
   if(type==='fixed'){
-    document.getElementById('dp-fixed').classList.add('active');
-    dateWrap.style.display='';
-    document.getElementById('pm-date-change-opt').style.display='none';
-    if(_prefillDate) document.getElementById('pm-date').value=_prefillDate;
+    sub.textContent = 'Post on';
+    hint.textContent = 'This post has to go out on this day.';
   } else {
-    if(type==='flexible') document.getElementById('dp-flexible').classList.add('active');
-    else document.getElementById('dp-premarx').classList.add('active');
-    dateWrap.style.display='none';
+    sub.textContent = 'Post on (optional)';
+    hint.textContent = type==='premar1'
+      ? 'Leave blank to keep it unscheduled. Any date before Mar 1 works.'
+      : 'Leave blank to keep it unscheduled. "Schedule for me" can pick a date later.';
   }
+  input.max = type==='premar1' ? '2027-02-28' : '';
+  syncUnschedBtn();
+}
+function syncUnschedBtn(){
+  document.getElementById('pm-unsched').style.display = document.getElementById('pm-date').value ? '' : 'none';
+}
+function clearPostDate(){
+  document.getElementById('pm-date').value = '';
+  // a fixed post with no date is really a flexible idea
+  if(document.getElementById('dp-fixed').classList.contains('active')) selectDatePill('flexible');
+  syncUnschedBtn();
 }
 
 let _selectedPostType = '';
@@ -1511,7 +1529,9 @@ function savePost(){
   let dateType = 'flexible';
   if(document.getElementById('dp-fixed').classList.contains('active')) dateType='fixed';
   else if(document.getElementById('dp-premarx').classList.contains('active')) dateType='premar1';
-  const date = dateType==='fixed' ? (document.getElementById('pm-date').value||'') : '';
+  const date = document.getElementById('pm-date').value || '';
+  if(dateType==='fixed' && !date){ alert('Pick a date, or choose Flexible to keep it unscheduled.'); return; }
+  if(dateType==='premar1' && date && date >= TICKETS_DATE){ alert('Pre Mar 1 posts need a date before March 1.'); return; }
 
   const type = editingPostType;
   const purpose = document.getElementById('pm-purpose').value.trim();
@@ -1575,16 +1595,15 @@ function openDetail(id){
   const isEmail = p.type==='email';
   const isOther = p.type==='other';
   const catLabel = isEmail ? 'Email' : isOther ? 'Other' : (p.cat||'');
-  let dateLbl = '';
-  if(p.dateType==='flexible') dateLbl='Flexible date';
-  else if(p.dateType==='premar1') dateLbl='Before Mar 1';
-  else if(p.date) dateLbl=fmtDate(p.date);
+  const typeLbl = {flexible:'Flexible', premar1:'Pre Mar 1', fixed:'Fixed date'}[p.dateType] || '';
+  const dateLbl = p.date ? `${fmtDate(p.date)} · ${typeLbl}` : `Unscheduled · ${typeLbl}`;
 
   let h = `
     <div class="detail-hero">
       <div class="detail-cat">${catLabel}${p.postType?` · ${p.postType}`:''}</div>
       <div class="detail-title">${p.title||'Untitled'}</div>
       <div class="detail-date">${dateLbl}</div>
+      ${p.date ? `<button class="unsched-btn" style="margin-top:8px" onclick="unschedulePost('${id}')">✕ Unschedule (keep the idea)</button>` : ''}
     </div>`;
 
   if(p.purpose||p.subject){
@@ -1606,6 +1625,14 @@ function openDetail(id){
 
   document.getElementById('detail-content').innerHTML = h;
   openModal('detail-modal');
+}
+
+function unschedulePost(id){
+  const p = posts.find(x=>x.id===id); if(!p) return;
+  p.date = '';
+  if(p.dateType==='fixed') p.dateType = 'flexible';
+  p.lastUpdated = formatUserStamp(); p.lastUpdatedBy = getCurrentUser();
+  save(); renderMasterList(); openDetail(id);
 }
 
 function copyDetailCaption(id){
