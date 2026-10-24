@@ -84,7 +84,8 @@ body{font-family:var(--fb);background:var(--cream);color:var(--black);min-height
 .card.drag-over{border-color:var(--sage);border-width:2px}
 
 /* category left stripe */
-.card-stripe{width:5px;flex-shrink:0}
+/* left colour tab with the post date */
+.card-stripe{width:42px;flex-shrink:0;display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--white);padding:6px 2px;text-align:center}
 .cat-author .card-stripe{background:var(--cat-author)}
 .cat-general .card-stripe{background:var(--cat-general)}
 .cat-tickets .card-stripe{background:var(--cat-tickets)}
@@ -92,17 +93,18 @@ body{font-family:var(--fb);background:var(--cream);color:var(--black);min-height
 .cat-fun .card-stripe{background:var(--cat-fun)}
 .cat-other .card-stripe{background:var(--cat-other)}
 .cat-email .card-stripe{background:var(--coral-d)}
-.cat-misc .card-stripe{background:var(--gray)}
+.cat-misc .card-stripe{background:#aaa}
+.tab-mon{font-size:8px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;line-height:1.1}
+.tab-num{font-family:var(--fd);font-size:19px;font-weight:500;line-height:1}
+.tab-none{font-size:8px;font-weight:500;letter-spacing:.05em;text-transform:uppercase;line-height:1.25;opacity:.9}
 
-.card-date{width:54px;flex-shrink:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:8px 4px;gap:1px;background:var(--cream)}
-.cd-day{font-size:9px;font-weight:500;letter-spacing:.06em;text-transform:uppercase;color:#888}
-.cd-num{font-family:var(--fd);font-size:20px;font-weight:300;line-height:1;color:var(--black)}
-.cd-mon{font-size:8px;font-weight:300;letter-spacing:.07em;text-transform:uppercase;opacity:.65}
-.card-date.unscheduled{background:var(--cream-d);display:flex;align-items:center;justify-content:center}
-.card-date.unscheduled .sch-lbl{font-size:8px;font-weight:500;color:#aaa;text-transform:uppercase;letter-spacing:.05em;text-align:center;line-height:1.3}
-
-.card-body{flex:1;padding:9px 38px 9px 10px;min-width:0}
-.card-cat-tag{display:inline-flex;align-items:center;font-size:9px;font-weight:500;letter-spacing:.05em;text-transform:uppercase;padding:2px 7px;border-radius:9px;margin-bottom:4px;color:var(--white)}
+.card-body{flex:1;padding:7px 8px 7px 10px;min-width:0}
+.card-corner-space{float:right;width:84px;height:20px}
+.card-line1{line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.card-title{font-family:var(--fd);font-size:14px;font-weight:600;color:var(--black)}
+.card-desc{font-size:10px;font-weight:300;color:#777;margin-left:5px}
+.card-line2{display:flex;align-items:center;gap:5px;margin-top:4px;clear:both}
+.card-cat-tag{display:inline-flex;align-items:center;font-size:9.5px;font-weight:500;padding:1px 7px;border-radius:9px;color:var(--white);line-height:1.5}
 .cat-author .card-cat-tag{background:var(--cat-author)}
 .cat-general .card-cat-tag{background:var(--cat-general)}
 .cat-tickets .card-cat-tag{background:var(--cat-tickets)}
@@ -111,14 +113,13 @@ body{font-family:var(--fb);background:var(--cream);color:var(--black);min-height
 .cat-other .card-cat-tag{background:var(--cat-other)}
 .cat-email .card-cat-tag{background:var(--coral-d)}
 .cat-misc .card-cat-tag{background:#aaa}
-.post-type-badge{display:inline-flex;align-items:center;font-size:9px;padding:2px 6px;border-radius:9px;border:1px solid var(--gray);color:#888;margin-left:4px;font-weight:400}
-.card-title{font-family:var(--fd);font-size:14px;font-weight:500;line-height:1.3;margin-bottom:2px}
-.card-desc{font-size:10px;font-weight:300;color:#666;line-height:1.5;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-.card-stamp{font-size:9px;color:var(--sage-d);margin-top:3px;font-style:italic;opacity:.8}
+.post-type-badge{display:inline-flex;align-items:center;justify-content:center;width:22px;height:17px;border-radius:9px;border:1px solid var(--gray);color:#777}
+.post-type-badge svg{width:11px;height:11px}
 
-.card-actions{position:absolute;bottom:0;right:0;top:0;display:flex;flex-direction:column;justify-content:center;padding:0 6px;gap:4px}
-.edit-btn{width:26px;height:26px;border-radius:50%;background:var(--cream);border:none;cursor:pointer;font-size:11px;display:flex;align-items:center;justify-content:center}
-.drag-handle{width:26px;height:26px;border-radius:50%;background:transparent;border:none;cursor:grab;font-size:14px;display:flex;align-items:center;justify-content:center;color:#ccc;display:none}
+.card-actions{position:absolute;top:5px;right:5px;display:flex;align-items:center;gap:5px;z-index:2}
+.dt-lbl{font-size:8.5px;font-weight:500;letter-spacing:.05em;text-transform:uppercase;color:#999;white-space:nowrap}
+.edit-btn{width:24px;height:24px;border-radius:50%;background:var(--cream);border:none;cursor:pointer;font-size:10px;display:flex;align-items:center;justify-content:center}
+.drag-handle{width:24px;height:24px;border-radius:50%;background:transparent;border:none;cursor:grab;font-size:14px;display:flex;align-items:center;justify-content:center;color:#ccc;display:none}
 .arrange-mode .drag-handle{display:flex}
 .arrange-mode .edit-btn{display:none}
 .card-tap{position:absolute;inset:0;z-index:1}
@@ -793,42 +794,44 @@ function renderCatFilters(){
 }
 
 // ── CARD HTML ──────────────────────────────────────────────────────────────
+const TYPE_ICONS = {
+  Reel: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="5"/><path d="M3 8.5h18M8 3l3 5.5M14 3l3 5.5"/><path d="M10 12v5l4.5-2.5z" fill="currentColor"/></svg>',
+  Slides: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><rect x="3" y="7" width="13" height="14" rx="3"/><path d="M8 4h9a4 4 0 0 1 4 4v9"/></svg>',
+};
+const DATE_TYPE_LBL = {flexible:'Flexible', premar1:'Pre Mar 1', fixed:'Fixed'};
+function esc(t){ return String(t??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+
 function cardHTML(post, opts={}){
   const isEmail = post.type === 'email';
   const isOther = post.type === 'other';
   const cls = isEmail ? 'cat-email' : isOther ? 'cat-misc' : catClass(post.cat);
   const catLabel = isEmail ? 'Email' : isOther ? 'Other' : (post.cat || '');
-  const postTypeBadge = post.postType ? `<span class="post-type-badge">${post.postType}</span>` : '';
+  const pt = post.postType;
+  const postTypeBadge = pt ? `<span class="post-type-badge" title="${esc(pt)}" aria-label="${esc(pt)}">${TYPE_ICONS[pt] || esc(pt)}</span>` : '';
   const isPast = post.date && new Date(post.date+"T12:00:00") < today;
   const pastCls = isPast && post.dateType==='fixed' ? ' past-post' : '';
   const dragAttr = opts.draggable ? 'draggable="true"' : '';
 
-  let datePart = '';
-  if(post.dateType === 'flexible'){
-    datePart = `<div class="card-date unscheduled"><span class="sch-lbl">Flex-<br>ible</span></div>`;
-  } else if(post.dateType === 'premar1'){
-    datePart = `<div class="card-date unscheduled"><span class="sch-lbl">Pre<br>Mar 1</span></div>`;
-  } else if(post.date){
+  // left colour tab: the post's date
+  let tab;
+  if(post.date){
     const d = new Date(post.date+"T12:00:00");
-    datePart = `<div class="card-date">
-      <span class="cd-day">${DAYS[d.getDay()].slice(0,2)}</span>
-      <span class="cd-num">${d.getDate()}</span>
-      <span class="cd-mon">${MONTHS[d.getMonth()].slice(0,3)}</span>
-    </div>`;
+    tab = `<span class="tab-mon">${MONTHS[d.getMonth()].slice(0,3)}</span><span class="tab-num">${d.getDate()}</span>`;
   } else {
-    datePart = `<div class="card-date unscheduled"><span class="sch-lbl">No<br>date</span></div>`;
+    tab = `<span class="tab-none">No<br>date</span>`;
   }
+  const dtLbl = DATE_TYPE_LBL[post.dateType] || '';
+  const desc = post.purpose || post.subject || '';
 
   return `<div class="card ${cls}${pastCls}" data-id="${post.id}" ${dragAttr}>
-    <div class="card-stripe"></div>
-    ${datePart}
+    <div class="card-stripe">${tab}</div>
     <div class="card-body">
-      <div><span class="card-cat-tag">${catLabel}</span>${postTypeBadge}</div>
-      <div class="card-title">${post.title||'Untitled'}</div>
-      ${post.purpose||post.subject ? `<div class="card-desc">${post.purpose||post.subject||''}</div>` : ''}
-      ${post.lastUpdated ? `<div class="card-stamp">${post.lastUpdated}</div>` : ''}
+      <span class="card-corner-space"></span>
+      <div class="card-line1"><span class="card-title">${esc(post.title||'Untitled')}</span>${desc ? `<span class="card-desc">${esc(desc)}</span>` : ''}</div>
+      <div class="card-line2">${catLabel ? `<span class="card-cat-tag">${esc(catLabel)}</span>` : ''}${postTypeBadge}</div>
     </div>
     <div class="card-actions">
+      ${dtLbl ? `<span class="dt-lbl">${dtLbl}</span>` : ''}
       <button class="drag-handle" title="Drag to reorder">⠿</button>
       <button class="edit-btn" onclick="event.stopPropagation();openEditPost('${post.id}')">✏️</button>
     </div>
@@ -836,7 +839,6 @@ function cardHTML(post, opts={}){
   </div>`;
 }
 
-// ── MASTER LIST ────────────────────────────────────────────────────────────
 function renderMasterList(){
   const el = document.getElementById('master-list-content');
   const view = document.getElementById('view-select').value;
