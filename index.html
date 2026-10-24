@@ -37,19 +37,19 @@ body{font-family:var(--fb);background:var(--cream);color:var(--black);min-height
 
 /* ── HEADER ── */
 .hdr{background:var(--white);padding:calc(10px + env(safe-area-inset-top,0px)) 14px 0;position:sticky;top:0;z-index:100;border-bottom:1px solid var(--cream-d)}
-.hdr-logo{display:block;height:44px;width:auto;max-width:48%;object-fit:contain;flex-shrink:1;min-width:0}
+.hdr-logo{display:block;height:38px;width:auto;max-width:44%;object-fit:contain;flex-shrink:1;min-width:0}
 .hdr-top{display:flex;align-items:center;gap:8px;padding-bottom:8px}
 .app-title{font-family:var(--fd);font-size:22px;font-weight:400;color:var(--white);line-height:1}
 .app-sub{font-size:10px;font-weight:300;color:rgba(255,255,255,.5);letter-spacing:.12em;text-transform:uppercase;margin-top:2px}
 .user-pill{font-size:11px;font-weight:600;color:var(--navy);background:var(--sage-l);border-radius:15px;min-width:30px;height:30px;flex-shrink:0;cursor:pointer;border:none;font-family:var(--fb);display:flex;align-items:center;justify-content:center;padding:0 9px}
 
 /* countdown badges row */
-.cd-row{display:flex;flex-direction:column;gap:4px;flex:1;min-width:0;align-items:flex-end}
+.cd-row{display:flex;flex:1;min-width:0;justify-content:center;align-items:flex-start;gap:14px}
 .cd-row::-webkit-scrollbar{display:none}
-.cd-badge{max-width:100%;color:var(--white);padding:3px 10px 3px 8px;border-radius:14px;cursor:pointer;border:none;font-family:var(--fb);display:flex;align-items:center;gap:5px;text-align:left}
-.cd-txt{display:flex;flex-direction:column;font-size:8.5px;font-weight:500;letter-spacing:.02em;line-height:1.15;min-width:0}
-.cd-txt b{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.cd-badge span.cd-num{font-family:var(--fd);font-size:20px;font-weight:600;line-height:1;color:var(--white)}
+.cd-badge{background:none!important;border:none;padding:0;cursor:pointer;font-family:var(--fb);color:var(--navy);display:flex;flex-direction:column;align-items:center;text-align:center;max-width:72px;min-width:0}
+.cd-txt{font-size:8px;font-weight:500;letter-spacing:.02em;line-height:1.2;color:var(--navy);opacity:.85}
+.cd-txt b{font-weight:600}
+.cd-badge span.cd-num{font-family:var(--fd);font-size:22px;font-weight:600;line-height:1;color:var(--navy)}
 
 /* ── FILTER CHIPS ── */
 .filter-bar{background:var(--white);border-bottom:1px solid var(--cream-d);padding:7px 0 5px}
@@ -68,9 +68,11 @@ body{font-family:var(--fb);background:var(--cream);color:var(--black);min-height
 .view-toggle{display:flex;background:var(--cream);border-radius:20px;padding:2px;flex-shrink:0}
 .vt-btn{border:none;background:transparent;font-family:var(--fb);font-size:11px;font-weight:500;color:#777;padding:5px 12px;border-radius:18px;cursor:pointer;white-space:nowrap}
 .vt-btn.active{background:var(--navy);color:var(--white)}
-.view-row .view-select{flex:1;min-width:0;padding:5px 8px;font-size:11px;border-radius:18px}
+.view-row .view-toggle{margin-right:auto}
+#listview-row{margin-bottom:2px}
+#listview-row.hide{display:none}
 .view-row .arrange-btn{padding:6px 11px;border-radius:18px;font-size:10.5px}
-.view-row.cal-mode .view-select,.view-row.cal-mode .arrange-btn{display:none}
+.view-row.cal-mode .arrange-btn{display:none}
 
 /* ── MAIN ── */
 .main{padding:12px 14px 100px}
@@ -92,7 +94,9 @@ body{font-family:var(--fb);background:var(--cream);color:var(--black);min-height
 .card:active{transform:scale(.98)}
 .card.past-post{opacity:.5}
 .card.dragging{opacity:.5;transform:scale(.97)}
-.card.drag-over{border-color:var(--sage);border-width:2px}
+.drop-line{height:3px;margin:-5px 6px 2px;border-radius:2px;background:var(--coral);position:relative;pointer-events:none}
+.drop-line::before,.drop-line::after{content:"";position:absolute;top:-3px;width:9px;height:9px;border-radius:50%;background:var(--coral)}
+.drop-line::before{left:-4px}.drop-line::after{right:-4px}
 
 /* category left stripe */
 /* left colour tab with the post date */
@@ -137,11 +141,11 @@ body{font-family:var(--fb);background:var(--cream);color:var(--black);min-height
 .arrange-mode .card-tap{pointer-events:none}
 
 /* Arrange overlay bar */
-.arrange-bar{background:var(--cream-d);border-radius:12px;padding:12px 14px;margin-bottom:10px;display:none}
-.arrange-bar.visible{display:block}
-.arrange-bar-title{font-family:var(--fd);font-size:15px;font-style:italic;margin-bottom:10px;color:var(--navy)}
-.arrange-pills{display:flex;gap:8px;flex-wrap:wrap}
-.arrange-pill{flex:1;min-width:120px;border:none;border-radius:20px;padding:10px 14px;font-family:var(--fb);font-size:12px;font-weight:500;cursor:pointer;text-align:center}
+.arrange-bar{background:var(--cream-d);border-radius:10px;padding:6px 8px 6px 12px;margin-bottom:8px;display:none;align-items:center;gap:6px;flex-wrap:wrap}
+.arrange-bar.visible{display:flex}
+.arrange-bar-title{font-family:var(--fd);font-size:13px;font-style:italic;color:var(--navy);margin-right:auto}
+.arrange-pills{display:flex;gap:5px}
+.arrange-pill{border:none;border-radius:14px;padding:5px 10px;font-family:var(--fb);font-size:10.5px;font-weight:500;cursor:pointer;white-space:nowrap}
 .arrange-pill.manual{background:var(--sage-l);color:var(--sage-d)}
 .arrange-pill.auto{background:var(--navy);color:var(--white)}
 
@@ -222,7 +226,9 @@ body{font-family:var(--fb);background:var(--cream);color:var(--black);min-height
 .mock-cal-date .mn{font-size:8px;text-transform:uppercase;color:#aaa;letter-spacing:.05em}
 .mock-cal-date .dd{font-family:var(--fd);font-size:18px;line-height:1;color:var(--black)}
 .mock-cal-items{flex:1;padding:8px 10px;display:flex;flex-direction:column;gap:4px}
-.mock-pill{font-size:10px;padding:3px 8px;border-radius:6px;color:var(--white);font-weight:500;cursor:pointer}
+.mock-nav{background:none;border:none;color:var(--white);font-size:20px;line-height:1;padding:0 8px;cursor:pointer;font-family:var(--fb)}
+.mock-cell{min-height:40px}
+.mock-pill{font-size:10px;padding:3px 8px;border-radius:6px;color:var(--white);font-weight:500;cursor:default}
 
 /* ── SETTINGS ── */
 .settings-section{background:var(--white);border-radius:12px;margin-bottom:12px;overflow:hidden;border:1px solid var(--cream-d)}
@@ -292,16 +298,17 @@ body{font-family:var(--fb);background:var(--cream);color:var(--black);min-height
       <button class="vt-btn" data-view="calendar" onclick="setViewMode('calendar')">📅 Calendar</button>
       <button class="vt-btn" data-view="list" onclick="setViewMode('list')">☰ List</button>
     </div>
-    <select class="view-select" id="view-select" onchange="renderMasterList()">
-      <option value="unposted">Unposted</option>
-      <option value="all-tasks">All Tasks</option>
-      <option value="all-posts">All Posts</option>
-      <option value="by-type">By Post Type</option>
-      <option value="by-cat">By Category</option>
-      <option value="emails">Emails Only</option>
-      <option value="others">Others Only</option>
-    </select>
     <button class="arrange-btn" id="arrange-btn" onclick="toggleArrange()">Arrange</button>
+  </div>
+  <div class="filter-group" id="listview-row">
+    <span class="fg-lbl">Show</span>
+    <button class="chip c-lv" data-lv="unposted" onclick="setListView('unposted')">Unposted</button>
+    <button class="chip c-lv" data-lv="all-tasks" onclick="setListView('all-tasks')">All Tasks</button>
+    <button class="chip c-lv" data-lv="all-posts" onclick="setListView('all-posts')">All Posts</button>
+    <button class="chip c-lv" data-lv="by-type" onclick="setListView('by-type')">By Post Type</button>
+    <button class="chip c-lv" data-lv="by-cat" onclick="setListView('by-cat')">By Category</button>
+    <button class="chip c-lv" data-lv="emails" onclick="setListView('emails')">Emails</button>
+    <button class="chip c-lv" data-lv="others" onclick="setListView('others')">Others</button>
   </div>
   <div class="filter-group" id="cat-filter-row">
     <span class="fg-lbl">Category</span>
@@ -324,10 +331,10 @@ body{font-family:var(--fb);background:var(--cream);color:var(--black);min-height
   <div class="page active" id="page-list">
     <!-- Arrange bar -->
     <div class="arrange-bar" id="arrange-bar">
-      <div class="arrange-bar-title">Drag posts to reorder, then:</div>
+      <div class="arrange-bar-title">Drag to reorder, then:</div>
       <div class="arrange-pills">
-        <button class="arrange-pill manual" onclick="doneArrange('manual')">I'll set dates myself</button>
-        <button class="arrange-pill auto" onclick="doneArrange('auto')">Schedule them for me ✨</button>
+        <button class="arrange-pill manual" onclick="doneArrange('manual')">I'll set dates</button>
+        <button class="arrange-pill auto" onclick="doneArrange('auto')">Schedule for me ✨</button>
       </div>
     </div>
     <div id="master-list-content"></div>
@@ -531,7 +538,11 @@ body{font-family:var(--fb);background:var(--cream);color:var(--black);min-height
 
     <!-- Step 2: preview -->
     <div class="sched-step" id="as-step2">
-      <p style="font-size:12px;color:#666;margin-bottom:12px">Here's the proposed schedule. Tap a post to change its date.</p>
+      <p style="font-size:12px;color:#666;margin-bottom:10px">Here's the proposed schedule.</p>
+      <div class="view-toggle" style="display:inline-flex;margin-bottom:8px">
+        <button class="vt-btn" data-mv="calendar" onclick="setMockView('calendar')">📅 Calendar</button>
+        <button class="vt-btn" data-mv="list" onclick="setMockView('list')">☰ List</button>
+      </div>
       <div class="mock-cal" id="as-mock-cal"></div>
       <div style="display:flex;gap:8px;margin-top:4px">
         <button class="btn-ghost" style="flex:1;margin-top:0" onclick="closeModal('autosched-modal')">Cancel</button>
@@ -789,7 +800,7 @@ function renderCountdowns(){
   row.innerHTML = countdowns.map(cd=>{
     const d = dateDiff(cd.date);
     const numPart = d > 0 ? `<span class="cd-num">${d}</span>` : '';
-    const lbl = d > 0 ? `<span class="cd-txt">days to<b>${cd.label}</b></span>` : d===0 ? `<span class="cd-txt">🎉 Today!<b>${cd.label}</b></span>` : `<span class="cd-txt">passed<b>${cd.label}</b></span>`;
+    const lbl = d > 0 ? `<span class="cd-txt">days to <b>${cd.label}</b></span>` : d===0 ? `<span class="cd-txt">🎉 <b>${cd.label}</b> today!</span>` : `<span class="cd-txt"><b>${cd.label}</b> has passed</span>`;
     return `<button class="cd-badge" style="background:${cd.color}" onclick="openEditCountdown('${cd.id}')">${numPart}${lbl}</button>`;
   }).join('');
 }
@@ -861,7 +872,18 @@ function setViewMode(m){
   try{ localStorage.setItem('ss_view', m); }catch(e){}
   renderMasterList();
 }
+let listView = (()=>{ try{ return localStorage.getItem('ss_listview') || 'unposted'; }catch(e){ return 'unposted'; } })();
+function setListView(v){
+  if(v === listView) return;
+  if(arrangeMode) toggleArrange();
+  listView = v;
+  try{ localStorage.setItem('ss_listview', v); }catch(e){}
+  renderMasterList();
+}
 function syncViewToggle(){
+  document.querySelectorAll('.c-lv').forEach(b=>b.classList.toggle('active', b.dataset.lv===listView));
+  const lvr = document.getElementById('listview-row');
+  if(lvr) lvr.classList.toggle('hide', viewMode==='calendar');
   document.querySelectorAll('.vt-btn').forEach(b=>b.classList.toggle('active', b.dataset.view===viewMode));
   const row = document.querySelector('.view-row');
   if(row) row.classList.toggle('cal-mode', viewMode==='calendar');
@@ -869,7 +891,7 @@ function syncViewToggle(){
 
 function renderMasterList(){
   const el = document.getElementById('master-list-content');
-  const view = viewMode === 'calendar' ? 'calendar' : document.getElementById('view-select').value;
+  const view = viewMode === 'calendar' ? 'calendar' : listView;
   syncViewToggle();
   const filtered = getFiltered();
 
@@ -1096,86 +1118,82 @@ function doneArrange(mode){
   }
 }
 
-// Touch drag for iOS
+// Drag to reorder: a coral line shows where the post will land
 let _dragSrc = null;
+function _listCards(){ return [...document.querySelectorAll('#master-list-content .card[data-id]')]; }
+function _clearDropLine(){ document.querySelectorAll('.drop-line').forEach(l=>l.remove()); }
+function _showDropLine(y){
+  const others = _listCards().filter(c=>c!==_dragSrc);
+  if(!others.length) return;
+  let before = others.find(c=>{ const r=c.getBoundingClientRect(); return y < r.top + r.height/2; });
+  let line = document.querySelector('.drop-line');
+  if(!line){ line = document.createElement('div'); line.className = 'drop-line'; }
+  if(before){
+    // no line if dropping here would leave the post where it is
+    const prev = before.previousElementSibling;
+    if(before.previousElementSibling === _dragSrc || (prev===line && line.previousElementSibling===_dragSrc)){ line.remove(); return; }
+    before.parentNode.insertBefore(line, before);
+  } else {
+    const last = others[others.length-1];
+    if(last.nextElementSibling === _dragSrc || (last.nextElementSibling===line && line.nextElementSibling===_dragSrc)){ line.remove(); return; }
+    last.parentNode.insertBefore(line, last.nextSibling);
+  }
+}
+function _dropAtLine(){
+  const line = document.querySelector('.drop-line');
+  if(line && _dragSrc){ line.parentNode.insertBefore(_dragSrc, line); }
+  _clearDropLine();
+}
+
 function setupDragDrop(){
-  const cards = document.querySelectorAll('#master-list-content .card[data-id]');
-  cards.forEach(card=>{
+  const list = document.getElementById('master-list-content');
+  if(!list._dndBound){
+    list._dndBound = true;
+    list.addEventListener('dragover', e=>{ if(!arrangeMode||!_dragSrc) return; e.preventDefault(); _showDropLine(e.clientY); });
+    list.addEventListener('drop', e=>{ if(!arrangeMode||!_dragSrc) return; e.preventDefault(); _dropAtLine(); });
+  }
+  _listCards().forEach(card=>{
     card.addEventListener('dragstart', e=>{
       _dragSrc = card;
       card.classList.add('dragging');
       e.dataTransfer.effectAllowed = 'move';
+      try{ e.dataTransfer.setData('text/plain', card.dataset.id); }catch(_){}
     });
     card.addEventListener('dragend', ()=>{
       card.classList.remove('dragging');
-      document.querySelectorAll('.card.drag-over').forEach(c=>c.classList.remove('drag-over'));
+      _clearDropLine(); _dragSrc = null;
     });
-    card.addEventListener('dragover', e=>{
-      e.preventDefault();
-      if(card !== _dragSrc){ card.classList.add('drag-over'); }
-    });
-    card.addEventListener('dragleave', ()=>card.classList.remove('drag-over'));
-    card.addEventListener('drop', e=>{
-      e.preventDefault();
-      card.classList.remove('drag-over');
-      if(_dragSrc && _dragSrc !== card){
-        const parent = card.parentNode;
-        const allCards = [...parent.querySelectorAll('.card[data-id]')];
-        const srcIdx = allCards.indexOf(_dragSrc);
-        const tgtIdx = allCards.indexOf(card);
-        if(srcIdx < tgtIdx) parent.insertBefore(_dragSrc, card.nextSibling);
-        else parent.insertBefore(_dragSrc, card);
-      }
-    });
-    // Touch support
     setupTouchDrag(card);
   });
 }
 
 function setupTouchDrag(el){
-  let startY, startX, clone, origIdx;
-  const cards = ()=>[...document.querySelectorAll('#master-list-content .card[data-id]')];
-
+  let startY;
   el.addEventListener('touchstart', e=>{
     if(!arrangeMode) return;
-    const t = e.touches[0];
-    startY = t.clientY; startX = t.clientX;
+    startY = e.touches[0].clientY;
+    _dragSrc = el;
     el.classList.add('dragging');
-    origIdx = cards().indexOf(el);
   },{passive:true});
 
   el.addEventListener('touchmove', e=>{
-    if(!arrangeMode || !el.classList.contains('dragging')) return;
+    if(!arrangeMode || _dragSrc!==el) return;
     e.preventDefault();
-    const t = e.touches[0];
-    const dy = t.clientY - startY;
-    el.style.transform = `translateY(${dy}px)`;
-    // Find target
-    const all = cards();
-    const myRect = el.getBoundingClientRect();
-    all.forEach(c=>{
-      if(c===el) return;
-      const r = c.getBoundingClientRect();
-      if(t.clientY > r.top && t.clientY < r.bottom) c.classList.add('drag-over');
-      else c.classList.remove('drag-over');
-    });
+    const y = e.touches[0].clientY;
+    el.style.transform = `translateY(${y - startY}px)`;
+    el.style.zIndex = 5;
+    _showDropLine(y);
   },{passive:false});
 
-  el.addEventListener('touchend', e=>{
-    if(!arrangeMode) return;
-    el.style.transform = '';
+  const end = ()=>{
+    if(_dragSrc!==el) return;
+    el.style.transform = ''; el.style.zIndex = '';
     el.classList.remove('dragging');
-    const target = document.querySelector('#master-list-content .card.drag-over');
-    if(target && target !== el){
-      const parent = el.parentNode;
-      const all = [...parent.querySelectorAll('.card[data-id]')];
-      const si = all.indexOf(el), ti = all.indexOf(target);
-      target.classList.remove('drag-over');
-      if(si < ti) parent.insertBefore(el, target.nextSibling);
-      else parent.insertBefore(el, target);
-    }
-    document.querySelectorAll('.card.drag-over').forEach(c=>c.classList.remove('drag-over'));
-  },{passive:true});
+    _dropAtLine();
+    _dragSrc = null;
+  };
+  el.addEventListener('touchend', end, {passive:true});
+  el.addEventListener('touchcancel', ()=>{ if(_dragSrc!==el) return; el.style.transform=''; el.style.zIndex=''; el.classList.remove('dragging'); _clearDropLine(); _dragSrc=null; }, {passive:true});
 }
 
 // ── AUTO-SCHEDULE ──────────────────────────────────────────────────────────
@@ -1227,6 +1245,7 @@ function runAutoSchedule(){
   proposed.sort((a,b)=>(a.date||'').localeCompare(b.date||''));
 
   pendingAutoSchedule = proposed;
+  _mockYear = null; _mockSel = null;
   renderMockCalendar(proposed);
 
   document.getElementById('as-step1').classList.remove('active');
@@ -1249,24 +1268,75 @@ function spreadDates(startDate, endDate, count){
   return dates;
 }
 
+let _mockView = (()=>{ try{ return localStorage.getItem('ss_mockview') || 'list'; }catch(e){ return 'list'; } })();
+let _mockYear = null, _mockMonth = null, _mockSel = null;
+function setMockView(v){
+  _mockView = v;
+  try{ localStorage.setItem('ss_mockview', v); }catch(e){}
+  renderMockCalendar(pendingAutoSchedule||[]);
+}
+function mockNav(dir){
+  _mockMonth += dir;
+  if(_mockMonth<0){ _mockMonth=11; _mockYear--; }
+  if(_mockMonth>11){ _mockMonth=0; _mockYear++; }
+  _mockSel = null;
+  renderMockCalendar(pendingAutoSchedule||[]);
+}
+function mockDayTap(ds){ _mockSel = _mockSel===ds ? null : ds; renderMockCalendar(pendingAutoSchedule||[]); }
+
 function renderMockCalendar(proposed){
+  document.querySelectorAll('[data-mv]').forEach(b=>b.classList.toggle('active', b.dataset.mv===_mockView));
   const cal = document.getElementById('as-mock-cal');
   if(!proposed.length){ cal.innerHTML='<div style="padding:14px;color:#aaa;font-style:italic">No posts to schedule</div>'; return; }
-  const catColors = {'Author announcement':getComputedStyle(document.documentElement).getPropertyValue('--cat-author').trim(),'General authors':'#5A7A58','Tickets':'#E8704A','Event':'#2D3561','Fun':'#C8AA88'};
+  const catColors = {'Author announcement':'#3D4A7A','General authors':'#5A7A58','Tickets':'#E8704A','Event':'#2D3561','Fun':'#C8AA88'};
+  const colorOf = item=>{ const p = posts.find(x=>x.id===item.id); return p ? (p.type==='email'?'#C4522E':p.type==='other'?'#aaa':(catColors[p.cat]||'#8BA888')) : '#8BA888'; };
+
+  if(_mockView === 'calendar'){
+    const dated = proposed.filter(i=>i.date);
+    if(_mockYear===null){
+      const first = dated.length ? new Date(dated[0].date+"T12:00:00") : today;
+      _mockYear = first.getFullYear(); _mockMonth = first.getMonth();
+    }
+    const yr=_mockYear, mo=_mockMonth;
+    const startDow = new Date(yr,mo,1).getDay(), nDays = new Date(yr,mo+1,0).getDate();
+    const byDay = {};
+    dated.forEach(i=>{ (byDay[i.date] = byDay[i.date]||[]).push(i); });
+    let cells = '';
+    for(let i=0;i<startDow;i++) cells += '<div class="cal-cell other-month"></div>';
+    for(let d=1; d<=nDays; d++){
+      const ds = `${yr}-${String(mo+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+      const items = byDay[ds]||[];
+      const dots = items.slice(0,3).map(i=>`<div class="cal-dot" style="background:${colorOf(i)}"></div>`).join('');
+      const more = items.length>3 ? `<div class="cal-overflow">+${items.length-3}</div>` : '';
+      const sel = ds===_mockSel ? ' style="box-shadow:0 0 0 2px var(--sage)"' : '';
+      cells += `<div class="cal-cell mock-cell${items.length?' has-posts':''}"${sel} onclick="mockDayTap('${ds}')"><div class="cal-day-num">${d}</div>${dots}${more}</div>`;
+    }
+    const rem = (startDow+nDays)%7 ? 7-((startDow+nDays)%7) : 0;
+    for(let i=0;i<rem;i++) cells += '<div class="cal-cell other-month"></div>';
+    let detail = '';
+    if(_mockSel && byDay[_mockSel]){
+      const d = new Date(_mockSel+"T12:00:00");
+      detail = `<div class="cal-popover" style="margin:8px 0 0"><div class="cal-pop-date">${DAYS[d.getDay()]}, ${MONTHS[d.getMonth()]} ${d.getDate()}</div>` +
+        byDay[_mockSel].map(i=>`<div class="cal-pop-item"><div class="cal-pop-dot" style="background:${colorOf(i)}"></div><div class="cal-pop-title">${esc(i.title)}${i.dateType==='fixed'?' 📌':''}</div></div>`).join('') + '</div>';
+    }
+    cal.innerHTML = `<div class="mock-cal-header" style="display:flex;align-items:center;justify-content:space-between;font-style:normal">
+        <button class="mock-nav" onclick="mockNav(-1)">‹</button><span style="font-style:italic">${MONTHS[mo]} ${yr}</span><button class="mock-nav" onclick="mockNav(1)">›</button>
+      </div>
+      <div style="padding:8px">
+        <div class="cal-grid">${['Su','Mo','Tu','We','Th','Fr','Sa'].map(x=>`<div class="cal-dow">${x}</div>`).join('')}${cells}</div>
+        ${detail}
+      </div>`;
+    return;
+  }
+
   cal.innerHTML = `<div class="mock-cal-header">Proposed Schedule</div>` +
     proposed.map(item=>{
-      const p = posts.find(x=>x.id===item.id);
-      const bg = p ? (catColors[p.cat]||'#8BA888') : '#8BA888';
       const ds = item.date;
-      let dateLbl = 'TBD';
-      if(ds){
-        const d = new Date(ds+"T12:00:00");
-        dateLbl = `${MONTHS[d.getMonth()].slice(0,3)} ${d.getDate()}`;
-      }
+      const d = ds ? new Date(ds+"T12:00:00") : null;
       const fixedNote = item.dateType==='fixed' ? ' 📌' : '';
       return `<div class="mock-cal-row">
-        <div class="mock-cal-date"><div class="mn">${ds?MONTHS[new Date(ds+"T12:00:00").getMonth()].slice(0,3):''}</div><div class="dd">${ds?new Date(ds+"T12:00:00").getDate():'-'}</div></div>
-        <div class="mock-cal-items"><div class="mock-pill" style="background:${bg}">${item.title}${fixedNote}</div></div>
+        <div class="mock-cal-date"><div class="mn">${d?MONTHS[d.getMonth()].slice(0,3):''}</div><div class="dd">${d?d.getDate():'-'}</div></div>
+        <div class="mock-cal-items"><div class="mock-pill" style="background:${colorOf(item)}">${esc(item.title)}${fixedNote}</div></div>
       </div>`;
     }).join('');
 }
