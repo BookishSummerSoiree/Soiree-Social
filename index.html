@@ -181,8 +181,8 @@ body{font-family:var(--fb);background:var(--cream);color:var(--black);min-height
 .pm-date-hint{font-size:10px;color:#999;margin-top:4px;line-height:1.4}
 
 /* Type picker */
-.type-pick-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:4px}
-.type-pick-btn{border:1px solid var(--gray);background:var(--white);font-family:var(--fb);font-size:12px;font-weight:500;padding:12px 8px;border-radius:12px;cursor:pointer;color:#444;transition:all .2s;text-align:center}
+.type-pick-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:2px}
+.type-pick-btn{border:1px solid var(--gray);background:var(--white);font-family:var(--fb);font-size:12px;font-weight:500;padding:8px 6px;border-radius:12px;cursor:pointer;color:#444;transition:all .2s;text-align:center}
 .type-pick-btn.active{background:var(--navy);border-color:var(--navy);color:var(--white)}
 
 /* Category chips in form */
@@ -408,11 +408,10 @@ body{font-family:var(--fb);background:var(--cream);color:var(--black);min-height
     <!-- Type picker (hidden when editing) -->
     <div id="pm-type-section">
       <div class="ef">
-        <label class="ef-lbl">What kind of item?</label>
         <div class="type-pick-row">
-          <button class="type-pick-btn" id="tp-social" onclick="selectPostType('social')">📸 Social Post</button>
+          <button class="type-pick-btn" id="tp-social" onclick="selectPostType('social')">📸 Social</button>
           <button class="type-pick-btn" id="tp-email" onclick="selectPostType('email')">✉️ Email</button>
-          <button class="type-pick-btn" style="grid-column:span 2" id="tp-other" onclick="selectPostType('other')">📝 Other / Note</button>
+          <button class="type-pick-btn" id="tp-other" onclick="selectPostType('other')">📝 Other</button>
         </div>
       </div>
     </div>
@@ -1507,17 +1506,30 @@ function openNewPost(prefillDate){
   editingPostType = null;
   document.getElementById('post-modal-title').textContent = 'New Post';
   document.getElementById('pm-type-section').style.display = '';
-  document.getElementById('pm-fields').style.display = 'none';
   document.getElementById('pm-del-btn').style.display = 'none';
-  // Reset type buttons
-  ['tp-social','tp-email','tp-other'].forEach(id=>document.getElementById(id).classList.remove('active'));
+  // Social is the usual pick, so start there with the title ready to type
+  editingPostType = 'social';
+  markPostType('social');
+  showPostFields('social', null);
   openModal('post-modal');
+  focusTitle();
+}
+function markPostType(type){
+  ['social','email','other'].forEach(t=>document.getElementById('tp-'+t).classList.toggle('active', t===type));
+}
+function focusTitle(){
+  const t = document.getElementById('pm-title');
+  try{ t.focus({preventScroll:true}); }catch(e){ t.focus(); }   // inside the tap, so the phone keyboard opens
+  setTimeout(()=>{ try{ t.focus({preventScroll:true}); }catch(e){} }, 320); // again once the sheet has slid up
 }
 
 function selectPostType(type){
+  const typed = document.getElementById('pm-title').value;   // keep what's already typed
   editingPostType = type;
-  document.getElementById('pm-type-section').style.display = 'none';
+  markPostType(type);
   showPostFields(type, null);
+  document.getElementById('pm-title').value = typed;
+  focusTitle();
 }
 
 function openEditPost(id){
