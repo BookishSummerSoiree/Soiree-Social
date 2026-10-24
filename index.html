@@ -1686,45 +1686,10 @@ function runAutoSchedule(){
   const startStr = document.getElementById('as-start-date').value;
   if(!startStr){ alert('Please pick a start date.'); return; }
   const orderedIds = _listCards().map(c=>c.dataset.id);   // the order on screen, Fixed posts included
-  const proposed = respectFixedPlacement(computeProposal(orderedIds, startStr), orderedIds, startStr);
+  const proposed = computeProposal(orderedIds, startStr);
   pendingAutoSchedule = proposed;
   _mockYear = null; _mockSel = null;
   renderMockCalendar(proposed);
-}
-// If you put a post above a Fixed post it goes before that date; below it goes after.
-// Posts already on the right side keep the date they were given.
-function respectFixedPlacement(proposed, orderedIds, startStr){
-  const day = ds=>new Date(ds+"T12:00:00"), iso = d=>d.toISOString().slice(0,10);
-  const shift = (ds,n)=>{ const d = day(ds); d.setDate(d.getDate()+n); return iso(d); };
-  const byId = {}; proposed.forEach(i=>{ byId[i.id] = i; });
-  const fixedDate = id=>{ const p = posts.find(x=>x.id===id); return p && p.dateType==='fixed' && p.date ? p.date : null; };
-  const lastDay = shift(SOIREE_DATE,-1), feb28 = shift(TICKETS_DATE,-1), jan31 = shift(AUTHOR_DEADLINE,-1), mar2 = shift(TICKETS_DATE,1);
-  const used = new Set(posts.filter(p=>p.dateType==='fixed' && p.date).map(p=>p.date));
-  const fix = [];
-  orderedIds.forEach((id,idx)=>{
-    const it = byId[id]; if(!it || it.kept || !it.date) return;
-    const p = posts.find(x=>x.id===id);
-    let lo = startStr, hi = lastDay;
-    if(isAuthorPost(p) && p.dateType!=='postmar1') hi = jan31;
-    else if(p.dateType==='premar1') hi = feb28;
-    if(p.dateType==='postmar1') lo = mar2;
-    let aLo = null, aHi = null;
-    for(let k=idx-1;k>=0;k--){ const f = fixedDate(orderedIds[k]); if(f){ aLo = shift(f,1); break; } }
-    for(let k=idx+1;k<orderedIds.length;k++){ const f = fixedDate(orderedIds[k]); if(f){ aHi = shift(f,-1); break; } }
-    const L = aLo && aLo > lo ? aLo : lo, H = aHi && aHi < hi ? aHi : hi;
-    if(L > H) { used.add(it.date); return; }          // can't satisfy both; the date rules win
-    if(it.date >= L && it.date <= H){ used.add(it.date); return; }
-    fix.push({it, L, H, target: it.date < L ? L : H});
-  });
-  fix.forEach(({it,L,H,target})=>{
-    for(let k=0;k<200;k++){
-      for(const v of k ? [shift(target,k), shift(target,-k)] : [target]){
-        if(v >= L && v <= H && !used.has(v)){ used.add(v); it.date = v; return; }
-      }
-    }
-  });
-  proposed.sort((a,b)=>(a.date||'').localeCompare(b.date||''));
-  return proposed;
 }
 function computeProposal(orderedIds, startStr){
 
@@ -1766,52 +1731,72 @@ function computeProposal(orderedIds, startStr){
   const g1 = seq.filter((_,i)=>win[i]===1), g2 = seq.filter((_,i)=>win[i]===2);
   // Inside the before-Mar-1 window: everything up to the last Author Intro is spaced out
   // before Feb 1; whatever comes after it fills February.
+  // ── The math ──
+  // Each stretch of time gets its own posts, spaced evenly: gap = days in the stretch ÷ posts.
+  // A Fixed post in the list splits a stretch in two (posts above it go before its date,
+  // posts below it go after), and each piece is spaced evenly on its own.
+  const iso = d=>d.toISOString().slice(0,10);
+  const addDays = (d,n)=>{ const x = new Date(d.getTime()); x.setDate(x.getDate()+n); return x; };
+  const daysBetween = (a,b)=>Math.round((b-a)/864e5);
+  const used = new Set(fixedDays);
+  const posInList = {}; orderedIds.forEach((id,i)=>{ posInList[id] = i; });
+  const evenDates = (lo, hi, k)=>{
+    if(!k) return [];
+    const span = daysBetween(lo, hi) + 1;
+    if(span <= 0) return Array(k).fill('');
+    return Array.from({length:k}, (_,j)=> iso(addDays(lo, Math.floor((j+0.5)*span/k))));
+  };
+  // nearest free day (no Fixed post, no other post) inside [lo, hi]
+  const free = (ds, lo, hi)=>{
+    if(!ds) return ds;
+    const L = iso(lo), H = iso(hi);
+    for(let k=0;k<120;k++){
+      for(const v of k ? [iso(addDays(day(ds),k)), iso(addDays(day(ds),-k))] : [ds]){
+        if(v >= L && v <= H && !used.has(v)){ used.add(v); return v; }
+      }
+    }
+    return ds;
+  };
+  const placeStretch = (items, lo, hi)=>{
+    if(!items.length) return [];
+    if(lo > hi) return items.map(()=> '');
+    const L = iso(lo), H = iso(hi);
+    // Fixed posts in this stretch, in list order (ignore any that are out of date order)
+    let anchors = orderedIds.map((id,idx)=>({idx, p:posts.find(x=>x.id===id)}))
+      .filter(a=>a.p && a.p.dateType==='fixed' && a.p.date && a.p.date >= L && a.p.date <= H);
+    anchors = anchors.filter((a,i)=> anchors.slice(0,i).every(b=>b.p.date < a.p.date));
+    const pieces = Array.from({length:anchors.length+1}, ()=>[]);
+    items.forEach(p=>{ pieces[anchors.filter(a=>a.idx < posInList[p.id]).length].push(p); });
+    const out = new Map();
+    pieces.forEach((list, k)=>{
+      let pLo = k===0 ? lo : addDays(day(anchors[k-1].p.date), 1);
+      let pHi = k===anchors.length ? hi : addDays(day(anchors[k].p.date), -1);
+      if(pLo > pHi){ pLo = lo; pHi = hi; }               // no room between two Fixed posts: use the whole stretch
+      evenDates(pLo, pHi, list.length).forEach((d,i)=> out.set(list[i], free(d, pLo, pHi) ));
+    });
+    return items.map(p=>out.get(p) || '');
+  };
+
   let d1 = [];
   if(w1Open){
     const authorEnd = day(AUTHOR_DEADLINE); authorEnd.setDate(authorEnd.getDate()-1);   // Jan 31
     const lastA = g1.map(isAuthorPost).lastIndexOf(true);
     if(lastA < 0){
-      d1 = spreadDates(start, w1End, g1.length);
+      d1 = placeStretch(g1, start, w1End);
     } else if(start > authorEnd){
       // too late for author posts: leave them unscheduled, space out the rest
       const rest = g1.filter(p=>!isAuthorPost(p));
-      const rd = spreadDates(start, w1End, rest.length);
+      const rd = placeStretch(rest, start, w1End);
       d1 = g1.map(p=>isAuthorPost(p) ? '' : rd[rest.indexOf(p)]);
     } else {
+      // everything up to the last Author Intro goes by Jan 31; the rest fills February
       const partA = g1.slice(0, lastA+1), partB = g1.slice(lastA+1);
       const febStart = day(AUTHOR_DEADLINE); if(start > febStart) febStart.setTime(start.getTime());
-      const dA = spreadDates(start, partB.length ? authorEnd : (authorEnd < w1End ? authorEnd : w1End), partA.length);
-      const dB = spreadDates(febStart, w1End, partB.length);
-      d1 = dA.concat(dB);
+      const aEnd = partB.length ? authorEnd : (authorEnd < w1End ? authorEnd : w1End);
+      d1 = placeStretch(partA, start, aEnd).concat(placeStretch(partB, febStart, w1End));
     }
   }
-  const d2 = days2>0 ? spreadDates(w2Start, w2End, g2.length) : [];
-
-  // nudge any date that falls on a Fixed post's day (or doubles up) to the nearest free day in its window
-  const used = new Set(fixedDays), iso = d=>d.toISOString().slice(0,10);
-  const nudge = (dates, lo, hi)=>{
-    return dates.map(ds=>{
-      if(!ds) return ds;
-      for(let k=0;k<60;k++){
-        for(const sgn of k ? [1,-1] : [0]){
-          const d = day(ds); d.setDate(d.getDate()+sgn*k);
-          const v = iso(d);
-          if(d >= lo && d <= hi && !used.has(v)){ used.add(v); return v; }
-        }
-      }
-      return ds;
-    });
-  };
-  if(w1Open){
-    const authorEnd = day(AUTHOR_DEADLINE); authorEnd.setDate(authorEnd.getDate()-1);
-    // author posts must stay by Jan 31 even after nudging
-    const authors = g1.map(isAuthorPost);
-    const nA = nudge(d1.filter((_,i)=>authors[i]), start, authorEnd < w1End ? authorEnd : w1End);
-    const nB = nudge(d1.filter((_,i)=>!authors[i]), start, w1End);
-    let ia=0, ib=0; d1 = d1.map((_,i)=> authors[i] ? nA[ia++] : nB[ib++]);
-  }
-  const d2n = nudge(d2, w2Start, w2End);
-  d2.splice(0, d2.length, ...d2n);
+  const d2 = days2>0 ? placeStretch(g2, w2Start, w2End) : g2.map(()=> '');
 
   const proposed = [];
   keep.forEach(p=>proposed.push({id:p.id, date:p.date||'', title:p.title, dateType:p.dateType, kept:true}));
