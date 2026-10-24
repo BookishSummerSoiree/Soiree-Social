@@ -680,6 +680,53 @@ function migrateAuthorIntro(){
   if(changed){ save(); renderAll(); }
   return changed;
 }
+// ── AUTHOR INTROS FROM HQ ──────────────────────────────────────────────────
+// Reads the confirmed authors from Soiree HQ and gives each one an
+// "Author intro: <name>" post, filling the numbered "Author Intro N" ideas in order.
+// Numbered ideas that aren't needed yet stay as they are.
+const HQ_DB_URL = 'https://soiree-prizes-2027-default-rtdb.firebaseio.com';
+const INTRO_PREFIX = 'Author intro: ';
+let _hqAuthorsSynced = false;
+async function syncAuthorIntros(){
+  if(_hqAuthorsSynced) return;
+  _hqAuthorsSynced = true;
+  let raw;
+  try{
+    const r = await fetch(HQ_DB_URL + '/authors.json', {cache:'no-store'});
+    if(!r.ok) return;
+    raw = await r.json();
+  }catch(e){ return; }
+  const list = (Array.isArray(raw) ? raw : Object.values(raw||{})).filter(a=>a && a.name && a.status==='Confirmed');
+  const last = n=>String(n).trim().split(/\s+/).pop();
+  list.sort((a,b)=>last(a.name).localeCompare(last(b.name)) || a.name.localeCompare(b.name));
+
+  let changed = false;
+  const numbered = posts
+    .map(p=>({p, m:/^Author Intro (\d+)$/i.exec(p.title||'')}))
+    .filter(x=>x.m).sort((a,b)=>+a.m[1] - +b.m[1]).map(x=>x.p);
+  list.forEach(a=>{
+    const name = String(a.name).trim();
+    const want = INTRO_PREFIX + name;
+    let post = posts.find(p=>p.hqAuthorId && p.hqAuthorId===String(a.id))
+            || posts.find(p=>(p.title||'').toLowerCase()===want.toLowerCase());
+    if(post){
+      // keep the title in step if the name was changed in HQ
+      if(post.hqAuthorId===String(a.id) && (post.title||'').startsWith(INTRO_PREFIX) && post.title!==want){ post.title = want; changed = true; }
+      if(!post.hqAuthorId){ post.hqAuthorId = String(a.id); changed = true; }
+      return;
+    }
+    post = numbered.shift();
+    if(post){
+      post.title = want; post.hqAuthorId = String(a.id);
+    } else {
+      posts.push({id:'intro-'+a.id, dateType:'premar1', date:'', type:'social', cat:'Author Intro', postType:'', title:want,
+        purpose:'', caption:'', driveLink:'', htagId:'', extraHtags:'', hqAuthorId:String(a.id)});
+    }
+    changed = true;
+  });
+  if(changed){ save(); renderAll(); }
+}
+
 const DC = [
   {id:"cd1",label:"Tickets On Sale",date:"2027-03-01",color:"#E8704A"},
   {id:"cd2",label:"THE SOIRÉE",date:"2027-06-12",color:"#2D3561"},
@@ -809,8 +856,9 @@ async function loadFromFirestoreAll(){
     }
     migrateV8();
     migrateAuthorIntro();
+    syncAuthorIntros();
     setupFirestoreListeners();
-  } catch(e){ console.warn('Firestore load failed', e); migrateV8(); migrateAuthorIntro(); }
+  } catch(e){ console.warn('Firestore load failed', e); migrateV8(); migrateAuthorIntro(); syncAuthorIntros(); }
 }
 function setupFirestoreListeners(){
   if(!window._firestoreDB || window._fsListenersActive2) return;
