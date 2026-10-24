@@ -148,6 +148,7 @@ body{font-family:var(--fb);background:var(--cream);color:var(--black);min-height
 .arrange-bar.visible{display:flex}
 .arrange-bar-title{font-family:var(--fd);font-size:13px;font-style:italic;color:var(--navy);margin-right:auto}
 .arrange-pills{display:flex;gap:5px}
+.arrange-note{flex-basis:100%;font-size:9.5px;color:#888;line-height:1.3}
 .arrange-pill{border:none;border-radius:14px;padding:5px 10px;font-family:var(--fb);font-size:10.5px;font-weight:500;cursor:pointer;white-space:nowrap}
 .arrange-pill.manual{background:var(--sage-l);color:var(--sage-d)}
 .arrange-pill.auto{background:var(--navy);color:var(--white)}
@@ -225,7 +226,10 @@ body{font-family:var(--fb);background:var(--cream);color:var(--black);min-height
 .detail-drive-btn{display:inline-flex;align-items:center;gap:8px;background:var(--sage-l);color:var(--sage-d);border:1px solid var(--sage);border-radius:10px;padding:9px 14px;font-size:12px;font-weight:500;text-decoration:none;font-family:var(--fb)}
 
 /* ── AUTO-SCHEDULE MODAL ── */
-.sched-step{display:none}.sched-step.active{display:block}
+.as-start-row{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.as-start-row label{font-size:11px;color:#777;white-space:nowrap}
+.as-start-row .ef-input{flex:1;padding:6px 10px}
+.link-btn{display:block;width:100%;background:none;border:none;color:#888;font-family:var(--fb);font-size:11px;text-decoration:underline;margin-top:10px;cursor:pointer}
 .mock-cal{background:var(--white);border-radius:12px;border:1px solid var(--cream-d);overflow:hidden;margin-bottom:12px}
 .mock-cal-header{background:var(--navy);color:var(--white);padding:10px 14px;font-family:var(--fd);font-size:16px;font-style:italic}
 .mock-cal-row{display:flex;border-bottom:1px solid var(--cream-d);align-items:stretch}
@@ -346,11 +350,12 @@ body{font-family:var(--fb);background:var(--cream);color:var(--black);min-height
   <div class="page active" id="page-list">
     <!-- Arrange bar -->
     <div class="arrange-bar" id="arrange-bar">
-      <div class="arrange-bar-title">Drag to reorder, then:</div>
+      <div class="arrange-bar-title">Drag to reorder, or</div>
       <div class="arrange-pills">
-        <button class="arrange-pill manual" onclick="doneArrange('manual')">I'll set dates</button>
-        <button class="arrange-pill auto" onclick="doneArrange('auto')">Schedule for me ✨</button>
+        <button class="arrange-pill manual" onclick="shuffleAndPreview()">🔀 Shuffle for me</button>
+        <button class="arrange-pill auto" onclick="arrangeDone()">Done ✓</button>
       </div>
+      <div class="arrange-note">Shuffling mixes up the categories. Anything that already has a date stays put.</div>
     </div>
     <div id="master-list-content"></div>
   </div>
@@ -533,39 +538,42 @@ body{font-family:var(--fb);background:var(--cream);color:var(--black);min-height
 </div>
 
 <!-- Auto-Schedule Modal -->
+<div class="modal-ov" id="arrange-confirm">
+  <div class="modal" style="padding-bottom:28px">
+    <div class="modal-handle"></div>
+    <div class="modal-title" style="margin-bottom:10px">Schedule them?</div>
+    <p style="font-size:13px;color:#555;line-height:1.5;margin-bottom:6px">Do you want me to space out and schedule the posts in this order?</p>
+    <p style="font-size:11px;color:#999;line-height:1.4;margin-bottom:4px">Posts that already have a date stay put. Pre Mar 1 posts land before March 1 and Post Mar 1 posts land after it.</p>
+    <div style="display:flex;gap:8px">
+      <button class="btn-ghost" style="flex:1" onclick="closeModal('arrange-confirm')">No, keep editing</button>
+      <button class="btn-navy" style="flex:1" onclick="closeModal('arrange-confirm');openAutoSchedule('order')">Yes, schedule them</button>
+    </div>
+    <button class="link-btn" onclick="closeModal('arrange-confirm');saveArrangeOrder(true)">Just save this order. I'll set the dates myself.</button>
+  </div>
+</div>
+
+<!-- Auto-Schedule preview -->
 <div class="modal-ov" id="autosched-modal">
   <div class="modal">
     <div class="modal-handle"></div>
     <div class="modal-top">
-      <div class="modal-title">Auto-Schedule Posts</div>
+      <div class="modal-title" id="as-title">Proposed Schedule</div>
       <button class="modal-close-btn" onclick="closeModal('autosched-modal')">✕</button>
     </div>
-
-    <!-- Step 1: pick start date -->
-    <div class="sched-step active" id="as-step1">
-      <p style="font-size:12px;color:#666;margin-bottom:14px;line-height:1.6">
-        I'll give a date to every unscheduled post, spread evenly from your start date. Posts that already have a date stay put. Pre Mar 1 posts land before March 1, Post Mar 1 posts land between March 2 and June 11.
-      </p>
-      <div class="ef">
-        <label class="ef-lbl">Start date for scheduling</label>
-        <input class="ef-input" id="as-start-date" type="date">
-      </div>
-      <button class="btn-navy" onclick="runAutoSchedule()">Generate Schedule</button>
-      <button class="btn-ghost" onclick="closeModal('autosched-modal')">Cancel</button>
+    <p id="as-intro" style="font-size:12px;color:#666;margin-bottom:8px;line-height:1.5"></p>
+    <div class="as-start-row">
+      <label for="as-start-date">Start on</label>
+      <input class="ef-input" id="as-start-date" type="date" onchange="runAutoSchedule()">
     </div>
-
-    <!-- Step 2: preview -->
-    <div class="sched-step" id="as-step2">
-      <p style="font-size:12px;color:#666;margin-bottom:10px">Here's the proposed schedule.</p>
-      <div class="view-toggle" style="display:inline-flex;margin-bottom:8px">
-        <button class="vt-btn" data-mv="calendar" onclick="setMockView('calendar')">📅 Calendar</button>
-        <button class="vt-btn" data-mv="list" onclick="setMockView('list')">☰ List</button>
-      </div>
-      <div class="mock-cal" id="as-mock-cal"></div>
-      <div style="display:flex;gap:8px;margin-top:4px">
-        <button class="btn-ghost" style="flex:1;margin-top:0" onclick="closeModal('autosched-modal')">Cancel</button>
-        <button class="btn-navy" style="flex:1;margin-top:0" onclick="applyAutoSchedule()">Use This Schedule ✓</button>
-      </div>
+    <div class="view-toggle" style="display:inline-flex;margin-bottom:8px">
+      <button class="vt-btn" data-mv="calendar" onclick="setMockView('calendar')">📅 Calendar</button>
+      <button class="vt-btn" data-mv="list" onclick="setMockView('list')">☰ List</button>
+    </div>
+    <div class="mock-cal" id="as-mock-cal"></div>
+    <button class="btn-ghost" id="as-reshuffle" style="margin-top:0;margin-bottom:8px" onclick="shuffleAndPreview(true)">🔀 Shuffle again</button>
+    <div style="display:flex;gap:8px">
+      <button class="btn-ghost" style="flex:1;margin-top:0" onclick="closeModal('autosched-modal')" id="as-cancel">Cancel</button>
+      <button class="btn-navy" style="flex:1;margin-top:0" onclick="applyAutoSchedule()">Use This Schedule ✓</button>
     </div>
   </div>
 </div>
@@ -1235,26 +1243,68 @@ function toggleArrange(){
   renderMasterList();
 }
 
-function doneArrange(mode){
-  if(mode === 'manual'){
-    arrangeMode = false;
-    document.getElementById('arrange-btn').textContent = 'Arrange';
-    document.getElementById('arrange-btn').classList.remove('active');
-    document.getElementById('arrange-bar').classList.remove('visible');
-    document.getElementById('master-list-content').classList.remove('arrange-mode');
-    // Save the new order
-    const cards = document.querySelectorAll('#master-list-content .card[data-id]');
-    const newOrder = Array.from(cards).map(c=>c.dataset.id);
-    const reordered = newOrder.map(id=>posts.find(p=>p.id===id)).filter(Boolean);
-    // Add back any posts not in view
-    const inView = new Set(newOrder);
-    posts.filter(p=>!inView.has(p.id)).forEach(p=>reordered.push(p));
-    posts = reordered;
-    save(); renderMasterList();
-  } else {
-    // Auto-schedule
-    openAutoSchedule();
+function exitArrangeMode(){
+  arrangeMode = false;
+  document.getElementById('arrange-btn').textContent = 'Arrange';
+  document.getElementById('arrange-btn').classList.remove('active');
+  document.getElementById('arrange-bar').classList.remove('visible');
+  document.getElementById('master-list-content').classList.remove('arrange-mode');
+}
+// Put the posts array in the order shown on screen (posts not on screen keep their place at the end)
+function applyScreenOrder(){
+  const ids = _listCards().map(c=>c.dataset.id);
+  const inView = new Set(ids);
+  posts = ids.map(id=>posts.find(p=>p.id===id)).filter(Boolean).concat(posts.filter(p=>!inView.has(p.id)));
+}
+function saveArrangeOrder(leave){
+  applyScreenOrder();
+  if(leave) exitArrangeMode();
+  save(); renderMasterList();
+}
+function arrangeDone(){ openModal('arrange-confirm'); }
+
+// Shuffle: spread each category evenly so the same kind of post isn't bunched up.
+// Only posts with no date move. Pre Mar 1 ideas go first, then Flexible, then Post Mar 1,
+// so the list reads in the same order the dates will.
+function spreadByCategory(list){
+  const groups = {};
+  list.forEach(p=>{ const k = p.cat || p.type || ''; (groups[k] = groups[k] || []).push(p); });
+  const keyed = [];
+  Object.values(groups).forEach(g=>{
+    for(let i=g.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [g[i],g[j]]=[g[j],g[i]]; }
+    const off = Math.random();
+    g.forEach((p,k)=>keyed.push({p, key:(k + off*0.9 + 0.05)/g.length + Math.random()*0.001}));
+  });
+  keyed.sort((a,b)=>a.key-b.key);
+  // break up two-in-a-rows where a later swap can fix them without making a new one
+  const out = keyed.map(x=>x.p), cat = p=>p.cat||p.type||'';
+  const ok = (arr, k, c)=> (k-1<0 || cat(arr[k-1])!==c) && (k+1>=arr.length || cat(arr[k+1])!==c);
+  for(let i=1;i<out.length;i++){
+    if(cat(out[i])!==cat(out[i-1])) continue;
+    for(let j=i+1;j<out.length;j++){
+      const t=[...out]; [t[i],t[j]]=[t[j],t[i]];
+      if(ok(t,i,cat(t[i])) && ok(t,j,cat(t[j]))){ out.splice(0,out.length,...t); break; }
+    }
   }
+  return out;
+}
+function shuffleAndPreview(again){
+  const cards = _listCards();
+  const onScreen = cards.map(c=>posts.find(p=>p.id===c.dataset.id)).filter(Boolean);
+  const movable = onScreen.filter(p=>!p.date && p.dateType!=='fixed');
+  if(movable.length < 2){ alert('There aren\'t enough unscheduled posts here to shuffle.'); return; }
+  const order = [
+    ...spreadByCategory(movable.filter(p=>p.dateType==='premar1')),
+    ...spreadByCategory(movable.filter(p=>p.dateType!=='premar1' && p.dateType!=='postmar1')),
+    ...spreadByCategory(movable.filter(p=>p.dateType==='postmar1')),
+  ];
+  // drop the new order into the slots the movable posts had; dated posts stay where they were
+  const movableIds = new Set(movable.map(p=>p.id));
+  const parentOf = new Map(cards.map(c=>[c.dataset.id, c]));
+  const slots = cards.filter(c=>movableIds.has(c.dataset.id));
+  const markers = slots.map(c=>{ const m=document.createComment('slot'); c.parentNode.insertBefore(m,c); return m; });
+  markers.forEach((m,i)=>{ const card = parentOf.get(order[i].id); m.parentNode.insertBefore(card, m); m.remove(); });
+  if(again) runAutoSchedule(); else openAutoSchedule('shuffle');
 }
 
 // Drag to reorder: a coral line shows where the post will land
@@ -1339,11 +1389,16 @@ function setupTouchDrag(el){
 const SOIREE_DATE = '2027-06-12';
 const TICKETS_DATE = '2027-03-01';
 
-function openAutoSchedule(){
-  const today_str = today.toISOString().slice(0,10);
-  document.getElementById('as-start-date').value = today_str;
-  document.getElementById('as-step1').classList.add('active');
-  document.getElementById('as-step2').classList.remove('active');
+let _asMode = 'order';
+function openAutoSchedule(mode){
+  _asMode = mode || 'order';
+  document.getElementById('as-start-date').value = today.toISOString().slice(0,10);
+  document.getElementById('as-intro').textContent = _asMode==='shuffle'
+    ? "I mixed up the order so the categories are spread out, then spaced them out from your start date. Posts that already have a date didn't move."
+    : "Here's your order, spaced out from your start date. Posts that already have a date didn't move.";
+  document.getElementById('as-reshuffle').style.display = _asMode==='shuffle' ? '' : 'none';
+  document.getElementById('as-cancel').textContent = _asMode==='shuffle' ? 'Back to editing' : 'Cancel';
+  runAutoSchedule();
   openModal('autosched-modal');
 }
 
@@ -1355,40 +1410,53 @@ function runAutoSchedule(){
   const domCards = [...document.querySelectorAll('#master-list-content .card[data-id]')];
   const orderedIds = domCards.map(c=>c.dataset.id);
 
-  // Posts that already have a date keep it. Only undated posts get a date.
-  const keep = [], premar = [], postmar = [], flexible = [];
+  // Posts that already have a date keep it. Only undated posts get a date, one sequence in
+  // the order on screen: Pre Mar 1 posts in the window before Mar 1, Post Mar 1 posts after it,
+  // and Flexible posts in whichever window they sit next to in the list.
+  const day = ds=>new Date(ds+"T12:00:00");
+  const keep = [], seq = [];
   orderedIds.forEach(id=>{
     const p = posts.find(x=>x.id===id);
     if(!p) return;
-    if(p.date || p.dateType==='fixed') keep.push(p);
-    else if(p.dateType==='premar1') premar.push(p);
-    else if(p.dateType==='postmar1') postmar.push(p);
-    else flexible.push(p);
+    if(p.date || p.dateType==='fixed') keep.push(p); else seq.push(p);
   });
-  const day = ds=>new Date(ds+"T12:00:00");
   const start = day(startStr);
-  const preCutoff = day(TICKETS_DATE); preCutoff.setDate(preCutoff.getDate()-1);   // Feb 28
-  const soireeEve = day(SOIREE_DATE); soireeEve.setDate(soireeEve.getDate()-1);    // Jun 11
-  const postStart = start > day(TICKETS_DATE) ? start : day(TICKETS_DATE);
-  // Mar 1 itself is ticket day, so Post Mar 1 ideas start the day after
-  if(postStart.getTime()===day(TICKETS_DATE).getTime()) postStart.setDate(postStart.getDate()+1);
-  const preDates  = spreadDates(start, preCutoff, premar.length);
-  const postDates = spreadDates(postStart, soireeEve, postmar.length);
-  const flexDates = spreadDates(start, soireeEve, flexible.length);
+  const w1End = day(TICKETS_DATE); w1End.setDate(w1End.getDate()-1);            // Feb 28
+  const w2Start = day(TICKETS_DATE); w2Start.setDate(w2Start.getDate()+1);       // Mar 2 (Mar 1 is ticket day)
+  if(start > w2Start) w2Start.setTime(start.getTime());
+  const w2End = day(SOIREE_DATE); w2End.setDate(w2End.getDate()-1);              // Jun 11
+  const w1Open = start <= w1End;
+  const days1 = w1Open ? (w1End-start)/864e5 + 1 : 0, days2 = Math.max(0,(w2End-w2Start)/864e5 + 1);
+
+  // decide each post's window
+  const win = seq.map(p=>p.dateType==='premar1' ? 1 : p.dateType==='postmar1' ? 2 : 0);
+  if(!w1Open) win.forEach((w,i)=>{ if(w===0) win[i]=2; });
+  // a run of Flexible posts sits between its neighbours: split it by how much room each window has
+  for(let i=0;i<win.length;){
+    if(win[i]!==0){ i++; continue; }
+    let j=i; while(j<win.length && win[j]===0) j++;
+    const before = i>0 ? win[i-1] : 0, after = j<win.length ? win[j] : 0;
+    const n = j-i;
+    // after a Post Mar 1 post → stay after Mar 1; before a Pre Mar 1 post → stay before it;
+    // otherwise split by how much room each window has
+    const into1 = before===2 ? 0 : after===1 ? n : Math.round(n * days1/((days1+days2)||1));
+    for(let k=0;k<n;k++) win[i+k] = k<into1 ? 1 : 2;
+    i = j;
+  }
+  const g1 = seq.filter((_,i)=>win[i]===1), g2 = seq.filter((_,i)=>win[i]===2);
+  const d1 = w1Open ? spreadDates(start, w1End, g1.length) : [];
+  const d2 = days2>0 ? spreadDates(w2Start, w2End, g2.length) : [];
 
   const proposed = [];
   keep.forEach(p=>proposed.push({id:p.id, date:p.date||'', title:p.title, dateType:p.dateType, kept:true}));
-  premar.forEach((p,i)=>proposed.push({id:p.id, date:preDates[i]||'', title:p.title, dateType:'premar1'}));
-  postmar.forEach((p,i)=>proposed.push({id:p.id, date:postDates[i]||'', title:p.title, dateType:'postmar1'}));
-  flexible.forEach((p,i)=>proposed.push({id:p.id, date:flexDates[i]||'', title:p.title, dateType:'flexible'}));
+  g1.forEach((p,i)=>proposed.push({id:p.id, date:d1[i]||'', title:p.title, dateType:p.dateType}));
+  g2.forEach((p,i)=>proposed.push({id:p.id, date:d2[i]||'', title:p.title, dateType:p.dateType}));
   proposed.sort((a,b)=>(a.date||'').localeCompare(b.date||''));
 
   pendingAutoSchedule = proposed;
   _mockYear = null; _mockSel = null;
   renderMockCalendar(proposed);
 
-  document.getElementById('as-step1').classList.remove('active');
-  document.getElementById('as-step2').classList.add('active');
 }
 
 function spreadDates(startDate, endDate, count){
@@ -1482,16 +1550,13 @@ function renderMockCalendar(proposed){
 
 function applyAutoSchedule(){
   if(!pendingAutoSchedule) return;
+  applyScreenOrder();   // keep the list in the order you scheduled
   pendingAutoSchedule.forEach(item=>{
     const p = posts.find(x=>x.id===item.id);
     if(p && item.date && !item.kept){ p.date = item.date; p.lastUpdated = formatUserStamp(); p.lastUpdatedBy = getCurrentUser(); }
   });
   pendingAutoSchedule = null;
-  arrangeMode = false;
-  document.getElementById('arrange-btn').textContent = 'Arrange';
-  document.getElementById('arrange-btn').classList.remove('active');
-  document.getElementById('arrange-bar').classList.remove('visible');
-  document.getElementById('master-list-content').classList.remove('arrange-mode');
+  exitArrangeMode();
   save();
   closeModal('autosched-modal');
   renderMasterList();
