@@ -1266,50 +1266,78 @@ function arrangeDone(){ openModal('arrange-confirm'); }
 // Shuffle: spread each category evenly so the same kind of post isn't bunched up.
 // Only posts with no date move. Pre Mar 1 ideas go first, then Flexible, then Post Mar 1,
 // so the list reads in the same order the dates will.
-function spreadByCategory(list){
-  const groups = {};
-  list.forEach(p=>{ const k = p.cat || p.type || ''; (groups[k] = groups[k] || []).push(p); });
-  const keyed = [];
-  Object.values(groups).forEach(g=>{
-    for(let i=g.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [g[i],g[j]]=[g[j],g[i]]; }
-    const off = Math.random();
-    g.forEach((p,k)=>keyed.push({p, key:(k + off*0.9 + 0.05)/g.length + Math.random()*0.001}));
-  });
-  keyed.sort((a,b)=>a.key-b.key);
-  // break up two-in-a-rows where a later swap can fix them without making a new one
-  const out = keyed.map(x=>x.p), cat = p=>p.cat||p.type||'';
-  const ok = (arr, k, c)=> (k-1<0 || cat(arr[k-1])!==c) && (k+1>=arr.length || cat(arr[k+1])!==c);
-  for(let i=1;i<out.length;i++){
-    if(cat(out[i])!==cat(out[i-1])) continue;
-    for(let j=i+1;j<out.length;j++){
-      const t=[...out]; [t[i],t[j]]=[t[j],t[i]];
-      if(ok(t,i,cat(t[i])) && ok(t,j,cat(t[j]))){ out.splice(0,out.length,...t); break; }
-    }
-  }
-  return out;
-}
 // Author Intros have to be done by Jan 31, so the shuffle mixes them with the other
 // Pre Mar 1 posts and saves a share of the non-author posts for February.
-function preMar1Order(list){
+// Returns [beforeFeb, february] groups.
+function preMar1Groups(list){
   const authors = list.filter(isAuthorPost), others = list.filter(p=>!isAuthorPost(p));
-  if(!authors.length || !others.length) return spreadByCategory(list);
+  if(!authors.length || !others.length) return [list];
   const start = new Date(), feb1 = new Date(AUTHOR_DEADLINE+'T12:00:00'), mar1 = new Date(TICKETS_DATE+'T12:00:00');
   const share = start < feb1 ? (mar1-feb1)/(mar1-start) : 1;
   const forFeb = Math.min(others.length, Math.max(1, Math.round(others.length*share)));
-  const mixed = spreadByCategory(others);   // random order of the non-author posts
-  const febPosts = mixed.slice(mixed.length-forFeb), earlyOthers = mixed.slice(0, mixed.length-forFeb);
-  return spreadByCategory(authors.concat(earlyOthers)).concat(febPosts);
+  const mixed = shuffled(others);
+  return [authors.concat(mixed.slice(forFeb)), mixed.slice(0, forFeb)];
+}
+function shuffled(arr){ const a=[...arr]; for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
+
+// How "bunched up" an order is. Lower is better. Neighbours (and near-neighbours) that share a
+// category, a post type (Reel/Slides) or the same idea ("Fun reel with authors" twice,
+// "Prizes" and "Prizes (part 2)") cost points.
+function _titleKey(p){
+  if(isAuthorPost(p)) return '';
+  return String(p.title||'').toLowerCase().replace(/\(.*?\)/g,'').replace(/[^a-z ]/g,' ').replace(/\b(part|pt|round)\b/g,'').replace(/\s+/g,' ').trim();
+}
+function bunchScore(a, keys){
+  const CAT=[0,12,5,2,1], TYPE=[0,4,1.5,.5,0], SAME=[0,60,35,20,12,8,6,4,3];
+  let s=0;
+  for(let i=0;i<a.length;i++){
+    for(let d=1; d<=8 && i+d<a.length; d++){
+      const P=a[i], Q=a[i+d];
+      if(d<=4){
+        if((P.cat||P.type)===(Q.cat||Q.type)) s += CAT[d] * (isAuthorPost(P) ? .6 : 1);
+        if(P.postType && P.postType===Q.postType) s += TYPE[d];
+      }
+      const k=keys.get(P);
+      if(k && k===keys.get(Q)) s += SAME[d];
+    }
+  }
+  return s;
+}
+// Shuffle each group, then keep swapping posts inside a group whenever it makes the whole
+// list less bunched up. Groups stay in order (so date rules still hold); posts never change group.
+function arrangeGroups(groups){
+  groups = groups.filter(g=>g.length);
+  const all = groups.flat(), keys = new Map(all.map(p=>[p,_titleKey(p)]));
+  const bounds = []; let at = 0; groups.forEach(g=>{ bounds.push([at, at+g.length]); at += g.length; });
+  const swappable = bounds.filter(([x,y])=>y-x>1);
+  let best=null, bestScore=Infinity;
+  for(let r=0; r<4; r++){
+    let cur = groups.map(shuffled).flat(), cs = bunchScore(cur, keys);
+    for(let it=0, T=6; it<4000 && swappable.length; it++, T*=0.9985){
+      const [x,y] = swappable[Math.floor(Math.random()*swappable.length)];
+      const i = x+Math.floor(Math.random()*(y-x)), j = x+Math.floor(Math.random()*(y-x));
+      if(i===j) continue;
+      [cur[i],cur[j]]=[cur[j],cur[i]];
+      const ns = bunchScore(cur, keys);
+      if(ns <= cs || Math.random() < Math.exp((cs-ns)/T)) cs = ns;
+      else [cur[i],cur[j]]=[cur[j],cur[i]];
+      if(cs < bestScore){ bestScore = cs; best = [...cur]; }
+    }
+    if(!swappable.length){ best = cur; break; }
+  }
+  return best || all;
 }
 function shuffleAndPreview(again){
   const cards = _listCards();
   const onScreen = cards.map(c=>posts.find(p=>p.id===c.dataset.id)).filter(Boolean);
   const movable = onScreen.filter(p=>!p.date && p.dateType!=='fixed');
   if(movable.length < 2){ alert('There aren\'t enough unscheduled posts here to shuffle.'); return; }
-  const order = [
-    ...preMar1Order(movable.filter(p=>p.dateType==='premar1' || (isAuthorPost(p) && p.dateType!=='postmar1'))),
-    ...spreadByCategory(movable.filter(p=>p.dateType!=='premar1' && p.dateType!=='postmar1' && !isAuthorPost(p))),
-    ...spreadByCategory(movable.filter(p=>p.dateType==='postmar1')),
-  ];
+  const isPre = p=>p.dateType==='premar1' || (isAuthorPost(p) && p.dateType!=='postmar1');
+  const order = arrangeGroups([
+    ...preMar1Groups(movable.filter(isPre)),
+    movable.filter(p=>!isPre(p) && p.dateType!=='postmar1'),
+    movable.filter(p=>p.dateType==='postmar1'),
+  ]);
   // drop the new order into the slots the movable posts had; dated posts stay where they were
   const movableIds = new Set(movable.map(p=>p.id));
   const parentOf = new Map(cards.map(c=>[c.dataset.id, c]));
