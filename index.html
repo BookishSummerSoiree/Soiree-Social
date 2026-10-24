@@ -1182,6 +1182,14 @@ function renderMasterList(){
   syncViewToggle();
   const sb = document.querySelector('.search-box'); if(sb) sb.classList.toggle('has-q', !!searchQ);
   const vr = document.querySelector('.view-row'); if(vr) vr.classList.toggle('searching', !!searchQ);
+  if(arrangeMode && !searchQ){
+    const lvr = document.getElementById('listview-row'); if(lvr) lvr.classList.add('hide');
+    const list = arrangeCandidates();
+    el.innerHTML = `<div class="search-head">${list.length} post${list.length===1?'':'s'} to schedule. Fixed-date posts aren't shown since they stay put.</div>` +
+      (list.length ? list.map(p=>cardHTML(p, {draggable:canDrag()})).join('') : `<div class="empty-msg">Nothing to schedule here</div>`);
+    if(canDrag()) setupDragDrop();
+    return;
+  }
   if(searchQ){
     if(arrangeMode) toggleArrange();
     const lvr = document.getElementById('listview-row'); if(lvr) lvr.classList.add('hide');
@@ -1370,6 +1378,11 @@ function calDayTap(ds){
 }
 
 // ── ARRANGE / DRAG ─────────────────────────────────────────────────────────
+// Posts Arrange can schedule: social posts that aren't Fixed and aren't already in the past,
+// in your list order, using the category / type / date chips but not the Show pills.
+function arrangeCandidates(){
+  return getFiltered().filter(p=>p.type==='social' && p.dateType!=='fixed' && !(p.date && new Date(p.date+'T12:00:00') < today));
+}
 // Arrange has two steps: first you pick how ('choose'), then for your own order you drag ('manual').
 let arrangeStage = 'choose';
 const canDrag = ()=> arrangeMode && arrangeStage === 'manual';
@@ -1406,7 +1419,7 @@ function renderArrangeBar(){
           <span>You'll see the calendar first, before anything is scheduled.</span>
         </button>
       </div>
-      <div class="arrange-note">Posts that already have a date never move. Author Intros land by Jan 31, Pre Mar 1 posts before March 1, Post Mar 1 posts after it.</div>`;
+      <div class="arrange-note">Posts that have a FIXED date never move. Author Intros land by Jan 31, Pre Mar 1 posts before March 1, Post Mar 1 posts after it.</div>`;
   } else {
     bar.innerHTML = `
       <div class="arrange-row">
@@ -1520,8 +1533,8 @@ function arrangeGroups(groups){
 function shuffleAndPreview(again){
   const cards = _listCards();
   const onScreen = cards.map(c=>posts.find(p=>p.id===c.dataset.id)).filter(Boolean);
-  const movable = onScreen.filter(p=>!p.date && p.dateType!=='fixed');
-  if(movable.length < 2){ alert('There aren\'t enough unscheduled posts here to shuffle.'); return; }
+  const movable = onScreen.filter(p=>p.dateType!=='fixed');
+  if(movable.length < 2){ alert('There aren\'t enough posts here to shuffle.'); return; }
   const isPre = p=>p.dateType==='premar1' || (isAuthorPost(p) && p.dateType!=='postmar1');
   const order = arrangeGroups([
     ...preMar1Groups(movable.filter(isPre)),
@@ -1628,8 +1641,8 @@ function openAutoSchedule(mode){
   _asMode = mode || 'order';
   document.getElementById('as-start-date').value = today.toISOString().slice(0,10);
   document.getElementById('as-intro').textContent = _asMode==='shuffle'
-    ? "I mixed up the order so the categories are spread out, then spaced them out from your start date. Posts that already have a date didn't move."
-    : "Here's your order, spaced out from your start date. Posts that already have a date didn't move.";
+    ? "I mixed up the order so the categories are spread out, then spaced them out from your start date. Posts with a FIXED date didn't move (📌)."
+    : "Here's your order, spaced out from your start date. Posts with a FIXED date didn't move (📌).";
   document.getElementById('as-reshuffle').style.display = _asMode==='shuffle' ? '' : 'none';
   document.getElementById('as-cancel').textContent = _asMode==='shuffle' ? 'Let me adjust the order' : 'Cancel';
   runAutoSchedule();
@@ -1644,16 +1657,18 @@ function runAutoSchedule(){
   const domCards = [...document.querySelectorAll('#master-list-content .card[data-id]')];
   const orderedIds = domCards.map(c=>c.dataset.id);
 
-  // Posts that already have a date keep it. Only undated posts get a date, one sequence in
+  // Only FIXED posts keep their date. Everything else on screen gets a date, one sequence in
   // the order on screen: Pre Mar 1 posts in the window before Mar 1, Post Mar 1 posts after it,
-  // and Flexible posts in whichever window they sit next to in the list.
+  // and Flexible posts in whichever window they sit next to in the list. No post lands on a
+  // day that already has a Fixed post.
   const day = ds=>new Date(ds+"T12:00:00");
-  const keep = [], seq = [];
+  const seq = [];
   orderedIds.forEach(id=>{
     const p = posts.find(x=>x.id===id);
-    if(!p) return;
-    if(p.date || p.dateType==='fixed') keep.push(p); else seq.push(p);
+    if(p && p.dateType!=='fixed') seq.push(p);
   });
+  const keep = posts.filter(p=>p.type==='social' && p.dateType==='fixed' && p.date && p.date >= startStr);
+  const fixedDays = new Set(posts.filter(p=>p.dateType==='fixed' && p.date).map(p=>p.date));
   const start = day(startStr);
   const w1End = day(TICKETS_DATE); w1End.setDate(w1End.getDate()-1);            // Feb 28
   const w2Start = day(TICKETS_DATE); w2Start.setDate(w2Start.getDate()+1);       // Mar 2 (Mar 1 is ticket day)
@@ -1700,6 +1715,32 @@ function runAutoSchedule(){
     }
   }
   const d2 = days2>0 ? spreadDates(w2Start, w2End, g2.length) : [];
+
+  // nudge any date that falls on a Fixed post's day (or doubles up) to the nearest free day in its window
+  const used = new Set(fixedDays), iso = d=>d.toISOString().slice(0,10);
+  const nudge = (dates, lo, hi)=>{
+    return dates.map(ds=>{
+      if(!ds) return ds;
+      for(let k=0;k<60;k++){
+        for(const sgn of k ? [1,-1] : [0]){
+          const d = day(ds); d.setDate(d.getDate()+sgn*k);
+          const v = iso(d);
+          if(d >= lo && d <= hi && !used.has(v)){ used.add(v); return v; }
+        }
+      }
+      return ds;
+    });
+  };
+  if(w1Open){
+    const authorEnd = day(AUTHOR_DEADLINE); authorEnd.setDate(authorEnd.getDate()-1);
+    // author posts must stay by Jan 31 even after nudging
+    const authors = g1.map(isAuthorPost);
+    const nA = nudge(d1.filter((_,i)=>authors[i]), start, authorEnd < w1End ? authorEnd : w1End);
+    const nB = nudge(d1.filter((_,i)=>!authors[i]), start, w1End);
+    let ia=0, ib=0; d1 = d1.map((_,i)=> authors[i] ? nA[ia++] : nB[ib++]);
+  }
+  const d2n = nudge(d2, w2Start, w2End);
+  d2.splice(0, d2.length, ...d2n);
 
   const proposed = [];
   keep.forEach(p=>proposed.push({id:p.id, date:p.date||'', title:p.title, dateType:p.dateType, kept:true}));
