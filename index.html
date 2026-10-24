@@ -606,7 +606,7 @@ const _fbScript1 = document.createElement('script');
 _fbScript1.type = 'module';
 _fbScript1.textContent = `
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
-import { getFirestore, collection, doc, setDoc, getDocs, onSnapshot, deleteDoc }
+import { getFirestore, collection, doc, setDoc, getDocs, onSnapshot, deleteDoc, writeBatch }
   from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 const firebaseConfig = {
   apiKey: "AIzaSyCqB0IkXZw40SER3eoV6hEXCDmRhrSrSLk",
@@ -625,6 +625,7 @@ window._fbSetDoc = setDoc;
 window._fbGetDocs = getDocs;
 window._fbOnSnapshot = onSnapshot;
 window._fbDeleteDoc = deleteDoc;
+window._fbWriteBatch = writeBatch;
 window._firebaseReady = true;
 window.dispatchEvent(new Event('firebase-ready'));
 `;
@@ -905,7 +906,7 @@ async function loadFromFirestoreAll(){
     if(adoptCats(metaCats)) changed = true;
     window._catsLoaded = true;
     if(!metaCats) saveCats();   // first phone to get this version shares its list
-    if(fsPosts && fsPosts.length > 0){ posts = sortByOrder(fsPosts); changed = true; }
+    if(fsPosts && fsPosts.length > 0){ posts = sortByOrder(fsPosts); rememberSynced(fsPosts); changed = true; }
     if(fsCDs && fsCDs.length > 0){ countdowns = fsCDs; changed = true; }
     if(changed){
       localStorage.setItem('ss_p2', JSON.stringify(posts));
@@ -923,9 +924,22 @@ async function loadFromFirestoreAll(){
 function setupFirestoreListeners(){
   if(!window._firestoreDB || window._fsListenersActive2) return;
   window._fsListenersActive2 = true;
+  // Updates can arrive in bursts; wait for them to settle, and only redraw if something changed.
+  let _postSnapTimer = null, _latestPostDocs = null;
   window._fbOnSnapshot(window._fbCollection(window._firestoreDB,'ss_posts2'), snap=>{
-    const data = snap.docs.map(d=>d.data());
-    if(data.length > 0){ posts = sortByOrder(data); if(migrateV8()) return; if(migrateAuthorIntro()) return; if(migrateAllAuthors()) return; localStorage.setItem('ss_p2',JSON.stringify(posts)); renderAll(); }
+    _latestPostDocs = snap.docs.map(d=>d.data());
+    clearTimeout(_postSnapTimer);
+    _postSnapTimer = setTimeout(()=>{
+      const data = _latestPostDocs;
+      if(!data || !data.length) return;
+      rememberSynced(data);
+      const next = sortByOrder(data);
+      if(stableJSON(next) === stableJSON(posts)) return;   // nothing new, no redraw
+      if(arrangeMode && _dragSrc) return;                          // don't move cards while you're dragging
+      posts = next;
+      if(migrateV8()) return; if(migrateAuthorIntro()) return; if(migrateAllAuthors()) return;
+      localStorage.setItem('ss_p2',JSON.stringify(posts)); renderAll();
+    }, 250);
   });
   window._fbOnSnapshot(window._fbCollection(window._firestoreDB,'ss_meta'), snap=>{
     const d = snap.docs.map(x=>x.data()).find(x=>x.id==='cats');
@@ -961,10 +975,30 @@ function save(){
   localStorage.setItem('ss_cats2', JSON.stringify(cats));
   localStorage.setItem('ss_htags2', JSON.stringify(hashtagGroups));
   if(window._firestoreDB){
-    saveToFirestore('ss_posts2', posts).catch(()=>{});
+    savePostsToFirestore();
     saveToFirestore('ss_cds2', countdowns).catch(()=>{});
   }
   saveCats();
+}
+// Send only the posts that actually changed, all in one batch. Sending every post one by
+// one made the list re-sort after each one (posts "popping around") on both phones.
+const stableJSON = o => JSON.stringify(o, (k,v)=> v && typeof v==='object' && !Array.isArray(v) ? Object.keys(v).sort().reduce((a,x)=>(a[x]=v[x],a),{}) : v);
+let _syncedPost = {};   // id -> JSON of what the database has
+function rememberSynced(list){ _syncedPost = {}; list.forEach(p=>{ _syncedPost[p.id] = stableJSON(p); }); }
+function savePostsToFirestore(){
+  const changed = posts.filter(p=>p.id && _syncedPost[p.id] !== stableJSON(p));
+  if(!changed.length) return;
+  changed.forEach(p=>{ _syncedPost[p.id] = stableJSON(p); });
+  const db = window._firestoreDB;
+  if(window._fbWriteBatch){
+    for(let i=0;i<changed.length;i+=400){
+      const batch = window._fbWriteBatch(db);
+      changed.slice(i,i+400).forEach(p=>batch.set(window._fbDoc(db,'ss_posts2',p.id), p));
+      batch.commit().catch(e=>{ console.warn('save failed', e); changed.forEach(p=>{ delete _syncedPost[p.id]; }); });
+    }
+  } else {
+    saveToFirestore('ss_posts2', changed).catch(()=>{});
+  }
 }
 
 // ── CATEGORY → CSS class map ───────────────────────────────────────────────
