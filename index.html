@@ -650,12 +650,12 @@ const V8_POSTS = [
   {id:"v8-pre-5",dateType:"premar1",date:"",type:"social",cat:"Fun",postType:"",title:"Soirée's 5th birthday",purpose:"",caption:"",driveLink:"",htagId:"",extraHtags:"",lastUpdated:"Oct 24 · Nik",lastUpdatedBy:"Nik"},
   {id:"v8-post-1",dateType:"postmar1",date:"",type:"social",cat:"Event",postType:"",title:"Book exchange",purpose:"",caption:"",driveLink:"",htagId:"",extraHtags:"",lastUpdated:"Oct 24 · Nik",lastUpdatedBy:"Nik"},
   {id:"v8-post-2",dateType:"postmar1",date:"",type:"social",cat:"Event",postType:"",title:"What to wear",purpose:"",caption:"",driveLink:"",htagId:"",extraHtags:"",lastUpdated:"Oct 24 · Nik",lastUpdatedBy:"Nik"},
-  {id:"v8-post-3",dateType:"postmar1",date:"",type:"social",cat:"General authors",postType:"",title:"Sponsor post",purpose:"",caption:"",driveLink:"",htagId:"",extraHtags:"",lastUpdated:"Oct 24 · Nik",lastUpdatedBy:"Nik"},
+  {id:"v8-post-3",dateType:"postmar1",date:"",type:"social",cat:"Event",postType:"",title:"Sponsor post",purpose:"",caption:"",driveLink:"",htagId:"",extraHtags:"",lastUpdated:"Oct 24 · Nik",lastUpdatedBy:"Nik"},
   {id:"v8-post-4",dateType:"postmar1",date:"",type:"social",cat:"Event",postType:"",title:"Prizes",purpose:"",caption:"",driveLink:"",htagId:"",extraHtags:"",lastUpdated:"Oct 24 · Nik",lastUpdatedBy:"Nik"},
   {id:"v8-post-5",dateType:"postmar1",date:"",type:"social",cat:"Event",postType:"",title:"Prizes (part 2)",purpose:"",caption:"",driveLink:"",htagId:"",extraHtags:"",lastUpdated:"Oct 24 · Nik",lastUpdatedBy:"Nik"},
   {id:"v8-post-6",dateType:"postmar1",date:"",type:"social",cat:"Fun",postType:"",title:"5th birthday celebration",purpose:"",caption:"",driveLink:"",htagId:"",extraHtags:"",lastUpdated:"Oct 24 · Nik",lastUpdatedBy:"Nik"},
-  {id:"v8-post-7",dateType:"postmar1",date:"",type:"social",cat:"General authors",postType:"",title:"Shadow Mountain",purpose:"",caption:"",driveLink:"",htagId:"",extraHtags:"",lastUpdated:"Oct 24 · Nik",lastUpdatedBy:"Nik"},
-  {id:"v8-post-8",dateType:"postmar1",date:"",type:"social",cat:"General authors",postType:"",title:"Storefront",purpose:"",caption:"",driveLink:"",htagId:"",extraHtags:"",lastUpdated:"Oct 24 · Nik",lastUpdatedBy:"Nik"},
+  {id:"v8-post-7",dateType:"postmar1",date:"",type:"social",cat:"Event",postType:"",title:"Shadow Mountain",purpose:"",caption:"",driveLink:"",htagId:"",extraHtags:"",lastUpdated:"Oct 24 · Nik",lastUpdatedBy:"Nik"},
+  {id:"v8-post-8",dateType:"postmar1",date:"",type:"social",cat:"Event",postType:"",title:"Storefront",purpose:"",caption:"",driveLink:"",htagId:"",extraHtags:"",lastUpdated:"Oct 24 · Nik",lastUpdatedBy:"Nik"},
   {id:"v8-soldout",dateType:"fixed",date:"2027-03-01",type:"social",cat:"Tickets",postType:"",title:"Sold Out",purpose:"",caption:"",driveLink:"",htagId:"",extraHtags:"",lastUpdated:"Oct 24 · Nik",lastUpdatedBy:"Nik"},
 ];
 // Ideas I suggested should never come with a date. Clear the ones I dated earlier
@@ -685,6 +685,11 @@ function migrateAuthorIntro(){
     const m = /^Author announcement (\d+)$/.exec(p.title||'');
     if(m){ p.title = 'Author Intro ' + m[1]; changed = true; }
   });
+  const GONE = 'General ' + 'authors';
+  posts.forEach(p=>{ if(p.cat === GONE){ p.cat = 'Event'; changed = true; } });
+  const gi = cats.indexOf(GONE);
+  if(gi > -1){ cats.splice(gi,1); changed = true; }
+  if(activeCatFilters && activeCatFilters.delete) activeCatFilters.delete(GONE);
   const i = cats.indexOf(OLD);
   if(i > -1){ if(cats.includes('Author Intro')) cats.splice(i,1); else cats[i] = 'Author Intro'; changed = true; }
   if(activeCatFilters && activeCatFilters.has && activeCatFilters.has(OLD)){ activeCatFilters.delete(OLD); activeCatFilters.add('Author Intro'); }
@@ -742,7 +747,7 @@ const DC = [
   {id:"cd1",label:"Tickets On Sale",date:"2027-03-01",color:"#E8704A"},
   {id:"cd2",label:"THE SOIRÉE",date:"2027-06-12",color:"#2D3561"},
 ];
-const DCATS = ["Author Intro","General authors","Tickets","Event","Fun"];
+const DCATS = ["Author Intro","Tickets","Event","Fun"];
 const DHTAGS = [
   {id:"h1",name:"BSS General",tags:"#bookishsummersoiree #bss2027 #bookish #booklover #bookstagram #booktok #authorevent #indiebooks #romancereader #summerreads"},
   {id:"h2",name:"Author Promo",tags:"#indieauthor #selfpublished #writingcommunity #authorlife #booklaunch #newrelease #romancebooks #romantasy #cleanromance"},
