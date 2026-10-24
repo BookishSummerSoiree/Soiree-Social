@@ -255,6 +255,10 @@ body{font-family:var(--fb);background:var(--cream);color:var(--black);min-height
 .cal-nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
 .cal-nav-btn{background:none;border:1px solid var(--gray);border-radius:8px;padding:6px 12px;font-size:13px;cursor:pointer;font-family:var(--fb);color:var(--navy)}
 .cal-month-lbl{font-family:var(--fd);font-size:18px;font-weight:500;color:var(--navy)}
+.cal-grid.slide-l{animation:calSlideL .22s ease}
+.cal-grid.slide-r{animation:calSlideR .22s ease}
+@keyframes calSlideL{from{opacity:.3;transform:translateX(24px)}to{opacity:1;transform:none}}
+@keyframes calSlideR{from{opacity:.3;transform:translateX(-24px)}to{opacity:1;transform:none}}
 .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;margin-bottom:4px}
 .cal-dow{text-align:center;font-size:9px;font-weight:500;letter-spacing:.06em;text-transform:uppercase;color:#aaa;padding:4px 0}
 .cal-cell{min-height:54px;background:var(--white);border-radius:8px;border:1px solid var(--cream-d);padding:3px;position:relative;overflow:hidden;cursor:pointer}
@@ -1951,7 +1955,48 @@ function switchNav(nav){
 }
 
 // ── MODAL HELPERS ──────────────────────────────────────────────────────────
-function openModal(id){ document.getElementById(id).classList.add('open'); }
+function openModal(id){
+  const ov = document.getElementById(id);
+  ov.classList.add('open');
+  // always open at the top, not wherever the last post was scrolled to
+  const m = ov.querySelector('.modal');
+  if(m){ m.scrollTop = 0; requestAnimationFrame(()=>{ m.scrollTop = 0; }); }
+}
+
+// ── SWIPE BETWEEN MONTHS (phone swipe + MacBook two-finger swipe) ─────────
+function calSwipeTarget(el){
+  if(!el || !el.closest) return null;
+  if(viewMode==='calendar' && el.closest('.main') && !el.closest('.modal-ov')) return 'main';
+  if(_mockView==='calendar' && el.closest('#as-mock-cal')) return 'mock';
+  return null;
+}
+function calSwipe(which, dir){
+  if(which==='main') calNav(dir); else mockNav(dir);
+  const grid = document.querySelector(which==='main' ? '#master-list-content .cal-grid' : '#as-mock-cal .cal-grid');
+  if(grid){ grid.classList.remove('slide-l','slide-r'); void grid.offsetWidth; grid.classList.add(dir>0?'slide-l':'slide-r'); }
+}
+(function(){
+  let sx=0, sy=0, target=null;
+  document.addEventListener('touchstart', e=>{
+    if(e.touches.length!==1) { target=null; return; }
+    target = calSwipeTarget(e.target); sx = e.touches[0].clientX; sy = e.touches[0].clientY;
+  }, {passive:true});
+  document.addEventListener('touchend', e=>{
+    if(!target) return;
+    const t = e.changedTouches[0], dx = t.clientX-sx, dy = t.clientY-sy;
+    if(Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy)*1.5) calSwipe(target, dx<0 ? 1 : -1);
+    target = null;
+  }, {passive:true});
+  let acc=0, lock=0;
+  document.addEventListener('wheel', e=>{
+    const which = calSwipeTarget(e.target);
+    if(!which || Math.abs(e.deltaX) <= Math.abs(e.deltaY)) return;
+    e.preventDefault();
+    if(Date.now() < lock) return;
+    acc += e.deltaX;
+    if(Math.abs(acc) > 60){ calSwipe(which, acc>0 ? 1 : -1); acc = 0; lock = Date.now()+700; }
+  }, {passive:false});
+})();
 function closeModal(id){ document.getElementById(id).classList.remove('open'); }
 document.querySelectorAll('.modal-ov').forEach(ov=>{
   ov.addEventListener('click', e=>{ if(e.target===ov) ov.classList.remove('open'); });
