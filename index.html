@@ -1288,14 +1288,26 @@ function spreadByCategory(list){
   }
   return out;
 }
+// Author Intros have to be done by Jan 31, so the shuffle mixes them with the other
+// Pre Mar 1 posts and saves a share of the non-author posts for February.
+function preMar1Order(list){
+  const authors = list.filter(isAuthorPost), others = list.filter(p=>!isAuthorPost(p));
+  if(!authors.length || !others.length) return spreadByCategory(list);
+  const start = new Date(), feb1 = new Date(AUTHOR_DEADLINE+'T12:00:00'), mar1 = new Date(TICKETS_DATE+'T12:00:00');
+  const share = start < feb1 ? (mar1-feb1)/(mar1-start) : 1;
+  const forFeb = Math.min(others.length, Math.max(1, Math.round(others.length*share)));
+  const mixed = spreadByCategory(others);   // random order of the non-author posts
+  const febPosts = mixed.slice(mixed.length-forFeb), earlyOthers = mixed.slice(0, mixed.length-forFeb);
+  return spreadByCategory(authors.concat(earlyOthers)).concat(febPosts);
+}
 function shuffleAndPreview(again){
   const cards = _listCards();
   const onScreen = cards.map(c=>posts.find(p=>p.id===c.dataset.id)).filter(Boolean);
   const movable = onScreen.filter(p=>!p.date && p.dateType!=='fixed');
   if(movable.length < 2){ alert('There aren\'t enough unscheduled posts here to shuffle.'); return; }
   const order = [
-    ...spreadByCategory(movable.filter(p=>p.dateType==='premar1')),
-    ...spreadByCategory(movable.filter(p=>p.dateType!=='premar1' && p.dateType!=='postmar1')),
+    ...preMar1Order(movable.filter(p=>p.dateType==='premar1' || (isAuthorPost(p) && p.dateType!=='postmar1'))),
+    ...spreadByCategory(movable.filter(p=>p.dateType!=='premar1' && p.dateType!=='postmar1' && !isAuthorPost(p))),
     ...spreadByCategory(movable.filter(p=>p.dateType==='postmar1')),
   ];
   // drop the new order into the slots the movable posts had; dated posts stay where they were
@@ -1388,6 +1400,10 @@ function setupTouchDrag(el){
 // ── AUTO-SCHEDULE ──────────────────────────────────────────────────────────
 const SOIREE_DATE = '2027-06-12';
 const TICKETS_DATE = '2027-03-01';
+// Author Intro posts must go out before Feb 1 so fans have time to get ready for tickets
+const AUTHOR_CAT = 'Author Intro';
+const AUTHOR_DEADLINE = '2027-02-01';   // last allowed day is Jan 31
+const isAuthorPost = p => p && p.cat === AUTHOR_CAT;
 
 let _asMode = 'order';
 function openAutoSchedule(mode){
@@ -1429,7 +1445,7 @@ function runAutoSchedule(){
   const days1 = w1Open ? (w1End-start)/864e5 + 1 : 0, days2 = Math.max(0,(w2End-w2Start)/864e5 + 1);
 
   // decide each post's window
-  const win = seq.map(p=>p.dateType==='premar1' ? 1 : p.dateType==='postmar1' ? 2 : 0);
+  const win = seq.map(p=>(p.dateType==='premar1' || isAuthorPost(p)) ? 1 : p.dateType==='postmar1' ? 2 : 0);
   if(!w1Open) win.forEach((w,i)=>{ if(w===0) win[i]=2; });
   // a run of Flexible posts sits between its neighbours: split it by how much room each window has
   for(let i=0;i<win.length;){
@@ -1444,7 +1460,27 @@ function runAutoSchedule(){
     i = j;
   }
   const g1 = seq.filter((_,i)=>win[i]===1), g2 = seq.filter((_,i)=>win[i]===2);
-  const d1 = w1Open ? spreadDates(start, w1End, g1.length) : [];
+  // Inside the before-Mar-1 window: everything up to the last Author Intro is spaced out
+  // before Feb 1; whatever comes after it fills February.
+  let d1 = [];
+  if(w1Open){
+    const authorEnd = day(AUTHOR_DEADLINE); authorEnd.setDate(authorEnd.getDate()-1);   // Jan 31
+    const lastA = g1.map(isAuthorPost).lastIndexOf(true);
+    if(lastA < 0){
+      d1 = spreadDates(start, w1End, g1.length);
+    } else if(start > authorEnd){
+      // too late for author posts: leave them unscheduled, space out the rest
+      const rest = g1.filter(p=>!isAuthorPost(p));
+      const rd = spreadDates(start, w1End, rest.length);
+      d1 = g1.map(p=>isAuthorPost(p) ? '' : rd[rest.indexOf(p)]);
+    } else {
+      const partA = g1.slice(0, lastA+1), partB = g1.slice(lastA+1);
+      const febStart = day(AUTHOR_DEADLINE); if(start > febStart) febStart.setTime(start.getTime());
+      const dA = spreadDates(start, partB.length ? authorEnd : (authorEnd < w1End ? authorEnd : w1End), partA.length);
+      const dB = spreadDates(febStart, w1End, partB.length);
+      d1 = dA.concat(dB);
+    }
+  }
   const d2 = days2>0 ? spreadDates(w2Start, w2End, g2.length) : [];
 
   const proposed = [];
@@ -1635,6 +1671,7 @@ function showPostFields(type, p){
   const catSection = document.getElementById('pm-cat-section');
   catSection.style.display = type==='email' ? 'none' : '';
   renderCatChips(p ? (p.cat||'') : '');
+  syncAuthorDateLimit();
 
   // Post type (Reel/Slides) — social only
   const ptSection = document.getElementById('pm-posttype-section');
@@ -1679,6 +1716,15 @@ function renderCatChips(selected){
 function selectCat(cat, btn){
   document.querySelectorAll('#pm-cat-chips .cat-chip').forEach(c=>c.classList.remove('active'));
   btn.classList.add('active');
+  syncAuthorDateLimit();
+}
+function syncAuthorDateLimit(){
+  const input = document.getElementById('pm-date'), hint = document.getElementById('pm-date-hint');
+  const typeMax = document.getElementById('dp-premarx').classList.contains('active') ? '2027-02-28' : '';
+  const author = getSelectedCat()===AUTHOR_CAT;
+  input.max = author ? '2027-01-31' : typeMax;
+  const note = 'Author Intros go out by Jan 31.';
+  hint.textContent = hint.textContent.replace(' '+note,'') + (author ? ' '+note : '');
 }
 function getSelectedCat(){
   const active = document.querySelector('#pm-cat-chips .cat-chip.active');
@@ -1708,6 +1754,7 @@ function updateDateRow(type){
   }
   input.max = type==='premar1' ? '2027-02-28' : '';
   input.min = type==='postmar1' ? '2027-03-01' : '';
+  if(document.getElementById('pm-cat-chips').children.length) syncAuthorDateLimit();
   syncUnschedBtn();
 }
 function syncUnschedBtn(){
@@ -1745,6 +1792,7 @@ function savePost(){
   if(dateType==='fixed' && !date){ alert('Pick a date, or choose Flexible to keep it unscheduled.'); return; }
   if(dateType==='premar1' && date && date >= TICKETS_DATE){ alert('Pre Mar 1 posts need a date before March 1.'); return; }
   if(dateType==='postmar1' && date && date < TICKETS_DATE){ alert('Post Mar 1 posts need a date on or after March 1.'); return; }
+  if(getSelectedCat()===AUTHOR_CAT && date && date >= AUTHOR_DEADLINE){ alert('Author Intro posts need to go out by January 31 so fans have time to get ready for tickets.'); return; }
 
   const type = editingPostType;
   const purpose = document.getElementById('pm-purpose').value.trim();
