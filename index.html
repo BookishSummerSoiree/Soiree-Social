@@ -115,12 +115,14 @@ body{font-family:var(--fb);background:var(--cream);color:var(--black);min-height
 .tab-num{font-family:var(--fd);font-size:19px;font-weight:500;line-height:1}
 .tab-none{font-size:8px;font-weight:500;letter-spacing:.05em;text-transform:uppercase;line-height:1.25;opacity:.9}
 
-.card-body{flex:1;padding:7px 8px 7px 10px;min-width:0}
-.card-corner-space{float:right;width:94px;height:20px}
+.card-body{flex:1;padding:7px 6px 7px 10px;min-width:0;display:flex;gap:8px;align-items:stretch}
+.card-text{flex:1;min-width:0;display:flex;align-items:center}
 .card-line1{line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .card-title{font-family:var(--fd);font-size:14px;font-weight:600;color:var(--black)}
 .card-desc{font-size:10px;font-weight:300;color:#777;margin-left:5px}
-.card-line2{display:flex;align-items:center;gap:5px;margin-top:4px;clear:both}
+.card-side{flex-shrink:0;display:flex;flex-direction:column;align-items:flex-end;justify-content:space-between;gap:4px}
+.card-side-top,.card-side-bot{display:flex;align-items:center;gap:5px}
+.card-side .edit-btn,.card-side .drag-handle{position:relative;z-index:2}
 .card-cat-tag{display:inline-flex;align-items:center;font-size:9.5px;font-weight:500;padding:1px 7px;border-radius:9px;color:var(--white);line-height:1.5}
 .cat-author .card-cat-tag{background:var(--cat-author)}
 .cat-general .card-cat-tag{background:var(--cat-general)}
@@ -133,7 +135,6 @@ body{font-family:var(--fb);background:var(--cream);color:var(--black);min-height
 .post-type-badge{display:inline-flex;align-items:center;justify-content:center;width:22px;height:17px;border-radius:9px;border:1px solid var(--gray);color:#777}
 .post-type-badge svg{width:11px;height:11px}
 
-.card-actions{position:absolute;top:5px;right:5px;display:flex;align-items:center;gap:5px;z-index:2}
 .dt-lbl{font-size:8.5px;font-weight:500;letter-spacing:.05em;text-transform:uppercase;color:#999;white-space:nowrap}
 .edit-btn{width:24px;height:24px;border-radius:50%;background:var(--cream);border:none;cursor:pointer;font-size:10px;display:flex;align-items:center;justify-content:center}
 .drag-handle{width:24px;height:24px;border-radius:50%;background:transparent;border:none;cursor:grab;font-size:14px;display:flex;align-items:center;justify-content:center;color:#ccc;display:none}
@@ -923,14 +924,17 @@ function cardHTML(post, opts={}){
   return `<div class="card ${cls}${pastCls}" data-id="${post.id}" ${dragAttr}>
     <div class="card-stripe">${tab}</div>
     <div class="card-body">
-      <span class="card-corner-space"></span>
-      <div class="card-line1"><span class="card-title">${esc(post.title||'Untitled')}</span>${desc ? `<span class="card-desc">${esc(desc)}</span>` : ''}</div>
-      <div class="card-line2">${catLabel ? `<span class="card-cat-tag">${esc(catLabel)}</span>` : ''}${postTypeBadge}</div>
-    </div>
-    <div class="card-actions">
-      ${dtLbl ? `<span class="dt-lbl">${dtLbl}</span>` : ''}
-      <button class="drag-handle" title="Drag to reorder">⠿</button>
-      <button class="edit-btn" onclick="event.stopPropagation();openEditPost('${post.id}')">✏️</button>
+      <div class="card-text">
+        <div class="card-line1"><span class="card-title">${esc(post.title||'Untitled')}</span>${desc ? `<span class="card-desc">${esc(desc)}</span>` : ''}</div>
+      </div>
+      <div class="card-side">
+        <div class="card-side-top">
+          ${dtLbl ? `<span class="dt-lbl">${dtLbl}</span>` : ''}
+          <button class="drag-handle" title="Drag to reorder">⠿</button>
+          <button class="edit-btn" onclick="event.stopPropagation();openEditPost('${post.id}')">✏️</button>
+        </div>
+        <div class="card-side-bot">${catLabel ? `<span class="card-cat-tag">${esc(catLabel)}</span>` : ''}${postTypeBadge}</div>
+      </div>
     </div>
     ${opts.draggable ? '' : `<div class="card-tap" onclick="openDetail('${post.id}')"></div>`}
   </div>`;
