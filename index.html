@@ -37,20 +37,22 @@ body{font-family:var(--fb);background:var(--cream);color:var(--black);min-height
 
 /* ── HEADER ── */
 .hdr{background:var(--white);padding:calc(10px + env(safe-area-inset-top,0px)) 14px 0;position:sticky;top:0;z-index:100;border-bottom:1px solid var(--cream-d)}
-.hdr-logo{display:block;height:58px;width:auto;max-width:calc(100% - 90px);object-fit:contain}
-.hdr-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.hdr-logo{display:block;height:44px;width:auto;max-width:48%;object-fit:contain;flex-shrink:1;min-width:0}
+.hdr-top{display:flex;align-items:center;gap:8px;padding-bottom:8px}
 .app-title{font-family:var(--fd);font-size:22px;font-weight:400;color:var(--white);line-height:1}
 .app-sub{font-size:10px;font-weight:300;color:rgba(255,255,255,.5);letter-spacing:.12em;text-transform:uppercase;margin-top:2px}
-.user-pill{font-size:11px;font-weight:500;color:var(--navy);background:var(--sage-l);border-radius:20px;padding:4px 12px;cursor:pointer;border:none;font-family:var(--fb)}
+.user-pill{font-size:11px;font-weight:600;color:var(--navy);background:var(--sage-l);border-radius:15px;min-width:30px;height:30px;flex-shrink:0;cursor:pointer;border:none;font-family:var(--fb);display:flex;align-items:center;justify-content:center;padding:0 9px}
 
 /* countdown badges row */
-.cd-row{display:flex;gap:8px;padding-bottom:12px;overflow-x:auto;scrollbar-width:none}
+.cd-row{display:flex;flex-direction:column;gap:4px;flex:1;min-width:0;align-items:flex-end}
 .cd-row::-webkit-scrollbar{display:none}
-.cd-badge{flex-shrink:0;color:var(--white);font-size:11px;font-weight:500;letter-spacing:.04em;padding:6px 14px;border-radius:20px;cursor:pointer;white-space:nowrap;border:none;font-family:var(--fb);opacity:.95}
-.cd-badge span.cd-num{font-family:var(--fd);font-size:18px;font-weight:500;margin-right:4px;vertical-align:middle;color:var(--white)}
+.cd-badge{max-width:100%;color:var(--white);padding:3px 10px 3px 8px;border-radius:14px;cursor:pointer;border:none;font-family:var(--fb);display:flex;align-items:center;gap:5px;text-align:left}
+.cd-txt{display:flex;flex-direction:column;font-size:8.5px;font-weight:500;letter-spacing:.02em;line-height:1.15;min-width:0}
+.cd-txt b{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cd-badge span.cd-num{font-family:var(--fd);font-size:20px;font-weight:600;line-height:1;color:var(--white)}
 
 /* ── FILTER CHIPS ── */
-.filter-bar{background:var(--white);border-bottom:1px solid var(--cream-d);padding:8px 0 6px}
+.filter-bar{background:var(--white);border-bottom:1px solid var(--cream-d);padding:7px 0 5px}
 .filter-group{display:flex;align-items:center;padding:3px 14px;gap:6px;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none}
 .filter-group::-webkit-scrollbar{display:none}
 .fg-lbl{font-size:9px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:#bbb;flex-shrink:0}
@@ -60,6 +62,15 @@ body{font-family:var(--fb);background:var(--cream);color:var(--black);min-height
 .chip.active.c-type{background:var(--coral-d);border-color:var(--coral-d)}
 .chip.active.c-date{background:var(--tan);border-color:var(--tan);color:var(--white)}
 .chip-add{border:1px dashed var(--gray);background:transparent;font-family:var(--fb);font-size:10px;padding:4px 10px;border-radius:20px;cursor:pointer;color:#aaa;white-space:nowrap;flex-shrink:0}
+
+/* view toggle row */
+.view-row{display:flex;align-items:center;gap:6px;padding:0 14px 6px}
+.view-toggle{display:flex;background:var(--cream);border-radius:20px;padding:2px;flex-shrink:0}
+.vt-btn{border:none;background:transparent;font-family:var(--fb);font-size:11px;font-weight:500;color:#777;padding:5px 12px;border-radius:18px;cursor:pointer;white-space:nowrap}
+.vt-btn.active{background:var(--navy);color:var(--white)}
+.view-row .view-select{flex:1;min-width:0;padding:5px 8px;font-size:11px;border-radius:18px}
+.view-row .arrange-btn{padding:6px 11px;border-radius:18px;font-size:10.5px}
+.view-row.cal-mode .view-select,.view-row.cal-mode .arrange-btn{display:none}
 
 /* ── MAIN ── */
 .main{padding:12px 14px 100px}
@@ -269,13 +280,29 @@ body{font-family:var(--fb);background:var(--cream);color:var(--black);min-height
 <div class="hdr">
   <div class="hdr-top">
     <img class="hdr-logo" src="./logo.png" alt="Bookish Summer Soirée — Soiree Social">
-    <button class="user-pill" onclick="openUserSwitch()">👤 <span id="current-user-display">…</span></button>
+    <div class="cd-row" id="cd-row"></div>
+    <button class="user-pill" onclick="openUserSwitch()" title="Switch user"><span id="current-user-display">…</span></button>
   </div>
-  <div class="cd-row" id="cd-row"></div>
 </div>
 
 <!-- ── FILTER BAR ── -->
 <div class="filter-bar" id="filter-bar">
+  <div class="view-row">
+    <div class="view-toggle">
+      <button class="vt-btn" data-view="calendar" onclick="setViewMode('calendar')">📅 Calendar</button>
+      <button class="vt-btn" data-view="list" onclick="setViewMode('list')">☰ List</button>
+    </div>
+    <select class="view-select" id="view-select" onchange="renderMasterList()">
+      <option value="unposted">Unposted</option>
+      <option value="all-tasks">All Tasks</option>
+      <option value="all-posts">All Posts</option>
+      <option value="by-type">By Post Type</option>
+      <option value="by-cat">By Category</option>
+      <option value="emails">Emails Only</option>
+      <option value="others">Others Only</option>
+    </select>
+    <button class="arrange-btn" id="arrange-btn" onclick="toggleArrange()">Arrange</button>
+  </div>
   <div class="filter-group" id="cat-filter-row">
     <span class="fg-lbl">Category</span>
     <!-- chips injected -->
@@ -295,19 +322,6 @@ body{font-family:var(--fb);background:var(--cream);color:var(--black);min-height
 <div class="main">
   <!-- Master List page -->
   <div class="page active" id="page-list">
-    <div class="list-top-bar">
-      <select class="view-select" id="view-select" onchange="renderMasterList()">
-        <option value="unposted">Unposted (default)</option>
-        <option value="calendar">📅 Calendar View</option>
-        <option value="all-tasks">All Tasks (posts + emails + others)</option>
-        <option value="all-posts">All Posts</option>
-        <option value="by-type">By Post Type</option>
-        <option value="by-cat">By Category</option>
-        <option value="emails">Emails Only</option>
-        <option value="others">Others Only</option>
-      </select>
-      <button class="arrange-btn" id="arrange-btn" onclick="toggleArrange()">Arrange</button>
-    </div>
     <!-- Arrange bar -->
     <div class="arrange-bar" id="arrange-bar">
       <div class="arrange-bar-title">Drag posts to reorder, then:</div>
@@ -775,7 +789,7 @@ function renderCountdowns(){
   row.innerHTML = countdowns.map(cd=>{
     const d = dateDiff(cd.date);
     const numPart = d > 0 ? `<span class="cd-num">${d}</span>` : '';
-    const lbl = d > 0 ? `days to ${cd.label}` : d===0 ? `🎉 ${cd.label} Today!` : `${cd.label} has passed`;
+    const lbl = d > 0 ? `<span class="cd-txt">days to<b>${cd.label}</b></span>` : d===0 ? `<span class="cd-txt">🎉 Today!<b>${cd.label}</b></span>` : `<span class="cd-txt">passed<b>${cd.label}</b></span>`;
     return `<button class="cd-badge" style="background:${cd.color}" onclick="openEditCountdown('${cd.id}')">${numPart}${lbl}</button>`;
   }).join('');
 }
@@ -839,9 +853,24 @@ function cardHTML(post, opts={}){
   </div>`;
 }
 
+let viewMode = (()=>{ try{ return localStorage.getItem('ss_view') || 'list'; }catch(e){ return 'list'; } })();
+function setViewMode(m){
+  if(m === viewMode) return;
+  if(m === 'calendar' && arrangeMode) toggleArrange();
+  viewMode = m;
+  try{ localStorage.setItem('ss_view', m); }catch(e){}
+  renderMasterList();
+}
+function syncViewToggle(){
+  document.querySelectorAll('.vt-btn').forEach(b=>b.classList.toggle('active', b.dataset.view===viewMode));
+  const row = document.querySelector('.view-row');
+  if(row) row.classList.toggle('cal-mode', viewMode==='calendar');
+}
+
 function renderMasterList(){
   const el = document.getElementById('master-list-content');
-  const view = document.getElementById('view-select').value;
+  const view = viewMode === 'calendar' ? 'calendar' : document.getElementById('view-select').value;
+  syncViewToggle();
   const filtered = getFiltered();
 
   if(view === 'unposted'){
