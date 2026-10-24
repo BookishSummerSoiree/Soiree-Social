@@ -116,7 +116,7 @@ body{font-family:var(--fb);background:var(--cream);color:var(--black);min-height
 .tab-none{font-size:8px;font-weight:500;letter-spacing:.05em;text-transform:uppercase;line-height:1.25;opacity:.9}
 
 .card-body{flex:1;padding:7px 8px 7px 10px;min-width:0}
-.card-corner-space{float:right;width:84px;height:20px}
+.card-corner-space{float:right;width:94px;height:20px}
 .card-line1{line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .card-title{font-family:var(--fd);font-size:14px;font-weight:600;color:var(--black)}
 .card-desc{font-size:10px;font-weight:300;color:#777;margin-left:5px}
@@ -171,7 +171,7 @@ body{font-family:var(--fb);background:var(--cream);color:var(--black);min-height
 
 /* Date pill group */
 .date-pills{display:flex;gap:6px;flex-wrap:wrap}
-.date-pill{flex:1;min-width:90px;border:1px solid var(--gray);background:var(--white);font-family:var(--fb);font-size:11px;font-weight:500;padding:9px 8px;border-radius:10px;cursor:pointer;color:#555;transition:all .15s;text-align:center}
+.date-pill{flex:1;min-width:0;white-space:nowrap;border:1px solid var(--gray);background:var(--white);font-family:var(--fb);font-size:11px;font-weight:500;padding:9px 8px;border-radius:10px;cursor:pointer;color:#555;transition:all .15s;text-align:center}
 .date-pill.active{background:var(--navy);border-color:var(--navy);color:var(--white)}
 .pm-date-lbl{font-size:10px;color:#888;margin-bottom:4px}
 .pm-date-row{display:flex;gap:6px;align-items:center}
@@ -329,6 +329,7 @@ body{font-family:var(--fb);background:var(--cream);color:var(--black);min-height
     <button class="chip c-date" data-fdate="Flexible" onclick="toggleFilter('date','Flexible',this)">Flexible</button>
     <button class="chip c-date" data-fdate="Fixed" onclick="toggleFilter('date','Fixed',this)">Fixed</button>
     <button class="chip c-date" data-fdate="Pre Mar 1" onclick="toggleFilter('date','Pre Mar 1',this)">Pre Mar 1</button>
+    <button class="chip c-date" data-fdate="Post Mar 1" onclick="toggleFilter('date','Post Mar 1',this)">Post Mar 1</button>
   </div>
 </div>
 
@@ -418,9 +419,10 @@ body{font-family:var(--fb);background:var(--cream);color:var(--black);min-height
       <div class="ef" id="pm-date-section">
         <label class="ef-lbl" id="pm-date-lbl">Date</label>
         <div class="date-pills" id="pm-date-pills">
-          <button class="date-pill" id="dp-fixed" onclick="selectDatePill('fixed')">📅 Fixed date</button>
+          <button class="date-pill" id="dp-fixed" onclick="selectDatePill('fixed')">📅 Fixed</button>
           <button class="date-pill" id="dp-flexible" onclick="selectDatePill('flexible')">🔄 Flexible</button>
           <button class="date-pill" id="dp-premarx" onclick="selectDatePill('premar1')">🎟️ Pre Mar 1</button>
+          <button class="date-pill" id="dp-postmar" onclick="selectDatePill('postmar1')">🌸 Post Mar 1</button>
         </div>
         <div id="pm-date-input-wrap" style="margin-top:8px">
           <div class="pm-date-lbl" id="pm-date-sublbl">Post on</div>
@@ -536,7 +538,7 @@ body{font-family:var(--fb);background:var(--cream);color:var(--black);min-height
     <!-- Step 1: pick start date -->
     <div class="sched-step active" id="as-step1">
       <p style="font-size:12px;color:#666;margin-bottom:14px;line-height:1.6">
-        I'll spread your flexible posts evenly between a start date and Jun 12, 2027. Fixed-date posts stay put. Pre-Mar-1 posts stay before March 1.
+        I'll give a date to every unscheduled post, spread evenly from your start date. Posts that already have a date stay put. Pre Mar 1 posts land before March 1, Post Mar 1 posts land between March 2 and June 11.
       </p>
       <div class="ef">
         <label class="ef-lbl">Start date for scheduling</label>
@@ -598,16 +600,67 @@ document.head.appendChild(_fbScript1);
 // ── DEFAULTS ──────────────────────────────────────────────────────────────
 const DP = [
   {id:"bss1",dateType:"fixed",date:"2027-01-15",type:"social",cat:"Author announcement",postType:"Slides",title:"Save the Date — BSS 2027 🌊",purpose:"Official save the date post. Tickets on sale March 1.",caption:"",driveLink:"",htagId:"",extraHtags:"",lastUpdated:"Jan 15 · Nik",lastUpdatedBy:"Nik"},
-  {id:"bss2",dateType:"premar1",date:"2027-02-15",type:"social",cat:"Tickets",postType:"Reel",title:"Two weeks until tickets go live!",purpose:"Build excitement. Early bird alert.",caption:"",driveLink:"",htagId:"",extraHtags:"",lastUpdated:"Jan 15 · Nik",lastUpdatedBy:"Nik"},
+  {id:"bss2",dateType:"premar1",date:"",type:"social",cat:"Tickets",postType:"Reel",title:"Two weeks until tickets go live!",purpose:"Build excitement. Early bird alert.",caption:"",driveLink:"",htagId:"",extraHtags:"",lastUpdated:"Jan 15 · Nik",lastUpdatedBy:"Nik"},
   {id:"bss3",dateType:"fixed",date:"2027-03-01",type:"social",cat:"Tickets",postType:"Slides",title:"🎟️ Tickets On Sale NOW",purpose:"Tickets are live. All the details + buy link.",caption:"",driveLink:"",htagId:"",extraHtags:"",lastUpdated:"Jan 15 · Nik",lastUpdatedBy:"Nik"},
   {id:"bss4",dateType:"fixed",date:"2027-03-01",type:"email",cat:"Tickets",postType:"",title:"Email — Tickets On Sale",purpose:"",subject:"Tickets are live!",caption:"",driveLink:"",htagId:"",extraHtags:"",lastUpdated:"Jan 15 · Nik",lastUpdatedBy:"Nik"},
-  {id:"bss5",dateType:"flexible",date:"2027-04-10",type:"social",cat:"Event",postType:"Slides",title:"Venue spotlight 📍",purpose:"Show off where we're hosting.",caption:"",driveLink:"",htagId:"",extraHtags:"",lastUpdated:"Jan 15 · Nik",lastUpdatedBy:"Nik"},
-  {id:"bss6",dateType:"flexible",date:"2027-05-01",type:"social",cat:"Author announcement",postType:"Slides",title:"Speaker / Author lineup reveal",purpose:"Announce featured authors attending.",caption:"",driveLink:"",htagId:"",extraHtags:"",lastUpdated:"Jan 15 · Nik",lastUpdatedBy:"Nik"},
-  {id:"bss7",dateType:"flexible",date:"2027-06-01",type:"social",cat:"Event",postType:"Reel",title:"11 days to THE SOIRÉE",purpose:"Countdown post. What to expect.",caption:"",driveLink:"",htagId:"",extraHtags:"",lastUpdated:"Jan 15 · Nik",lastUpdatedBy:"Nik"},
+  {id:"bss5",dateType:"flexible",date:"",type:"social",cat:"Event",postType:"Slides",title:"Venue spotlight 📍",purpose:"Show off where we're hosting.",caption:"",driveLink:"",htagId:"",extraHtags:"",lastUpdated:"Jan 15 · Nik",lastUpdatedBy:"Nik"},
+  {id:"bss6",dateType:"flexible",date:"",type:"social",cat:"Author announcement",postType:"Slides",title:"Speaker / Author lineup reveal",purpose:"Announce featured authors attending.",caption:"",driveLink:"",htagId:"",extraHtags:"",lastUpdated:"Jan 15 · Nik",lastUpdatedBy:"Nik"},
+  {id:"bss7",dateType:"flexible",date:"",type:"social",cat:"Event",postType:"Reel",title:"11 days to THE SOIRÉE",purpose:"Countdown post. What to expect.",caption:"",driveLink:"",htagId:"",extraHtags:"",lastUpdated:"Jan 15 · Nik",lastUpdatedBy:"Nik"},
   {id:"bss8",dateType:"fixed",date:"2027-06-11",type:"social",cat:"Event",postType:"Reel",title:"Tomorrow! 🌊",purpose:"Eve of the event. Pure hype.",caption:"",driveLink:"",htagId:"",extraHtags:"",lastUpdated:"Jan 15 · Nik",lastUpdatedBy:"Nik"},
   {id:"bss9",dateType:"fixed",date:"2027-06-12",type:"social",cat:"Event",postType:"Reel",title:"🌊 THE SOIRÉE — It's here!",purpose:"Day-of post. Welcome your guests.",caption:"",driveLink:"",htagId:"",extraHtags:"",lastUpdated:"Jan 15 · Nik",lastUpdatedBy:"Nik"},
-  {id:"bss10",dateType:"flexible",date:"2027-06-13",type:"social",cat:"Fun",postType:"Slides",title:"BSS 2027 Recap — thank you!",purpose:"Post-event thank-you. Photos, highlights, gratitude.",caption:"",driveLink:"",htagId:"",extraHtags:"",lastUpdated:"Jan 15 · Nik",lastUpdatedBy:"Nik"},
+  {id:"bss10",dateType:"flexible",date:"",type:"social",cat:"Fun",postType:"Slides",title:"BSS 2027 Recap — thank you!",purpose:"Post-event thank-you. Photos, highlights, gratitude.",caption:"",driveLink:"",htagId:"",extraHtags:"",lastUpdated:"Jan 15 · Nik",lastUpdatedBy:"Nik"},
 ];
+const V8_POSTS = [
+  {id:"v8-auth-01",dateType:"premar1",date:"",type:"social",cat:"Author announcement",postType:"",title:"Author announcement 1",purpose:"",caption:"",driveLink:"",htagId:"",extraHtags:"",lastUpdated:"Oct 24 · Nik",lastUpdatedBy:"Nik"},
+  {id:"v8-auth-02",dateType:"premar1",date:"",type:"social",cat:"Author announcement",postType:"",title:"Author announcement 2",purpose:"",caption:"",driveLink:"",htagId:"",extraHtags:"",lastUpdated:"Oct 24 · Nik",lastUpdatedBy:"Nik"},
+  {id:"v8-auth-03",dateType:"premar1",date:"",type:"social",cat:"Author announcement",postType:"",title:"Author announcement 3",purpose:"",caption:"",driveLink:"",htagId:"",extraHtags:"",lastUpdated:"Oct 24 · Nik",lastUpdatedBy:"Nik"},
+  {id:"v8-auth-04",dateType:"premar1",date:"",type:"social",cat:"Author announcement",postType:"",title:"Author announcement 4",purpose:"",caption:"",driveLink:"",htagId:"",extraHtags:"",lastUpdated:"Oct 24 · Nik",lastUpdatedBy:"Nik"},
+  {id:"v8-auth-05",dateType:"premar1",date:"",type:"social",cat:"Author announcement",postType:"",title:"Author announcement 5",purpose:"",caption:"",driveLink:"",htagId:"",extraHtags:"",lastUpdated:"Oct 24 · Nik",lastUpdatedBy:"Nik"},
+  {id:"v8-auth-06",dateType:"premar1",date:"",type:"social",cat:"Author announcement",postType:"",title:"Author announcement 6",purpose:"",caption:"",driveLink:"",htagId:"",extraHtags:"",lastUpdated:"Oct 24 · Nik",lastUpdatedBy:"Nik"},
+  {id:"v8-auth-07",dateType:"premar1",date:"",type:"social",cat:"Author announcement",postType:"",title:"Author announcement 7",purpose:"",caption:"",driveLink:"",htagId:"",extraHtags:"",lastUpdated:"Oct 24 · Nik",lastUpdatedBy:"Nik"},
+  {id:"v8-auth-08",dateType:"premar1",date:"",type:"social",cat:"Author announcement",postType:"",title:"Author announcement 8",purpose:"",caption:"",driveLink:"",htagId:"",extraHtags:"",lastUpdated:"Oct 24 · Nik",lastUpdatedBy:"Nik"},
+  {id:"v8-auth-09",dateType:"premar1",date:"",type:"social",cat:"Author announcement",postType:"",title:"Author announcement 9",purpose:"",caption:"",driveLink:"",htagId:"",extraHtags:"",lastUpdated:"Oct 24 · Nik",lastUpdatedBy:"Nik"},
+  {id:"v8-auth-10",dateType:"premar1",date:"",type:"social",cat:"Author announcement",postType:"",title:"Author announcement 10",purpose:"",caption:"",driveLink:"",htagId:"",extraHtags:"",lastUpdated:"Oct 24 · Nik",lastUpdatedBy:"Nik"},
+  {id:"v8-auth-11",dateType:"premar1",date:"",type:"social",cat:"Author announcement",postType:"",title:"Author announcement 11",purpose:"",caption:"",driveLink:"",htagId:"",extraHtags:"",lastUpdated:"Oct 24 · Nik",lastUpdatedBy:"Nik"},
+  {id:"v8-auth-12",dateType:"premar1",date:"",type:"social",cat:"Author announcement",postType:"",title:"Author announcement 12",purpose:"",caption:"",driveLink:"",htagId:"",extraHtags:"",lastUpdated:"Oct 24 · Nik",lastUpdatedBy:"Nik"},
+  {id:"v8-auth-13",dateType:"premar1",date:"",type:"social",cat:"Author announcement",postType:"",title:"Author announcement 13",purpose:"",caption:"",driveLink:"",htagId:"",extraHtags:"",lastUpdated:"Oct 24 · Nik",lastUpdatedBy:"Nik"},
+  {id:"v8-auth-14",dateType:"premar1",date:"",type:"social",cat:"Author announcement",postType:"",title:"Author announcement 14",purpose:"",caption:"",driveLink:"",htagId:"",extraHtags:"",lastUpdated:"Oct 24 · Nik",lastUpdatedBy:"Nik"},
+  {id:"v8-auth-15",dateType:"premar1",date:"",type:"social",cat:"Author announcement",postType:"",title:"Author announcement 15",purpose:"",caption:"",driveLink:"",htagId:"",extraHtags:"",lastUpdated:"Oct 24 · Nik",lastUpdatedBy:"Nik"},
+  {id:"v8-auth-16",dateType:"premar1",date:"",type:"social",cat:"Author announcement",postType:"",title:"Author announcement 16",purpose:"",caption:"",driveLink:"",htagId:"",extraHtags:"",lastUpdated:"Oct 24 · Nik",lastUpdatedBy:"Nik"},
+  {id:"v8-auth-17",dateType:"premar1",date:"",type:"social",cat:"Author announcement",postType:"",title:"Author announcement 17",purpose:"",caption:"",driveLink:"",htagId:"",extraHtags:"",lastUpdated:"Oct 24 · Nik",lastUpdatedBy:"Nik"},
+  {id:"v8-auth-18",dateType:"premar1",date:"",type:"social",cat:"Author announcement",postType:"",title:"Author announcement 18",purpose:"",caption:"",driveLink:"",htagId:"",extraHtags:"",lastUpdated:"Oct 24 · Nik",lastUpdatedBy:"Nik"},
+  {id:"v8-pre-1",dateType:"premar1",date:"",type:"social",cat:"Tickets",postType:"",title:"Ticket sale date",purpose:"",caption:"",driveLink:"",htagId:"",extraHtags:"",lastUpdated:"Oct 24 · Nik",lastUpdatedBy:"Nik"},
+  {id:"v8-pre-2",dateType:"premar1",date:"",type:"social",cat:"Tickets",postType:"",title:"Ticket price",purpose:"",caption:"",driveLink:"",htagId:"",extraHtags:"",lastUpdated:"Oct 24 · Nik",lastUpdatedBy:"Nik"},
+  {id:"v8-pre-3",dateType:"premar1",date:"",type:"social",cat:"Tickets",postType:"",title:"What's included with tickets",purpose:"",caption:"",driveLink:"",htagId:"",extraHtags:"",lastUpdated:"Oct 24 · Nik",lastUpdatedBy:"Nik"},
+  {id:"v8-pre-4",dateType:"premar1",date:"",type:"social",cat:"Event",postType:"",title:"What to expect",purpose:"",caption:"",driveLink:"",htagId:"",extraHtags:"",lastUpdated:"Oct 24 · Nik",lastUpdatedBy:"Nik"},
+  {id:"v8-pre-5",dateType:"premar1",date:"",type:"social",cat:"Fun",postType:"",title:"Soirée's 5th birthday",purpose:"",caption:"",driveLink:"",htagId:"",extraHtags:"",lastUpdated:"Oct 24 · Nik",lastUpdatedBy:"Nik"},
+  {id:"v8-post-1",dateType:"postmar1",date:"",type:"social",cat:"Event",postType:"",title:"Book exchange",purpose:"",caption:"",driveLink:"",htagId:"",extraHtags:"",lastUpdated:"Oct 24 · Nik",lastUpdatedBy:"Nik"},
+  {id:"v8-post-2",dateType:"postmar1",date:"",type:"social",cat:"Event",postType:"",title:"What to wear",purpose:"",caption:"",driveLink:"",htagId:"",extraHtags:"",lastUpdated:"Oct 24 · Nik",lastUpdatedBy:"Nik"},
+  {id:"v8-post-3",dateType:"postmar1",date:"",type:"social",cat:"General authors",postType:"",title:"Sponsor post",purpose:"",caption:"",driveLink:"",htagId:"",extraHtags:"",lastUpdated:"Oct 24 · Nik",lastUpdatedBy:"Nik"},
+  {id:"v8-post-4",dateType:"postmar1",date:"",type:"social",cat:"Event",postType:"",title:"Prizes",purpose:"",caption:"",driveLink:"",htagId:"",extraHtags:"",lastUpdated:"Oct 24 · Nik",lastUpdatedBy:"Nik"},
+  {id:"v8-post-5",dateType:"postmar1",date:"",type:"social",cat:"Event",postType:"",title:"Prizes (part 2)",purpose:"",caption:"",driveLink:"",htagId:"",extraHtags:"",lastUpdated:"Oct 24 · Nik",lastUpdatedBy:"Nik"},
+  {id:"v8-post-6",dateType:"postmar1",date:"",type:"social",cat:"Fun",postType:"",title:"5th birthday celebration",purpose:"",caption:"",driveLink:"",htagId:"",extraHtags:"",lastUpdated:"Oct 24 · Nik",lastUpdatedBy:"Nik"},
+  {id:"v8-post-7",dateType:"postmar1",date:"",type:"social",cat:"General authors",postType:"",title:"Shadow Mountain",purpose:"",caption:"",driveLink:"",htagId:"",extraHtags:"",lastUpdated:"Oct 24 · Nik",lastUpdatedBy:"Nik"},
+  {id:"v8-post-8",dateType:"postmar1",date:"",type:"social",cat:"General authors",postType:"",title:"Storefront",purpose:"",caption:"",driveLink:"",htagId:"",extraHtags:"",lastUpdated:"Oct 24 · Nik",lastUpdatedBy:"Nik"},
+  {id:"v8-soldout",dateType:"fixed",date:"2027-03-01",type:"social",cat:"Tickets",postType:"",title:"Sold Out",purpose:"",caption:"",driveLink:"",htagId:"",extraHtags:"",lastUpdated:"Oct 24 · Nik",lastUpdatedBy:"Nik"},
+];
+// Ideas I suggested should never come with a date. Clear the ones I dated earlier
+// (only if nobody has edited them since) and add the new ideas, once, on every device.
+const V8_SEED_IDS = ['bss2','bss5','bss6','bss7','bss10'];
+let _v8Done = false;
+function migrateV8(){
+  if(_v8Done) return false;
+  _v8Done = true;
+  if(posts.some(p=>p.id==='v8-soldout')) return false;
+  // order was never saved before, so start from a natural id order (bss1, bss2 … bss10)
+  if(posts.every(p=>p.order===undefined)) posts.sort((x,y)=>String(x.id).localeCompare(String(y.id), undefined, {numeric:true}));
+  posts.forEach(p=>{
+    if(V8_SEED_IDS.includes(p.id) && p.lastUpdated==='Jan 15 · Nik' && p.dateType!=='fixed') p.date = '';
+  });
+  V8_POSTS.forEach(np=>{ if(!posts.some(p=>p.id===np.id)) posts.push(JSON.parse(JSON.stringify(np))); });
+  save(); renderAll();
+  return true;
+}
 const DC = [
   {id:"cd1",label:"Tickets On Sale",date:"2027-03-01",color:"#E8704A"},
   {id:"cd2",label:"THE SOIRÉE",date:"2027-06-12",color:"#2D3561"},
@@ -728,29 +781,34 @@ async function loadFromFirestoreAll(){
       loadFromFirestore('ss_cds2'),
     ]);
     let changed = false;
-    if(fsPosts && fsPosts.length > 0){ posts = fsPosts; changed = true; }
+    if(fsPosts && fsPosts.length > 0){ posts = sortByOrder(fsPosts); changed = true; }
     if(fsCDs && fsCDs.length > 0){ countdowns = fsCDs; changed = true; }
     if(changed){
       localStorage.setItem('ss_p2', JSON.stringify(posts));
       localStorage.setItem('ss_c2', JSON.stringify(countdowns));
       renderAll();
     }
+    migrateV8();
     setupFirestoreListeners();
-  } catch(e){ console.warn('Firestore load failed', e); }
+  } catch(e){ console.warn('Firestore load failed', e); migrateV8(); }
 }
 function setupFirestoreListeners(){
   if(!window._firestoreDB || window._fsListenersActive2) return;
   window._fsListenersActive2 = true;
   window._fbOnSnapshot(window._fbCollection(window._firestoreDB,'ss_posts2'), snap=>{
     const data = snap.docs.map(d=>d.data());
-    if(data.length > 0){ posts = data; localStorage.setItem('ss_p2',JSON.stringify(posts)); renderAll(); }
+    if(data.length > 0){ posts = sortByOrder(data); if(migrateV8()) return; localStorage.setItem('ss_p2',JSON.stringify(posts)); renderAll(); }
   });
   window._fbOnSnapshot(window._fbCollection(window._firestoreDB,'ss_cds2'), snap=>{
     const data = snap.docs.map(d=>d.data());
     if(data.length > 0){ countdowns = data; localStorage.setItem('ss_c2',JSON.stringify(countdowns)); renderCountdowns(); }
   });
 }
+function sortByOrder(arr){
+  return arr.map((p,i)=>[p,i]).sort((a,b)=>((a[0].order??1e6+a[1]) - (b[0].order??1e6+b[1]))).map(x=>x[0]);
+}
 function save(){
+  posts.forEach((p,i)=>{ p.order = i; });
   localStorage.setItem('ss_p2', JSON.stringify(posts));
   localStorage.setItem('ss_c2', JSON.stringify(countdowns));
   localStorage.setItem('ss_cats2', JSON.stringify(cats));
@@ -787,6 +845,7 @@ function getFiltered(all=false){
     if(activeDateFilters.has('Flexible') && p.dateType==='flexible') return true;
     if(activeDateFilters.has('Fixed') && p.dateType==='fixed') return true;
     if(activeDateFilters.has('Pre Mar 1') && p.dateType==='premar1') return true;
+    if(activeDateFilters.has('Post Mar 1') && p.dateType==='postmar1') return true;
     return false;
   });
   return items;
@@ -833,7 +892,7 @@ const TYPE_ICONS = {
   Reel: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="5"/><path d="M3 8.5h18M8 3l3 5.5M14 3l3 5.5"/><path d="M10 12v5l4.5-2.5z" fill="currentColor"/></svg>',
   Slides: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><rect x="3" y="7" width="13" height="14" rx="3"/><path d="M8 4h9a4 4 0 0 1 4 4v9"/></svg>',
 };
-const DATE_TYPE_LBL = {flexible:'Flexible', premar1:'Pre Mar 1', fixed:'Fixed'};
+const DATE_TYPE_LBL = {flexible:'Flexible', premar1:'Pre Mar 1', postmar1:'Post Mar 1', fixed:'Fixed'};
 function esc(t){ return String(t??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
 
 function cardHTML(post, opts={}){
@@ -1226,31 +1285,31 @@ function runAutoSchedule(){
   const domCards = [...document.querySelectorAll('#master-list-content .card[data-id]')];
   const orderedIds = domCards.map(c=>c.dataset.id);
 
-  // Categorize
-  const fixed = [], premar = [], flexible = [];
+  // Posts that already have a date keep it. Only undated posts get a date.
+  const keep = [], premar = [], postmar = [], flexible = [];
   orderedIds.forEach(id=>{
     const p = posts.find(x=>x.id===id);
     if(!p) return;
-    if(p.dateType==='fixed') fixed.push(p);
+    if(p.date || p.dateType==='fixed') keep.push(p);
     else if(p.dateType==='premar1') premar.push(p);
+    else if(p.dateType==='postmar1') postmar.push(p);
     else flexible.push(p);
   });
+  const day = ds=>new Date(ds+"T12:00:00");
+  const start = day(startStr);
+  const preCutoff = day(TICKETS_DATE); preCutoff.setDate(preCutoff.getDate()-1);   // Feb 28
+  const soireeEve = day(SOIREE_DATE); soireeEve.setDate(soireeEve.getDate()-1);    // Jun 11
+  const postStart = start > day(TICKETS_DATE) ? start : day(TICKETS_DATE);
+  // Mar 1 itself is ticket day, so Post Mar 1 ideas start the day after
+  if(postStart.getTime()===day(TICKETS_DATE).getTime()) postStart.setDate(postStart.getDate()+1);
+  const preDates  = spreadDates(start, preCutoff, premar.length);
+  const postDates = spreadDates(postStart, soireeEve, postmar.length);
+  const flexDates = spreadDates(start, soireeEve, flexible.length);
 
-  // Schedule Pre-Mar-1 posts: spread between startStr and TICKETS_DATE
-  const preStart = new Date(startStr+"T12:00:00");
-  const preCutoff = new Date(TICKETS_DATE+"T12:00:00");
-  preCutoff.setDate(preCutoff.getDate()-1); // day before Mar 1
-  const preDates = spreadDates(preStart, preCutoff, premar.length);
-
-  // Schedule Flexible posts: spread between startStr and SOIREE_DATE
-  const flexStart = new Date(startStr+"T12:00:00");
-  const soireeDate = new Date(SOIREE_DATE+"T12:00:00");
-  const flexDates = spreadDates(flexStart, soireeDate, flexible.length);
-
-  // Build proposed schedule
   const proposed = [];
-  fixed.forEach(p=>proposed.push({id:p.id, date:p.date, title:p.title, dateType:'fixed'}));
+  keep.forEach(p=>proposed.push({id:p.id, date:p.date||'', title:p.title, dateType:p.dateType, kept:true}));
   premar.forEach((p,i)=>proposed.push({id:p.id, date:preDates[i]||'', title:p.title, dateType:'premar1'}));
+  postmar.forEach((p,i)=>proposed.push({id:p.id, date:postDates[i]||'', title:p.title, dateType:'postmar1'}));
   flexible.forEach((p,i)=>proposed.push({id:p.id, date:flexDates[i]||'', title:p.title, dateType:'flexible'}));
   proposed.sort((a,b)=>(a.date||'').localeCompare(b.date||''));
 
@@ -1327,7 +1386,7 @@ function renderMockCalendar(proposed){
     if(_mockSel && byDay[_mockSel]){
       const d = new Date(_mockSel+"T12:00:00");
       detail = `<div class="cal-popover" style="margin:8px 0 0"><div class="cal-pop-date">${DAYS[d.getDay()]}, ${MONTHS[d.getMonth()]} ${d.getDate()}</div>` +
-        byDay[_mockSel].map(i=>`<div class="cal-pop-item"><div class="cal-pop-dot" style="background:${colorOf(i)}"></div><div class="cal-pop-title">${esc(i.title)}${i.dateType==='fixed'?' 📌':''}</div></div>`).join('') + '</div>';
+        byDay[_mockSel].map(i=>`<div class="cal-pop-item"><div class="cal-pop-dot" style="background:${colorOf(i)}"></div><div class="cal-pop-title">${esc(i.title)}${i.kept?' 📌':''}</div></div>`).join('') + '</div>';
     }
     cal.innerHTML = `<div class="mock-cal-header" style="display:flex;align-items:center;justify-content:space-between;font-style:normal">
         <button class="mock-nav" onclick="mockNav(-1)">‹</button><span style="font-style:italic">${MONTHS[mo]} ${yr}</span><button class="mock-nav" onclick="mockNav(1)">›</button>
@@ -1343,7 +1402,7 @@ function renderMockCalendar(proposed){
     proposed.map(item=>{
       const ds = item.date;
       const d = ds ? new Date(ds+"T12:00:00") : null;
-      const fixedNote = item.dateType==='fixed' ? ' 📌' : '';
+      const fixedNote = item.kept ? ' 📌' : '';
       return `<div class="mock-cal-row">
         <div class="mock-cal-date"><div class="mn">${d?MONTHS[d.getMonth()].slice(0,3):''}</div><div class="dd">${d?d.getDate():'-'}</div></div>
         <div class="mock-cal-items"><div class="mock-pill" style="background:${colorOf(item)}">${esc(item.title)}${fixedNote}</div></div>
@@ -1355,7 +1414,7 @@ function applyAutoSchedule(){
   if(!pendingAutoSchedule) return;
   pendingAutoSchedule.forEach(item=>{
     const p = posts.find(x=>x.id===item.id);
-    if(p && item.date){ p.date = item.date; p.lastUpdated = formatUserStamp(); p.lastUpdatedBy = getCurrentUser(); }
+    if(p && item.date && !item.kept){ p.date = item.date; p.lastUpdated = formatUserStamp(); p.lastUpdatedBy = getCurrentUser(); }
   });
   pendingAutoSchedule = null;
   arrangeMode = false;
@@ -1420,6 +1479,7 @@ function showPostFields(type, p){
   if(dateType==='fixed') document.getElementById('dp-fixed').classList.add('active');
   else if(dateType==='flexible') document.getElementById('dp-flexible').classList.add('active');
   else if(dateType==='premar1') document.getElementById('dp-premarx').classList.add('active');
+  else if(dateType==='postmar1') document.getElementById('dp-postmar').classList.add('active');
   document.getElementById('pm-date').value = p ? (p.date||'') : (_prefillDate||'');
   updateDateRow(dateType);
 
@@ -1478,8 +1538,8 @@ function getSelectedCat(){
 }
 
 function selectDatePill(type){
-  ['dp-fixed','dp-flexible','dp-premarx'].forEach(id=>document.getElementById(id).classList.remove('active'));
-  document.getElementById(type==='fixed'?'dp-fixed':type==='premar1'?'dp-premarx':'dp-flexible').classList.add('active');
+  ['dp-fixed','dp-flexible','dp-premarx','dp-postmar'].forEach(id=>document.getElementById(id).classList.remove('active'));
+  document.getElementById({fixed:'dp-fixed',premar1:'dp-premarx',postmar1:'dp-postmar'}[type]||'dp-flexible').classList.add('active');
   if(type==='fixed' && _prefillDate && !document.getElementById('pm-date').value) document.getElementById('pm-date').value=_prefillDate;
   updateDateRow(type);
 }
@@ -1494,9 +1554,12 @@ function updateDateRow(type){
     sub.textContent = 'Post on (optional)';
     hint.textContent = type==='premar1'
       ? 'Leave blank to keep it unscheduled. Any date before Mar 1 works.'
+      : type==='postmar1'
+      ? 'Leave blank to keep it unscheduled. Any date from Mar 1 on works.'
       : 'Leave blank to keep it unscheduled. "Schedule for me" can pick a date later.';
   }
   input.max = type==='premar1' ? '2027-02-28' : '';
+  input.min = type==='postmar1' ? '2027-03-01' : '';
   syncUnschedBtn();
 }
 function syncUnschedBtn(){
@@ -1529,9 +1592,11 @@ function savePost(){
   let dateType = 'flexible';
   if(document.getElementById('dp-fixed').classList.contains('active')) dateType='fixed';
   else if(document.getElementById('dp-premarx').classList.contains('active')) dateType='premar1';
+  else if(document.getElementById('dp-postmar').classList.contains('active')) dateType='postmar1';
   const date = document.getElementById('pm-date').value || '';
   if(dateType==='fixed' && !date){ alert('Pick a date, or choose Flexible to keep it unscheduled.'); return; }
   if(dateType==='premar1' && date && date >= TICKETS_DATE){ alert('Pre Mar 1 posts need a date before March 1.'); return; }
+  if(dateType==='postmar1' && date && date < TICKETS_DATE){ alert('Post Mar 1 posts need a date on or after March 1.'); return; }
 
   const type = editingPostType;
   const purpose = document.getElementById('pm-purpose').value.trim();
@@ -1595,7 +1660,7 @@ function openDetail(id){
   const isEmail = p.type==='email';
   const isOther = p.type==='other';
   const catLabel = isEmail ? 'Email' : isOther ? 'Other' : (p.cat||'');
-  const typeLbl = {flexible:'Flexible', premar1:'Pre Mar 1', fixed:'Fixed date'}[p.dateType] || '';
+  const typeLbl = {flexible:'Flexible', premar1:'Pre Mar 1', postmar1:'Post Mar 1', fixed:'Fixed date'}[p.dateType] || '';
   const dateLbl = p.date ? `${fmtDate(p.date)} · ${typeLbl}` : `Unscheduled · ${typeLbl}`;
 
   let h = `
