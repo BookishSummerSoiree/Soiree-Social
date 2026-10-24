@@ -745,6 +745,33 @@ function migrateAuthorIntro(){
 const HQ_DB_URL = 'https://soiree-prizes-2027-default-rtdb.firebaseio.com';
 const INTRO_PREFIX = 'Author intro: ';
 let _hqAuthorsSynced = false;
+// If two copies of the app were open at once, both could give the same author a slot.
+// Keep one intro per author; any extra copy that nobody has worked on (no caption, purpose,
+// Drive link or graphic) goes back to being a numbered "Author Intro" slot.
+function dedupeAuthorIntros(confirmed){
+  const nameKey = t=>{ const m = /^author intro:\s*(.+)$/i.exec(String(t||'').trim()); return m ? m[1].trim().toLowerCase() : null; };
+  const idByName = {}; (confirmed||[]).forEach(a=>{ idByName[String(a.name).trim().toLowerCase()] = String(a.id); });
+  const groups = {};
+  posts.forEach(p=>{
+    const k = p.hqAuthorId ? 'id:'+p.hqAuthorId : (nameKey(p.title) ? 'id:'+(idByName[nameKey(p.title)] || 'name:'+nameKey(p.title)) : null);
+    if(k) (groups[k] = groups[k] || []).push(p);
+  });
+  const hasWork = p=> !!(p.caption || p.purpose || p.driveLink || postImages[p.id]);
+  const taken = new Set(posts.map(p=>{ const m=/^Author Intro (\d+)$/i.exec(p.title||''); return m ? +m[1] : null; }).filter(Boolean));
+  let changed = false;
+  Object.values(groups).forEach(g=>{
+    if(g.length < 2) return;
+    const rank = p=> (hasWork(p)?4:0) + (isAuthorPost(p)?2:0) + (p.hqAuthorId?1:0);
+    const keep = [...g].sort((a,b)=> rank(b)-rank(a) || (a.order??1e6)-(b.order??1e6))[0];
+    g.forEach(p=>{
+      if(p===keep || hasWork(p)) return;
+      let n = 1; while(taken.has(n)) n++; taken.add(n);
+      p.title = 'Author Intro ' + n; delete p.hqAuthorId; p.cat = catName('Author Intro');
+      changed = true;
+    });
+  });
+  return changed;
+}
 async function syncAuthorIntros(){
   if(_hqAuthorsSynced) return;
   _hqAuthorsSynced = true;
@@ -758,7 +785,7 @@ async function syncAuthorIntros(){
   const last = n=>String(n).trim().split(/\s+/).pop();
   list.sort((a,b)=>last(a.name).localeCompare(last(b.name)) || a.name.localeCompare(b.name));
 
-  let changed = false;
+  let changed = dedupeAuthorIntros(list);
   const numbered = posts
     .map(p=>({p, m:/^Author Intro (\d+)$/i.exec(p.title||'')}))
     .filter(x=>x.m).sort((a,b)=>+a.m[1] - +b.m[1]).map(x=>x.p);
