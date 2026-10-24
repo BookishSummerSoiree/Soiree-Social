@@ -2330,14 +2330,18 @@ function calSwipe(which, dir){
     if(Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy)*1.5) calSwipe(target, dx<0 ? 1 : -1);
     target = null;
   }, {passive:true});
-  let acc=0, lock=0;
+  // One trackpad swipe = one month. After a swipe, ignore the leftover glide until the
+  // fingers have been still for a moment, so the calendar can't race through months.
+  let acc=0, spent=false, quietTimer=null;
   document.addEventListener('wheel', e=>{
     const which = calSwipeTarget(e.target);
     if(!which || Math.abs(e.deltaX) <= Math.abs(e.deltaY)) return;
     e.preventDefault();
-    if(Date.now() < lock) return;
+    clearTimeout(quietTimer);
+    quietTimer = setTimeout(()=>{ spent=false; acc=0; }, 350);
+    if(spent) return;
     acc += e.deltaX;
-    if(Math.abs(acc) > 60){ calSwipe(which, acc>0 ? 1 : -1); acc = 0; lock = Date.now()+700; }
+    if(Math.abs(acc) > 60){ calSwipe(which, acc>0 ? 1 : -1); spent = true; }
   }, {passive:false});
 })();
 function closeModal(id){ document.getElementById(id).classList.remove('open'); }
