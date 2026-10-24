@@ -262,8 +262,9 @@ body{font-family:var(--fb);background:var(--cream);color:var(--black);min-height
 .cal-cell.has-posts{cursor:pointer}
 .cal-day-num{font-size:10px;font-weight:500;color:#888;line-height:1;margin-bottom:2px}
 .cal-cell.today .cal-day-num{color:var(--coral-d);font-weight:700}
-.cal-dot{height:5px;border-radius:3px;margin-bottom:1px;font-size:0}
-.cal-overflow{font-size:8px;color:#aaa;line-height:1}
+.cal-ev{font-size:8.5px;font-weight:500;line-height:1.2;color:#fff;border-radius:3px;padding:1px 3px;margin-bottom:2px;overflow:hidden;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;word-break:break-word;hyphens:auto}
+@media (min-width:640px){.cal-ev{font-size:10.5px;padding:2px 5px;-webkit-line-clamp:2}}
+.cal-overflow{font-size:8.5px;color:#888;line-height:1.2;font-weight:500}
 /* Cal detail popover */
 .cal-popover{background:var(--white);border-radius:12px;border:1px solid var(--cream-d);padding:10px 12px;margin-bottom:8px;box-shadow:0 4px 16px rgba(0,0,0,.08)}
 .cal-pop-date{font-family:var(--fd);font-size:14px;font-weight:500;color:var(--navy);margin-bottom:6px}
@@ -894,6 +895,7 @@ const TYPE_ICONS = {
   Slides: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><rect x="3" y="7" width="13" height="14" rx="3"/><path d="M8 4h9a4 4 0 0 1 4 4v9"/></svg>',
 };
 const DATE_TYPE_LBL = {flexible:'Flexible', premar1:'Pre Mar 1', postmar1:'Post Mar 1', fixed:'Fixed'};
+function calLabel(t){ return String(t||'Untitled').replace(/[\p{Extended_Pictographic}\uFE0F\u200D]/gu,'').replace(/\s+/g,' ').trim() || 'Untitled'; }
 function esc(t){ return String(t??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
 
 function cardHTML(post, opts={}){
@@ -1097,8 +1099,8 @@ function renderCalendarView(){
     const isToday = ds===todayStr;
     const isSel = ds===_calSelectedDay;
     const dayPosts = byDay[ds]||[];
-    const dots = dayPosts.slice(0,3).map(p=>`<div class="cal-dot" style="background:${postColor(p)}"></div>`).join('');
-    const overflow = dayPosts.length>3 ? `<div class="cal-overflow">+${dayPosts.length-3}</div>` : '';
+    const dots = dayPosts.slice(0,4).map(p=>`<div class="cal-ev" style="background:${postColor(p)}">${esc(calLabel(p.title))}</div>`).join('');
+    const overflow = dayPosts.length>4 ? `<div class="cal-overflow">+${dayPosts.length-4} more</div>` : '';
     const selStyle = isSel ? ';box-shadow:0 0 0 2px var(--sage)' : '';
     cells += `<div class="cal-cell${isToday?' today':''}${dayPosts.length?' has-posts':''}" style="cursor:${dayPosts.length||isSel?'pointer':'default'}${selStyle}" onclick="calDayTap('${ds}')">
       <div class="cal-day-num">${d}</div>${dots}${overflow}
@@ -1371,8 +1373,8 @@ function renderMockCalendar(proposed){
     for(let d=1; d<=nDays; d++){
       const ds = `${yr}-${String(mo+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
       const items = byDay[ds]||[];
-      const dots = items.slice(0,3).map(i=>`<div class="cal-dot" style="background:${colorOf(i)}"></div>`).join('');
-      const more = items.length>3 ? `<div class="cal-overflow">+${items.length-3}</div>` : '';
+      const dots = items.slice(0,4).map(i=>`<div class="cal-ev" style="background:${colorOf(i)}">${esc(calLabel(i.title))}</div>`).join('');
+      const more = items.length>4 ? `<div class="cal-overflow">+${items.length-4} more</div>` : '';
       const sel = ds===_mockSel ? ' style="box-shadow:0 0 0 2px var(--sage)"' : '';
       cells += `<div class="cal-cell mock-cell${items.length?' has-posts':''}"${sel} onclick="mockDayTap('${ds}')"><div class="cal-day-num">${d}</div>${dots}${more}</div>`;
     }
