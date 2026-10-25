@@ -75,6 +75,7 @@ body{font-family:var(--fb);background:var(--cream);color:var(--black);min-height
 .search-ic{font-size:11px;opacity:.6}
 #search-input{flex:1;min-width:0;border:none;background:transparent;outline:none;font-family:var(--fb);font-size:16px;color:var(--black);padding:0;-webkit-appearance:none;appearance:none}
 #search-input::-webkit-search-cancel-button{display:none}
+#save-banner{position:fixed;left:8px;right:8px;top:calc(6px + env(safe-area-inset-top,0px));z-index:500;background:#FFF4E5;border:1px solid #F0B46B;color:#6B3E00;border-radius:10px;padding:8px 12px;font-family:var(--fb);font-size:11.5px;line-height:1.4;box-shadow:0 4px 14px rgba(0,0,0,.12)}
 @media (min-width:640px){#search-input{font-size:12px}}
 .search-x{border:none;background:none;color:#999;font-size:12px;cursor:pointer;padding:2px;display:none}
 .search-box.has-q .search-x{display:block}
@@ -1014,10 +1015,12 @@ async function loadFromFirestoreAll(){
     let changed = false;
     const metaCats = (fsMeta||[]).find(d=>d.id==='cats');
     if(adoptCats(metaCats)) changed = true;
+    if(metaCats) window._syncedCats = stableJSON({list:metaCats.list, alias:metaCats.alias||{}});
     window._catsLoaded = true;
     if(!metaCats) saveCats();   // first phone to get this version shares its list
-    if(fsPosts && fsPosts.length > 0){ posts = sortByOrder(fsPosts); rememberSynced(fsPosts); changed = true; window._postsFromCloud = true; }
+    if(fsPosts && fsPosts.length > 0){ rescueUnsentPosts(fsPosts); rememberSynced(fsPosts); posts = sortByOrder(mergePending(fsPosts)); changed = true; window._postsFromCloud = true; if(_pending.size||_pendingDel.size) setTimeout(()=>savePostsToFirestore(true), 1500); }
     if(fsCDs && fsCDs.length > 0){ countdowns = fsCDs; changed = true; }
+    window._syncedCds = stableJSON(countdowns);
     if(changed){
       localStorage.setItem('ss_p2', JSON.stringify(posts));
       localStorage.setItem('ss_c2', JSON.stringify(countdowns));
@@ -1044,7 +1047,7 @@ function setupFirestoreListeners(){
       const data = _latestPostDocs;
       if(!data || !data.length) return;
       rememberSynced(data);
-      const next = sortByOrder(data);
+      const next = sortByOrder(mergePending(data));
       if(stableJSON(next) === stableJSON(posts)) return;   // nothing new, no redraw
       if(arrangeMode && _dragSrc) return;                          // don't move cards while you're dragging
       posts = next;
@@ -1067,8 +1070,10 @@ function sortByOrder(arr){
 function saveCats(){
   localStorage.setItem('ss_cats2', JSON.stringify(cats));
   try{ localStorage.setItem('ss_catalias', JSON.stringify(catAlias)); }catch(e){}
-  if(window._firestoreDB && window._catsLoaded){
-    window._fbSetDoc(window._fbDoc(window._firestoreDB,'ss_meta','cats'), {id:'cats', list:cats, alias:catAlias, at:Date.now()}).catch(()=>{});
+  const cj = stableJSON({list:cats, alias:catAlias});
+  if(window._firestoreDB && window._catsLoaded && cj !== window._syncedCats){
+    window._syncedCats = cj;
+    window._fbSetDoc(window._fbDoc(window._firestoreDB,'ss_meta','cats'), {id:'cats', list:cats, alias:catAlias, at:Date.now()}).catch(()=>{ window._syncedCats = null; });
   }
 }
 function adoptCats(d){
@@ -1087,7 +1092,8 @@ function save(){
   localStorage.setItem('ss_htags2', JSON.stringify(hashtagGroups));
   if(window._firestoreDB){
     savePostsToFirestore();
-    saveToFirestore('ss_cds2', countdowns).catch(()=>{});
+    const cj = stableJSON(countdowns);
+    if(cj !== window._syncedCds){ window._syncedCds = cj; saveToFirestore('ss_cds2', countdowns).catch(()=>{ window._syncedCds = null; }); }
   }
   saveCats();
 }
@@ -1096,21 +1102,78 @@ function save(){
 const stableJSON = o => JSON.stringify(o, (k,v)=> v && typeof v==='object' && !Array.isArray(v) ? Object.keys(v).sort().reduce((a,x)=>(a[x]=v[x],a),{}) : v);
 let _syncedPost = {};   // id -> JSON of what the database has
 function rememberSynced(list){ _syncedPost = {}; list.forEach(p=>{ _syncedPost[p.id] = stableJSON(p); }); }
-function savePostsToFirestore(){
-  const changed = posts.filter(p=>p.id && _syncedPost[p.id] !== stableJSON(p));
-  if(!changed.length) return;
-  changed.forEach(p=>{ _syncedPost[p.id] = stableJSON(p); });
-  const db = window._firestoreDB;
-  if(window._fbWriteBatch){
-    for(let i=0;i<changed.length;i+=400){
-      const batch = window._fbWriteBatch(db);
-      changed.slice(i,i+400).forEach(p=>batch.set(window._fbDoc(db,'ss_posts2',p.id), p));
-      batch.commit().catch(e=>{ console.warn('save failed', e); changed.forEach(p=>{ delete _syncedPost[p.id]; }); });
-    }
-  } else {
-    saveToFirestore('ss_posts2', changed).catch(()=>{});
-  }
+// ── NEVER LOSE A CHANGE ────────────────────────────────────────────────────
+// Every post change is kept on this device (ss_pending) until the cloud confirms it.
+// If saving fails (no connection, or the database's daily limit), the change stays
+// here, the app keeps showing it, and it uploads automatically later.
+const _ls = (k,d)=>{ try{ const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; }catch(e){ return d; } };
+let _pending = new Set(_ls('ss_pending', []));        // post ids changed here, not yet confirmed by the cloud
+let _pendingDel = new Set(_ls('ss_pending_del', []));  // post ids deleted here, not yet confirmed
+function _savePendingLists(){ try{ localStorage.setItem('ss_pending', JSON.stringify([..._pending])); localStorage.setItem('ss_pending_del', JSON.stringify([..._pendingDel])); }catch(e){} }
+let _saveProblem = null;
+function setSaveProblem(err){
+  _saveProblem = err ? (String(err.code||err.message||err).includes('resource-exhausted') || String(err).includes('Quota') ? 'quota' : 'offline') : null;
+  renderSaveBanner();
 }
+function renderSaveBanner(){
+  let bar = document.getElementById('save-banner');
+  const waiting = _pending.size + _pendingDel.size;
+  if(!_saveProblem && !waiting){ if(bar) bar.remove(); return; }
+  if(!bar){ bar = document.createElement('div'); bar.id = 'save-banner'; document.body.appendChild(bar); }
+  const what = waiting ? `${waiting} change${waiting===1?'':'s'} waiting to upload. ` : '';
+  bar.innerHTML = _saveProblem==='quota'
+    ? `⚠️ <b>Not saving to the cloud right now.</b> The database hit its daily limit. ${what}Your changes are kept safe on this device and will upload by themselves when the limit resets. Please don't clear this browser's data.`
+    : _saveProblem ? `⚠️ <b>Can't reach the cloud.</b> ${what}Your changes are kept on this device and will upload when the connection is back.`
+    : `☁️ Uploading ${what}`;
+}
+// One-time rescue: posts typed on this device while saving was failing (before this version
+// kept a list) are still in this device's copy. Any post you made here that the cloud never got
+// is put back in the upload list.
+function rescueUnsentPosts(cloud){
+  try{
+    if(localStorage.getItem('ss_rescue_v43')) return;
+    localStorage.setItem('ss_rescue_v43','1');
+    const local = JSON.parse(localStorage.getItem('ss_p2')||'[]');
+    const inCloud = new Set(cloud.map(p=>p.id));
+    const system = /^(bss\d+|v8-|intro-|author-slot-)/;
+    local.filter(p=>p && p.id && !inCloud.has(p.id) && !system.test(p.id) && p.title).forEach(p=>_pending.add(p.id));
+    _savePendingLists();
+  }catch(e){}
+}
+function mergePending(cloud){
+  // cloud list + this device's not-yet-uploaded changes and deletions
+  let local = []; try{ local = JSON.parse(localStorage.getItem('ss_p2')||'[]'); }catch(e){}
+  const byId = new Map(cloud.map(p=>[p.id,p]));
+  _pending.forEach(id=>{ const lp = local.find(x=>x.id===id) || posts.find(x=>x.id===id); if(lp) byId.set(id, lp); });
+  _pendingDel.forEach(id=>byId.delete(id));
+  return [...byId.values()];
+}
+function savePostsToFirestore(force){
+  const changed = posts.filter(p=>p.id && (force && _pending.has(p.id) || _syncedPost[p.id] !== stableJSON(p)));
+  const dels = [..._pendingDel];
+  if(!changed.length && !dels.length){ renderSaveBanner(); return; }
+  changed.forEach(p=>{ _pending.add(p.id); });
+  _savePendingLists();
+  const sent = new Map(changed.map(p=>[p.id, stableJSON(p)]));
+  changed.forEach(p=>{ _syncedPost[p.id] = sent.get(p.id); });
+  const db = window._firestoreDB;
+  const batch = window._fbWriteBatch(db);
+  changed.slice(0,450).forEach(p=>batch.set(window._fbDoc(db,'ss_posts2',p.id), p));
+  dels.slice(0,40).forEach(id=>batch.delete(window._fbDoc(db,'ss_posts2',id)));
+  renderSaveBanner();
+  batch.commit().then(()=>{
+    changed.slice(0,450).forEach(p=>{ const cur = posts.find(x=>x.id===p.id); if(!cur || stableJSON(cur)===sent.get(p.id)) _pending.delete(p.id); });
+    dels.slice(0,40).forEach(id=>_pendingDel.delete(id));
+    _savePendingLists(); setSaveProblem(null);
+  }).catch(e=>{
+    console.warn('save failed', e);
+    changed.forEach(p=>{ delete _syncedPost[p.id]; });
+    setSaveProblem(e);
+  });
+}
+// keep trying in the background while anything is waiting
+setInterval(()=>{ if(window._firestoreDB && (_pending.size || _pendingDel.size)) savePostsToFirestore(true); }, 90*1000);
+window.addEventListener('online', ()=>{ if(window._firestoreDB && (_pending.size || _pendingDel.size)) savePostsToFirestore(true); });
 
 // ── CATEGORY → CSS class map ───────────────────────────────────────────────
 // Built-in categories keep their color and rules when renamed. catAlias maps a
@@ -2430,7 +2493,7 @@ function deletePost(){
     return;
   }
   posts = posts.filter(p=>p.id!==editingPostId);
-  if(window._firestoreDB) deleteFromFirestore('ss_posts2', editingPostId);
+  _pendingDel.add(editingPostId); _pending.delete(editingPostId); _savePendingLists();
   if(postImages[editingPostId]) storePostImage(editingPostId, '');
   save();
   closeModal('post-modal');
