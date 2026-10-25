@@ -1364,10 +1364,11 @@ function renderMasterList(){
     const lvr = document.getElementById('listview-row'); if(lvr) lvr.classList.add('hide');
     const list = arrangeCandidates(), anchors = fixedAnchors();
     const ids = new Set(list.concat(anchors).map(p=>p.id));
-    const shown = posts.filter(p=>ids.has(p.id));
+    let shown = posts.filter(p=>ids.has(p.id));
+    if(_arrangeOrder){ const at = new Map(_arrangeOrder.map((id,i)=>[id,i])); shown = shown.map((p,i)=>({p,i})).sort((a,b)=>(at.has(a.p.id)?at.get(a.p.id):1e6+a.i)-(at.has(b.p.id)?at.get(b.p.id):1e6+b.i)).map(x=>x.p); }
     el.innerHTML = `<div class="search-head">${list.length} post${list.length===1?'':'s'} to schedule. The date on each card is where it will land. Drag Fixed posts too: posts above one go before its date, posts below go after.</div>` +
       (list.length ? `<div class="${canDrag()?'compact-list':''}">` + shown.map(p=> canDrag() ? compactRowHTML(p) : cardHTML(p, {draggable:false})).join('') + `</div>` : `<div class="empty-msg">Nothing to schedule here</div>`);
-    if(list.length && !_anchorsPlaced){ placeAnchors(); _anchorsPlaced = true; applyScreenOrder(); }
+    if(list.length && !_anchorsPlaced){ orderByCurrentDates(); _anchorsPlaced = true; rememberArrangeOrder(); }
     refreshArrangeDates();
     if(canDrag()) setupDragDrop();
     return;
@@ -1586,6 +1587,26 @@ function fixedAnchors(){
 // in their current order.
 // Lay the Arrange list out as a timeline: every post at the date it would get in the current
 // order, and each Fixed post at its own date. (Within a stretch the order you set is kept.)
+// When Arrange opens, the list is in the order of each post's CURRENT date (including dates
+// you typed in by hand). Posts without a date go at the end of their stretch: Author Intros
+// just before Feb 1, Pre Mar 1 posts just before March, everything else just before the Soirée.
+function orderByCurrentDates(){
+  const cards = _listCards(); if(!cards.length) return;
+  const box = cards[0].parentNode;
+  const shift = (ds,n)=>{ const d = new Date(ds+'T12:00:00'); d.setDate(d.getDate()+n); return d.toISOString().slice(0,10); };
+  // posts with no date yet: where they'd land if spaced out in their current order
+  const undated = cards.map(c=>posts.find(x=>x.id===c.dataset.id)).filter(p=>p && !p.date && p.dateType!=='fixed').map(p=>p.id);
+  const guess = {}; if(undated.length) computeProposal(undated, today.toISOString().slice(0,10)).forEach(i=>{ guess[i.id] = i.date; });
+  const keyOf = c=>{
+    const p = posts.find(x=>x.id===c.dataset.id); if(!p) return '9999';
+    if(p.date) return p.date + (p.dateType==='fixed' ? ' 0' : ' 1');     // same day: the Fixed post first
+    if(guess[p.id]) return guess[p.id] + ' 2';
+    if(isAuthorPost(p) && p.dateType!=='postmar1') return shift(AUTHOR_DEADLINE,-1) + ' 9';
+    if(p.dateType==='premar1') return shift(TICKETS_DATE,-1) + ' 9';
+    return shift(SOIREE_DATE,-2) + ' 9';
+  };
+  cards.map((c,i)=>({c, k:keyOf(c), i})).sort((a,b)=> a.k.localeCompare(b.k) || a.i-b.i).forEach(x=>box.appendChild(x.c));
+}
 function placeAnchors(){
   const el = document.getElementById('master-list-content');
   const cards = _listCards();
@@ -1603,14 +1624,15 @@ function arrangeCandidates(){
 // Arrange has two steps: first you pick how ('choose'), then for your own order you drag ('manual').
 let arrangeStage = 'choose';
 const canDrag = ()=> arrangeMode && arrangeStage === 'manual';
-let _anchorsPlaced = false;
+let _anchorsPlaced = false, _arrangeOrder = null;
+function rememberArrangeOrder(){ _arrangeOrder = _listCards().map(c=>c.dataset.id); }
 function toggleArrange(){
   if(arrangeMode){ exitArrangeMode(); renderMasterList(); return; }
-  arrangeMode = true; arrangeStage = 'choose'; _anchorsPlaced = false;
+  arrangeMode = true; arrangeStage = 'choose'; _anchorsPlaced = false; _arrangeOrder = null;
   syncArrangeUI(); renderMasterList();
 }
 function setArrangeStage(stage){
-  if(stage === 'manual') applyScreenOrder();   // keep whatever order is on screen (e.g. after a shuffle)
+  if(stage === 'manual') rememberArrangeOrder();   // keep whatever order is on screen (e.g. after a shuffle)
   arrangeStage = stage; syncArrangeUI(); renderMasterList();
 }
 function syncArrangeUI(){
@@ -1650,7 +1672,7 @@ function renderArrangeBar(){
   }
 }
 function exitArrangeMode(){
-  arrangeMode = false; arrangeStage = 'choose';
+  arrangeMode = false; arrangeStage = 'choose'; _arrangeOrder = null;
   syncArrangeUI();
 }
 // "I'm done arranging them": space out and schedule in the order on screen, straight away.
@@ -1765,7 +1787,7 @@ function shuffleAndPreview(again){
   const slots = cards.filter(c=>movableIds.has(c.dataset.id));
   const markers = slots.map(c=>{ const m=document.createComment('slot'); c.parentNode.insertBefore(m,c); return m; });
   markers.forEach((m,i)=>{ const card = parentOf.get(order[i].id); m.parentNode.insertBefore(card, m); m.remove(); });
-  placeAnchors(); _anchorsPlaced = true; applyScreenOrder(); refreshArrangeDates();
+  placeAnchors(); _anchorsPlaced = true; rememberArrangeOrder(); refreshArrangeDates();
   if(again) runAutoSchedule(); else openAutoSchedule('shuffle');
 }
 
@@ -1806,7 +1828,7 @@ function _dropAtLine(){
   if(line && moved){ line.parentNode.insertBefore(moved, line); }
   _clearDropLine();
   if(moved && arrangeMode){
-    applyScreenOrder();          // remember the new order (not saved until you're done)
+    rememberArrangeOrder();      // remember the new order (not saved until you're done)
     refreshArrangeDates();
     explainIfStuck(moved.dataset.id);
   }
@@ -2173,7 +2195,7 @@ function reorderFromMock(order, movedId){
   const box = cards[0].parentNode;
   const byId = new Map(cards.map(c=>[c.dataset.id, c]));
   order.forEach(id=>{ const c = byId.get(id); if(c) box.appendChild(c); });
-  applyScreenOrder();
+  rememberArrangeOrder();
   refreshArrangeDates();
   runAutoSchedule();
   explainIfStuck(movedId);
