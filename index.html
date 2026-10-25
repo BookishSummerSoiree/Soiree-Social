@@ -706,12 +706,6 @@ function migrateAllAuthors(){
   const OLD = 'General ' + 'authors', NEW = catName('All authors');
   let changed = false;
   posts.forEach(p=>{ if(p.cat === OLD){ p.cat = NEW; changed = true; } });
-  // A brief update removed this category and moved my three suggested posts to Event.
-  // Put them back if nobody has edited them since.
-  ['v8-post-3','v8-post-7','v8-post-8'].forEach(id=>{
-    const p = posts.find(x=>x.id===id);
-    if(p && p.cat==='Event' && p.lastUpdated==='Oct 24 · Nik'){ p.cat = NEW; changed = true; }
-  });
   const i = cats.indexOf(OLD);
   if(i > -1){ if(cats.includes(NEW)) cats.splice(i,1); else cats[i] = NEW; changed = true; }
   // bring the category back once on this device (after that, Settings decides)
