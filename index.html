@@ -761,7 +761,7 @@ function dedupeAuthorIntros(confirmed){
   let changed = false;
   Object.values(groups).forEach(g=>{
     if(g.length < 2) return;
-    const rank = p=> (hasWork(p)?4:0) + (isAuthorPost(p)?2:0) + (p.hqAuthorId?1:0);
+    const rank = p=> (hasWork(p)?8:0) + (p.date?4:0) + (isAuthorPost(p)?2:0) + (/^v8-auth-/.test(p.id)?1:0);
     const keep = [...g].sort((a,b)=> rank(b)-rank(a) || (a.order??1e6)-(b.order??1e6))[0];
     g.forEach(p=>{
       if(p===keep || hasWork(p)) return;
@@ -770,6 +770,48 @@ function dedupeAuthorIntros(confirmed){
       changed = true;
     });
   });
+  return changed;
+}
+// There are AUTHOR_SLOTS author posts in all: one per confirmed author (each started out as a
+// numbered "Author Intro N") plus numbered ones still waiting for an author.
+const AUTHOR_SLOTS = 18;
+const _isNumberedSlot = p=> /^Author Intro \d+$/i.test(p.title||'');
+const _isNamedIntro = p=> !!p.hqAuthorId || /^author intro:/i.test(p.title||'');
+function authorSlotCount(){ return posts.filter(p=>_isNumberedSlot(p) || _isNamedIntro(p)).length; }
+function tidyAuthorSlots(confirmed){
+  const hasWork = p=> !!(p.caption || p.purpose || p.driveLink || postImages[p.id]);
+  let changed = false;
+  const removed = [];
+  // 1. A named intro that was made as a brand-new post moves into an empty numbered slot
+  //    (it takes the slot's date), and the new post goes away.
+  posts.filter(p=>_isNamedIntro(p) && /^intro-/.test(p.id) && !hasWork(p)).forEach(np=>{
+    const slot = posts.filter(q=>_isNumberedSlot(q) && !hasWork(q))
+      .sort((a,b)=>(+/\d+/.exec(a.title)[0]) - (+/\d+/.exec(b.title)[0]))[0];
+    if(!slot) return;
+    slot.title = np.title; slot.hqAuthorId = np.hqAuthorId; slot.cat = catName('Author Intro');
+    if(!slot.date && np.date) slot.date = np.date;
+    removed.push(np.id); changed = true;
+  });
+  if(removed.length) posts = posts.filter(p=>!removed.includes(p.id));
+  // 2. Keep the total at AUTHOR_SLOTS (or one per confirmed author, if that's more):
+  //    drop extra empty numbered slots, last numbers first.
+  const target = Math.max(AUTHOR_SLOTS, (confirmed||[]).length);
+  let extra = authorSlotCount() - target;
+  if(extra > 0){
+    const spare = posts.filter(p=>_isNumberedSlot(p) && !hasWork(p))
+      .sort((a,b)=>(+/\d+/.exec(b.title)[0]) - (+/\d+/.exec(a.title)[0]));
+    const drop = spare.slice(0, extra).map(p=>p.id);
+    if(drop.length){ posts = posts.filter(p=>!drop.includes(p.id)); removed.push(...drop); changed = true; }
+  }
+  // 3. Number the waiting slots after the named ones (e.g. 14-18 when 13 authors are named),
+  //    in date order.
+  const named = posts.filter(_isNamedIntro).length;
+  posts.filter(_isNumberedSlot)
+    .sort((a,b)=>(a.date||'9999').localeCompare(b.date||'9999') || (+/\d+/.exec(a.title)[0]) - (+/\d+/.exec(b.title)[0]))
+    .forEach((p,i)=>{ const t = 'Author Intro ' + (named + i + 1); if(p.title !== t){ p.title = t; changed = true; } });
+  // 4. Author posts can't be on or after Feb 1
+  posts.forEach(p=>{ if((_isNumberedSlot(p) || _isNamedIntro(p)) && p.date && p.date >= AUTHOR_DEADLINE){ p.date = ''; changed = true; } });
+  if(removed.length && window._firestoreDB) removed.forEach(id=>deleteFromFirestore('ss_posts2', id));
   return changed;
 }
 async function syncAuthorIntros(){
@@ -786,6 +828,7 @@ async function syncAuthorIntros(){
   list.sort((a,b)=>last(a.name).localeCompare(last(b.name)) || a.name.localeCompare(b.name));
 
   let changed = dedupeAuthorIntros(list);
+  if(window._postsFromCloud && tidyAuthorSlots(list)) changed = true;
   const numbered = posts
     .map(p=>({p, m:/^Author Intro (\d+)$/i.exec(p.title||'')}))
     .filter(x=>x.m).sort((a,b)=>+a.m[1] - +b.m[1]).map(x=>x.p);
@@ -803,7 +846,7 @@ async function syncAuthorIntros(){
     post = numbered.shift();
     if(post){
       post.title = want; post.hqAuthorId = String(a.id);
-    } else {
+    } else if(window._postsFromCloud && authorSlotCount() < AUTHOR_SLOTS) {
       posts.push({id:'intro-'+a.id, dateType:'premar1', date:'', type:'social', cat:catName('Author Intro'), postType:'', title:want,
         purpose:'', caption:'', driveLink:'', htagId:'', extraHtags:'', hqAuthorId:String(a.id)});
     }
@@ -937,7 +980,7 @@ async function loadFromFirestoreAll(){
     if(adoptCats(metaCats)) changed = true;
     window._catsLoaded = true;
     if(!metaCats) saveCats();   // first phone to get this version shares its list
-    if(fsPosts && fsPosts.length > 0){ posts = sortByOrder(fsPosts); rememberSynced(fsPosts); changed = true; }
+    if(fsPosts && fsPosts.length > 0){ posts = sortByOrder(fsPosts); rememberSynced(fsPosts); changed = true; window._postsFromCloud = true; }
     if(fsCDs && fsCDs.length > 0){ countdowns = fsCDs; changed = true; }
     if(changed){
       localStorage.setItem('ss_p2', JSON.stringify(posts));
