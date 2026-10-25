@@ -125,6 +125,7 @@ mark.hit{background:#F6E2A6;color:inherit;border-radius:2px;padding:0 1px}
 .tab-num{font-family:var(--fd);font-size:19px;font-weight:500;line-height:1}
 .tab-fixed{font-size:6.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;line-height:1;margin-top:3px;padding:1.5px 3px 1px;border-radius:3px;background:#fff;color:#C62828}
 .drag-handle.pin{cursor:default;color:inherit;font-size:11px}
+.tab-proposed{opacity:.88;font-style:italic}
 .tab-none{font-size:8px;font-weight:500;letter-spacing:.05em;text-transform:uppercase;line-height:1.25;opacity:.9}
 
 .card-body{flex:1;padding:7px 6px 7px 10px;min-width:0;display:flex;gap:8px;align-items:stretch}
@@ -1167,7 +1168,7 @@ function cardHTML(post, opts={}){
   const postTypeBadge = pt ? `<span class="post-type-badge" title="${esc(pt)}" aria-label="${esc(pt)}">${TYPE_ICONS[pt] || esc(pt)}</span>` : '';
   const isPast = post.date && new Date(post.date+"T12:00:00") < today;
   const pastCls = isPast && post.dateType==='fixed' ? ' past-post' : '';
-  const dragAttr = opts.draggable && !(post.dateType==='fixed' && post.date) ? 'draggable="true"' : '';
+  const dragAttr = opts.draggable ? 'draggable="true"' : '';
 
   // left colour tab: the post's date
   let tab;
@@ -1191,7 +1192,7 @@ function cardHTML(post, opts={}){
       <div class="card-side">
         <div class="card-side-top">
           ${dtLbl ? `<span class="dt-lbl">${dtLbl}</span>` : ''}
-          ${isFixed ? `<span class="drag-handle pin" title="Fixed date: stays put">📌</span>` : `<button class="drag-handle" title="Drag to reorder">⠿</button>`}
+          <button class="drag-handle" title="Drag to reorder">⠿</button>
           <button class="edit-btn" onclick="event.stopPropagation();openEditPost('${post.id}')">✏️</button>
         </div>
         <div class="card-side-bot">${postImages[post.id] ? `<img class="card-thumb" src="${postImages[post.id]}" alt="">` : ''}${catLabel ? `<span class="card-cat-tag">${esc(catLabel)}</span>` : ''}${postTypeBadge}</div>
@@ -1267,9 +1268,12 @@ function renderMasterList(){
   if(arrangeMode && !searchQ){
     const lvr = document.getElementById('listview-row'); if(lvr) lvr.classList.add('hide');
     const list = arrangeCandidates(), anchors = fixedAnchors();
-    el.innerHTML = `<div class="search-head">${list.length} post${list.length===1?'':'s'} to schedule. 📌 Fixed posts stay put; posts above one go before its date, posts below go after.</div>` +
-      (list.length ? list.concat(anchors).map(p=>cardHTML(p, {draggable:canDrag()})).join('') : `<div class="empty-msg">Nothing to schedule here</div>`);
-    if(list.length) placeAnchors();
+    const ids = new Set(list.concat(anchors).map(p=>p.id));
+    const shown = posts.filter(p=>ids.has(p.id));
+    el.innerHTML = `<div class="search-head">${list.length} post${list.length===1?'':'s'} to schedule. The date on each card is where it will land. Drag Fixed posts too: posts above one go before its date, posts below go after.</div>` +
+      (list.length ? shown.map(p=>cardHTML(p, {draggable:canDrag()})).join('') : `<div class="empty-msg">Nothing to schedule here</div>`);
+    if(list.length && !_anchorsPlaced){ placeAnchors(); _anchorsPlaced = true; applyScreenOrder(); }
+    refreshArrangeDates();
     if(canDrag()) setupDragDrop();
     return;
   }
@@ -1471,19 +1475,17 @@ function fixedAnchors(){
 }
 // Put each Fixed card where it falls in time, based on the dates the other posts would get
 // in their current order.
+// Lay the Arrange list out as a timeline: every post at the date it would get in the current
+// order, and each Fixed post at its own date. (Within a stretch the order you set is kept.)
 function placeAnchors(){
   const el = document.getElementById('master-list-content');
   const cards = _listCards();
-  const anchorsEls = cards.filter(c=>c.dataset.fixed).map(c=>({c, p:posts.find(x=>x.id===c.dataset.id)})).filter(a=>a.p)
-                          .sort((a,b)=>a.p.date.localeCompare(b.p.date));
   const movEls = cards.filter(c=>!c.dataset.fixed);
-  if(!anchorsEls.length || !movEls.length) return;
+  if(!movEls.length) return;
   const prov = {};
   computeProposal(movEls.map(c=>c.dataset.id), today.toISOString().slice(0,10)).forEach(i=>{ prov[i.id] = i.date; });
-  anchorsEls.forEach(({c,p})=>{
-    const next = movEls.find(m=>prov[m.dataset.id] && prov[m.dataset.id] > p.date);
-    if(next) next.parentNode.insertBefore(c, next); else el.appendChild(c);
-  });
+  const keyOf = c=>{ if(c.dataset.fixed){ const p = posts.find(x=>x.id===c.dataset.id); return (p && p.date) || '9999'; } return prov[c.dataset.id] || '9999'; };
+  cards.map((c,i)=>({c, k:keyOf(c), i})).sort((a,b)=> a.k.localeCompare(b.k) || a.i-b.i).forEach(x=>el.appendChild(x.c));
 }
 function arrangeCandidates(){
   return getFiltered().filter(p=>p.type==='social' && p.dateType!=='fixed' && !(p.date && new Date(p.date+'T12:00:00') < today));
@@ -1491,9 +1493,10 @@ function arrangeCandidates(){
 // Arrange has two steps: first you pick how ('choose'), then for your own order you drag ('manual').
 let arrangeStage = 'choose';
 const canDrag = ()=> arrangeMode && arrangeStage === 'manual';
+let _anchorsPlaced = false;
 function toggleArrange(){
   if(arrangeMode){ exitArrangeMode(); renderMasterList(); return; }
-  arrangeMode = true; arrangeStage = 'choose';
+  arrangeMode = true; arrangeStage = 'choose'; _anchorsPlaced = false;
   syncArrangeUI(); renderMasterList();
 }
 function setArrangeStage(stage){
@@ -1652,7 +1655,7 @@ function shuffleAndPreview(again){
   const slots = cards.filter(c=>movableIds.has(c.dataset.id));
   const markers = slots.map(c=>{ const m=document.createComment('slot'); c.parentNode.insertBefore(m,c); return m; });
   markers.forEach((m,i)=>{ const card = parentOf.get(order[i].id); m.parentNode.insertBefore(card, m); m.remove(); });
-  placeAnchors();
+  placeAnchors(); _anchorsPlaced = true; applyScreenOrder(); refreshArrangeDates();
   if(again) runAutoSchedule(); else openAutoSchedule('shuffle');
 }
 
@@ -1679,8 +1682,43 @@ function _showDropLine(y){
 }
 function _dropAtLine(){
   const line = document.querySelector('.drop-line');
-  if(line && _dragSrc){ line.parentNode.insertBefore(_dragSrc, line); }
+  const moved = _dragSrc;
+  if(line && moved){ line.parentNode.insertBefore(moved, line); }
   _clearDropLine();
+  if(moved && arrangeMode){
+    applyScreenOrder();          // remember the new order (not saved until you're done)
+    refreshArrangeDates();
+    explainIfStuck(moved.dataset.id);
+  }
+}
+// While arranging, each card's color tab shows the date it would get in the current order.
+let _arrangeProposal = {};
+function refreshArrangeDates(){
+  if(!arrangeMode) return;
+  const ids = _listCards().map(c=>c.dataset.id);
+  _arrangeProposal = {};
+  computeProposal(ids, today.toISOString().slice(0,10)).forEach(i=>{ _arrangeProposal[i.id] = i.date; });
+  _listCards().forEach(c=>{
+    if(c.dataset.fixed) return;
+    const ds = _arrangeProposal[c.dataset.id];
+    const tab = c.querySelector('.card-stripe');
+    if(!tab) return;
+    if(ds){ const d = new Date(ds+'T12:00:00'); tab.innerHTML = `<span class="tab-mon">${MONTHS[d.getMonth()].slice(0,3)}</span><span class="tab-num">${d.getDate()}</span>`; }
+    else tab.innerHTML = `<span class="tab-none">No<br>date</span>`;
+    tab.classList.add('tab-proposed');
+  });
+}
+// If a post was dropped past a Fixed post but its own rule won't let it go there, say why.
+function explainIfStuck(id){
+  const p = posts.find(x=>x.id===id); if(!p || p.dateType==='fixed') return;
+  const ds = _arrangeProposal[id]; if(!ds) return;
+  const ids = _listCards().map(c=>c.dataset.id), i = ids.indexOf(id);
+  const fixedAt = k=>{ const q = posts.find(x=>x.id===ids[k]); return q && q.dateType==='fixed' && q.date ? q : null; };
+  let before = null; for(let k=i-1;k>=0;k--){ if(fixedAt(k)){ before = fixedAt(k); break; } }
+  if(!before || ds > before.date) return;
+  const t = '"' + (p.title||'This post').replace(/^Author intro:\s*/i,'') + '"';
+  if(isAuthorPost(p)){ showToast(t+' is an Author Intro, so it has to go out by Jan 31.'); return; }
+  if(p.dateType==='premar1') showToast(t+' is set to Pre Mar 1, so it stays before March 1.', 'Make it Flexible', ()=>{ p.dateType='flexible'; p.lastUpdated=formatUserStamp(); p.lastUpdatedBy=getCurrentUser(); save(); refreshArrangeDates(); });
 }
 
 function setupDragDrop(){
@@ -1691,7 +1729,6 @@ function setupDragDrop(){
     list.addEventListener('drop', e=>{ if(!canDrag()||!_dragSrc) return; e.preventDefault(); _dropAtLine(); });
   }
   _listCards().forEach(card=>{
-    if(card.dataset.fixed) return;   // Fixed posts stay put
     card.addEventListener('dragstart', e=>{
       _dragSrc = card;
       card.classList.add('dragging');
