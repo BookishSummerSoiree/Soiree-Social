@@ -838,12 +838,9 @@ function tidyAuthorSlots(confirmed){
       title:'Author Intro 99', purpose:'', caption:'', driveLink:'', htagId:'', extraHtags:''});
     short--; changed = true;
   }
-  // 3. Number the waiting slots after the named ones (e.g. 14-18 when 13 authors are named),
-  //    in date order.
-  const named = posts.filter(_isNamedIntro).length;
-  posts.filter(_isNumberedSlot)
-    .sort((a,b)=>(a.date||'9999').localeCompare(b.date||'9999') || (+/\d+/.exec(a.title)[0]) - (+/\d+/.exec(b.title)[0]))
-    .forEach((p,i)=>{ const t = 'Author Intro ' + (named + i + 1); if(p.title !== t){ p.title = t; changed = true; } });
+  // 3. Give a newly added slot the next free number (other slots keep their numbers)
+  const usedN = new Set(posts.filter(_isNumberedSlot).map(p=>+/\d+/.exec(p.title)[0]).filter(n=>n!==99));
+  posts.filter(p=>p.title==='Author Intro 99').forEach(p=>{ let n = posts.filter(_isNamedIntro).length + 1; while(usedN.has(n)) n++; usedN.add(n); p.title = 'Author Intro ' + n; changed = true; });
   // 4. Author posts can't be on or after Feb 1
   posts.forEach(p=>{ if((_isNumberedSlot(p) || _isNamedIntro(p)) && p.date && p.date >= AUTHOR_DEADLINE){ p.date = ''; changed = true; } });
   if(removed.length && window._firestoreDB) removed.forEach(id=>deleteFromFirestore('ss_posts2', id));
@@ -1109,7 +1106,14 @@ function rememberSynced(list){ _syncedPost = {}; list.forEach(p=>{ _syncedPost[p
 const _ls = (k,d)=>{ try{ const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; }catch(e){ return d; } };
 let _pending = new Set(_ls('ss_pending', []));        // post ids changed here, not yet confirmed by the cloud
 let _pendingDel = new Set(_ls('ss_pending_del', []));  // post ids deleted here, not yet confirmed
-function _savePendingLists(){ try{ localStorage.setItem('ss_pending', JSON.stringify([..._pending])); localStorage.setItem('ss_pending_del', JSON.stringify([..._pendingDel])); }catch(e){} }
+function _savePendingLists(confirmed){
+  try{
+    // add in anything another tab is waiting on, except what the cloud just confirmed
+    _ls('ss_pending', []).forEach(id=>{ if(!(confirmed && confirmed.has(id))) _pending.add(id); });
+    _ls('ss_pending_del', []).forEach(id=>{ if(!(confirmed && confirmed.has(id))) _pendingDel.add(id); });
+    localStorage.setItem('ss_pending', JSON.stringify([..._pending])); localStorage.setItem('ss_pending_del', JSON.stringify([..._pendingDel]));
+  }catch(e){}
+}
 let _saveProblem = null;
 function setSaveProblem(err){
   _saveProblem = err ? (String(err.code||err.message||err).includes('resource-exhausted') || String(err).includes('Quota') ? 'quota' : 'offline') : null;
@@ -1162,15 +1166,34 @@ function savePostsToFirestore(force){
   dels.slice(0,40).forEach(id=>batch.delete(window._fbDoc(db,'ss_posts2',id)));
   renderSaveBanner();
   batch.commit().then(()=>{
-    changed.slice(0,450).forEach(p=>{ const cur = posts.find(x=>x.id===p.id); if(!cur || stableJSON(cur)===sent.get(p.id)) _pending.delete(p.id); });
-    dels.slice(0,40).forEach(id=>_pendingDel.delete(id));
-    _savePendingLists(); setSaveProblem(null);
+    const done = new Set();
+    changed.slice(0,450).forEach(p=>{ const cur = posts.find(x=>x.id===p.id); if(!cur || stableJSON(cur)===sent.get(p.id)){ _pending.delete(p.id); done.add(p.id); } });
+    dels.slice(0,40).forEach(id=>{ _pendingDel.delete(id); done.add(id); });
+    _savePendingLists(done); setSaveProblem(null);
   }).catch(e=>{
     console.warn('save failed', e);
     changed.forEach(p=>{ delete _syncedPost[p.id]; });
     setSaveProblem(e);
   });
 }
+// Two tabs (or windows) of the app on the same computer share this device's copy and its
+// waiting-to-upload list. When one tab saves, the others pick up its copy right away, so a tab
+// that's out of date can never save over newer changes.
+window.addEventListener('storage', e=>{
+  try{
+    if(e.key==='ss_p2' && e.newValue){
+      const np = JSON.parse(e.newValue);
+      if(stableJSON(np) !== stableJSON(posts)){ posts = np; if(!(arrangeMode && _dragSrc)) renderAll(); }
+    } else if(e.key==='ss_pending' || e.key==='ss_pending_del'){
+      _pending = new Set(_ls('ss_pending', [])); _pendingDel = new Set(_ls('ss_pending_del', [])); renderSaveBanner();
+    } else if(e.key==='ss_cats2' && e.newValue){
+      cats = JSON.parse(e.newValue); try{ catAlias = JSON.parse(localStorage.getItem('ss_catalias')||'{}'); }catch(_){}
+      renderCatFilters();
+    } else if(e.key==='ss_c2' && e.newValue){
+      countdowns = JSON.parse(e.newValue); renderCountdowns();
+    }
+  }catch(err){}
+});
 // keep trying in the background while anything is waiting
 setInterval(()=>{ if(window._firestoreDB && (_pending.size || _pendingDel.size)) savePostsToFirestore(true); }, 90*1000);
 window.addEventListener('online', ()=>{ if(window._firestoreDB && (_pending.size || _pendingDel.size)) savePostsToFirestore(true); });
