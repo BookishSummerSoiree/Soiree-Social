@@ -1124,7 +1124,7 @@ function renderSaveBanner(){
   bar.innerHTML = _saveProblem==='quota'
     ? `⚠️ <b>Not saving to the cloud right now.</b> The database hit its daily limit. ${what}Your changes are kept safe on this device and will upload by themselves when the limit resets. Please don't clear this browser's data.`
     : _saveProblem ? `⚠️ <b>Can't reach the cloud.</b> ${what}Your changes are kept on this device and will upload when the connection is back.`
-    : `☁️ Uploading ${what}`;
+    : `☁️ ${waiting} change${waiting===1?'':'s'} waiting to upload. They're saved on this device and will upload by themselves.`;
 }
 // One-time rescue: posts typed on this device while saving was failing (before this version
 // kept a list) are still in this device's copy. Any post you made here that the cloud never got
