@@ -988,6 +988,15 @@ async function fillAuthorCaptions(list){
   }
   if(any){ save(); renderAll(); }
 }
+// The app can stay open in the background for days, so look for newly confirmed authors
+// again whenever you come back to it (at most once every 20 seconds).
+let _lastAuthorCheck = Date.now();
+document.addEventListener('visibilitychange', ()=>{
+  if(document.visibilityState!=='visible' || Date.now()-_lastAuthorCheck < 20000) return;
+  _lastAuthorCheck = Date.now();
+  _hqAuthorsSynced = false;
+  syncAuthorIntros();
+});
 const DC = [
   {id:"cd1",label:"Tickets On Sale",date:"2027-03-01",color:"#E8704A"},
   {id:"cd2",label:"THE SOIRÉE",date:"2027-06-12",color:"#2D3561"},
