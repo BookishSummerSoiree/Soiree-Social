@@ -803,6 +803,16 @@ function tidyAuthorSlots(confirmed){
     const drop = spare.slice(0, extra).map(p=>p.id);
     if(drop.length){ posts = posts.filter(p=>!drop.includes(p.id)); removed.push(...drop); changed = true; }
   }
+  // 2b. Too few (e.g. one was deleted): add empty numbered slots back. Fixed ids, so two
+  //     phones doing this at once write the same post instead of making two.
+  let short = target - authorSlotCount();
+  for(let k=1; short>0 && k<=target+40; k++){
+    const id = 'author-slot-' + String(k).padStart(2,'0');
+    if(posts.some(p=>p.id===id)) continue;
+    posts.push({id, type:'social', dateType:'premar1', date:'', cat:catName('Author Intro'), postType:'',
+      title:'Author Intro 99', purpose:'', caption:'', driveLink:'', htagId:'', extraHtags:''});
+    short--; changed = true;
+  }
   // 3. Number the waiting slots after the named ones (e.g. 14-18 when 13 authors are named),
   //    in date order.
   const named = posts.filter(_isNamedIntro).length;
