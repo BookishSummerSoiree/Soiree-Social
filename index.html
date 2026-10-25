@@ -720,6 +720,18 @@ function migrateV8(){
 // "Author announcement" was renamed "Author Intro" (category, and the numbered idea titles).
 // Safe to run on every load: it only changes posts that still use the old name.
 // "General authors" was renamed "All authors". Safe to run on every load.
+// Older copies of the app (a phone that hasn't been closed and reopened) move Storefront,
+// Sponsor post and Shadow Mountain back to "All authors" whenever their stamp reads exactly
+// "Oct 24 · Nik" or "Oct 24 · Hill". Giving them a stamp with the time in it means no old copy
+// can match them again. Their category is left exactly as it is.
+function shieldFromOldCopies(){
+  let changed = false;
+  ['v8-post-3','v8-post-7','v8-post-8'].forEach(id=>{
+    const p = posts.find(x=>x.id===id);
+    if(p && /^[A-Z][a-z]{2} \d+ · [^,]+$/.test(p.lastUpdated||'')){ p.lastUpdated = p.lastUpdated.replace(' · ', ', 12:00 PM · '); changed = true; }
+  });
+  if(changed) save();
+}
 function migrateAllAuthors(){
   const OLD = 'General ' + 'authors', NEW = catName('All authors');
   let changed = false;
@@ -923,7 +935,9 @@ function getCurrentUser(){ return currentUser || 'Nik'; }
 function formatUserStamp(){
   const now = new Date();
   const m = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
-  return `${m[now.getMonth()]} ${now.getDate()} · ${getCurrentUser()}`;
+  // includes the time, e.g. "Oct 24, 8:12 PM · Nik"
+  const t = now.toLocaleTimeString([], {hour:'numeric', minute:'2-digit'});
+  return `${m[now.getMonth()]} ${now.getDate()}, ${t} · ${getCurrentUser()}`;
 }
 function showUserPicker(onSelect){
   const ov = document.createElement('div');
@@ -1012,6 +1026,7 @@ async function loadFromFirestoreAll(){
     migrateV8();
     migrateAuthorIntro();
     migrateAllAuthors();
+    shieldFromOldCopies();
     syncAuthorIntros();
     setupFirestoreListeners();
     loadPostImages().catch(()=>{});
