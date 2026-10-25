@@ -75,6 +75,14 @@ body{font-family:var(--fb);background:var(--cream);color:var(--black);min-height
 .search-ic{font-size:11px;opacity:.6}
 #search-input{flex:1;min-width:0;border:none;background:transparent;outline:none;font-family:var(--fb);font-size:16px;color:var(--black);padding:0;-webkit-appearance:none;appearance:none}
 #search-input::-webkit-search-cancel-button{display:none}
+.rdy-cap{display:inline-flex;align-items:center;justify-content:center;width:13px;height:13px;border-radius:50%;background:#2E7D32;color:#fff;font-size:8.5px;font-weight:700;line-height:1;margin-right:3px;vertical-align:1px;flex-shrink:0;font-family:var(--fb);font-style:normal}
+.rdy-gfx{font-size:10px;line-height:1;margin-right:3px;vertical-align:0;flex-shrink:0;font-style:normal}
+.cal-ev .rdy-cap{width:10px;height:10px;font-size:7px;margin-right:2px;background:#fff;color:#2E7D32}
+.cal-ev .rdy-gfx{font-size:8px;margin-right:2px}
+.ready-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:14px 0 4px}
+.ready-btn{border:1.5px solid var(--gray);background:var(--white);border-radius:12px;padding:10px 8px;font-family:var(--fb);font-size:11.5px;font-weight:500;color:#777;cursor:pointer;line-height:1.3;text-align:center}
+.ready-btn.on{border-color:#2E7D32;background:#E8F5E9;color:#1B5E20}
+.ready-btn.on.gfx{border-color:var(--navy);background:#E8EAF6;color:var(--navy)}
 #save-banner{position:fixed;left:8px;right:8px;top:calc(6px + env(safe-area-inset-top,0px));z-index:500;background:#FFF4E5;border:1px solid #F0B46B;color:#6B3E00;border-radius:10px;padding:8px 12px;font-family:var(--fb);font-size:11.5px;line-height:1.4;box-shadow:0 4px 14px rgba(0,0,0,.12)}
 @media (min-width:640px){#search-input{font-size:12px}}
 .search-x{border:none;background:none;color:#999;font-size:12px;cursor:pointer;padding:2px;display:none}
@@ -551,6 +559,10 @@ mark.hit{background:#F6E2A6;color:inherit;border-radius:2px;padding:0 1px}
         </div>
       </div>
       <!-- Save / Delete -->
+      <div class="ready-row" id="pm-ready-row">
+        <button type="button" class="ready-btn" id="pm-cap-ready" onclick="this.classList.toggle('on')">✓ This caption/keywords is ready</button>
+        <button type="button" class="ready-btn gfx" id="pm-gfx-ready" onclick="this.classList.toggle('on')">📷 The graphic is ready</button>
+      </div>
       <button class="btn-save" onclick="savePost()">Save</button>
       <button class="btn-del" id="pm-del-btn" style="display:none" onclick="deletePost()">Remove Post</button>
     </div>
@@ -1274,6 +1286,12 @@ const TYPE_ICONS = {
 };
 const DATE_TYPE_LBL = {flexible:'Flexible', premar1:'Pre Mar 1', postmar1:'Post Mar 1', fixed:'Fixed'};
 function inkOn(bg){ return String(bg).toUpperCase()==='#E5B33E' ? 'color:var(--navy)' : ''; }
+// ✓ = caption/keywords ready, 📷 = graphic ready
+function readyMarks(p){
+  if(!p) return '';
+  return (p.captionReady ? '<span class="rdy-cap" title="Caption/keywords ready">✓</span>' : '') +
+         (p.graphicReady ? '<span class="rdy-gfx" title="Graphic ready">📷</span>' : '');
+}
 function calLabel(t){ return String(t||'Untitled').replace(/^Author intro:\s*/i,'').replace(/[\p{Extended_Pictographic}\uFE0F\u200D]/gu,'').replace(/\s+/g,' ').trim() || 'Untitled'; }
 function esc(t){ return String(t??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
 
@@ -1305,7 +1323,7 @@ function cardHTML(post, opts={}){
     <div class="card-stripe">${tab}</div>
     <div class="card-body">
       <div class="card-text">
-        <div class="card-line1"><span class="card-title">${esc(post.title||'Untitled')}</span>${desc ? `<span class="card-desc">${esc(desc)}</span>` : ''}</div>
+        <div class="card-line1">${readyMarks(post)}<span class="card-title">${esc(post.title||'Untitled')}</span>${desc ? `<span class="card-desc">${esc(desc)}</span>` : ''}</div>
       </div>
       <div class="card-side">
         <div class="card-side-top">
@@ -1532,7 +1550,7 @@ function renderCalendarView(){
     const isToday = ds===todayStr;
     const isSel = ds===_calSelectedDay;
     const dayPosts = byDay[ds]||[];
-    const dots = dayPosts.slice(0,4).map(p=>`<div class="cal-ev" style="background:${postColor(p)};${inkOn(postColor(p))}">${esc(calLabel(p.title))}</div>`).join('');
+    const dots = dayPosts.slice(0,4).map(p=>`<div class="cal-ev" style="background:${postColor(p)};${inkOn(postColor(p))}">${readyMarks(p)}${esc(calLabel(p.title))}</div>`).join('');
     const overflow = dayPosts.length>4 ? `<div class="cal-overflow">+${dayPosts.length-4} more</div>` : '';
     const selStyle = isSel ? ';box-shadow:0 0 0 2px var(--sage)' : '';
     cells += `<div class="cal-cell${isToday?' today':''}${dayPosts.length?' has-posts':''}" style="cursor:${dayPosts.length||isSel?'pointer':'default'}${selStyle}" onclick="calDayTap('${ds}')">
@@ -1594,7 +1612,7 @@ function compactRowHTML(p){
                     : '<span class="tab-none">No<br>date</span>';
   return `<div class="card compact-row" data-id="${p.id}" ${fixed?'data-fixed="1"':''} draggable="true">
     <div class="card-stripe">${dateCol}</div>
-    <div class="cr-name"><span class="mock-pill" style="background:${color};${inkOn(color)}">${esc(p.title||'Untitled')}${fixed?' 📌':''}</span></div>
+    <div class="cr-name"><span class="mock-pill" style="background:${color};${inkOn(color)}">${readyMarks(p)}${esc(p.title||'Untitled')}${fixed?' 📌':''}</span></div>
     <div class="cr-handle" title="${fixed?'Move this Fixed post (its date stays)':'Drag to move'}">⠿</div>
   </div>`;
 }
@@ -2137,7 +2155,7 @@ function renderMockCalendar(proposed){
     for(let d=1; d<=nDays; d++){
       const ds = `${yr}-${String(mo+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
       const items = byDay[ds]||[];
-      const dots = items.slice(0,4).map(i=>`<div class="cal-ev" style="background:${colorOf(i)};${inkOn(colorOf(i))}">${esc(calLabel(i.title))}</div>`).join('');
+      const dots = items.slice(0,4).map(i=>`<div class="cal-ev" style="background:${colorOf(i)};${inkOn(colorOf(i))}">${readyMarks(posts.find(x=>x.id===i.id))}${esc(calLabel(i.title))}</div>`).join('');
       const more = items.length>4 ? `<div class="cal-overflow">+${items.length-4} more</div>` : '';
       const sel = ds===_mockSel ? ' style="box-shadow:0 0 0 2px var(--sage)"' : '';
       cells += `<div class="cal-cell mock-cell${items.length?' has-posts':''}"${sel} onclick="mockDayTap('${ds}')"><div class="cal-day-num">${d}</div>${dots}${more}</div>`;
@@ -2168,7 +2186,7 @@ function renderMockCalendar(proposed){
       const fixedNote = item.kept ? ' 📌' : '';
       return `<div class="mock-cal-row${item.kept?' kept':''}" data-id="${item.id}">
         <div class="mock-cal-date"><div class="mn">${d?MONTHS[d.getMonth()].slice(0,3):''}</div><div class="dd">${d?d.getDate():'-'}</div></div>
-        <div class="mock-cal-items"><div class="mock-pill" style="background:${colorOf(item)};${inkOn(colorOf(item))}">${esc(item.title)}${fixedNote}</div></div>
+        <div class="mock-cal-items"><div class="mock-pill" style="background:${colorOf(item)};${inkOn(colorOf(item))}">${readyMarks(posts.find(x=>x.id===item.id))}${esc(item.title)}${fixedNote}</div></div>
         <div class="mock-handle" title="${item.kept ? 'Move this Fixed post (its date stays)' : 'Drag to move'}">⠿</div>
       </div>`;
     }).join('');
@@ -2344,6 +2362,8 @@ function showPostFields(type, p){
   // Graphic — social only
   document.getElementById('pm-graphic-section').style.display = type==='social' ? '' : 'none';
   if(type==='social') document.getElementById('pm-drive-link').value = p ? (p.driveLink||'') : '';
+  document.getElementById('pm-cap-ready').classList.toggle('on', !!(p && p.captionReady));
+  document.getElementById('pm-gfx-ready').classList.toggle('on', !!(p && p.graphicReady));
   _pendingImg = undefined;
   showImgPreview(p ? (postImages[p.id]||'') : '');
 }
@@ -2502,6 +2522,8 @@ function savePost(){
     extraHtags: type==='social' ? document.getElementById('pm-extra-htags').value.trim() : '',
     caption: type==='social' ? document.getElementById('pm-caption').value.trim() : '',
     driveLink: type==='social' ? document.getElementById('pm-drive-link').value.trim() : '',
+    captionReady: document.getElementById('pm-cap-ready').classList.contains('on'),
+    graphicReady: document.getElementById('pm-gfx-ready').classList.contains('on'),
     lastUpdated: formatUserStamp(),
     lastUpdatedBy: getCurrentUser(),
   };
@@ -2580,6 +2602,10 @@ function openDetail(id){
       + (p.driveLink ? `<a class="detail-drive-btn" style="margin-top:8px" href="${esc(p.driveLink)}" target="_blank">📁 Open full size in Drive ↗</a>` : '')
       + `</div>`;
   }
+  h += `<div class="ready-row">
+      <button class="ready-btn${p.captionReady?' on':''}" onclick="toggleReady('${id}','captionReady')">✓ This caption/keywords is ready</button>
+      <button class="ready-btn gfx${p.graphicReady?' on':''}" onclick="toggleReady('${id}','graphicReady')">📷 The graphic is ready</button>
+    </div>`;
   if(p.lastUpdated){
     h += `<div style="font-size:10px;color:#aaa;font-style:italic;margin-top:8px">Last updated: ${p.lastUpdated}</div>`;
   }
@@ -2588,6 +2614,14 @@ function openDetail(id){
   openModal('detail-modal');
 }
 
+function toggleReady(id, field){
+  const p = posts.find(x=>x.id===id); if(!p) return;
+  p[field] = !p[field];
+  p.lastUpdated = formatUserStamp(); p.lastUpdatedBy = getCurrentUser();
+  save(); renderMasterList();
+  const sc = document.querySelector('#detail-modal .modal'), top = sc ? sc.scrollTop : 0;
+  openDetail(id); if(sc) sc.scrollTop = top;
+}
 function unschedulePost(id){
   const p = posts.find(x=>x.id===id); if(!p) return;
   p.date = '';
