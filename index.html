@@ -269,6 +269,11 @@ mark.hit{background:#F6E2A6;color:inherit;border-radius:2px;padding:0 1px}
 .mock-cal-items{flex:1;padding:8px 10px;display:flex;flex-direction:column;gap:4px}
 .mock-nav{background:none;border:none;color:var(--white);font-size:20px;line-height:1;padding:0 8px;cursor:pointer;font-family:var(--fb)}
 .mock-cell{min-height:40px}
+.mock-hint{font-family:var(--fb);font-style:normal;font-size:10px;opacity:.7;margin-left:8px}
+.mock-cal-row{position:relative}
+.mock-handle{display:flex;align-items:center;padding:0 12px;color:#bbb;font-size:16px;cursor:grab;touch-action:none;user-select:none}
+.mock-cal-row.dragging{opacity:.45}
+.mock-drop{margin:-2px 8px -1px}
 .mock-pill{font-size:10px;padding:3px 8px;border-radius:6px;color:var(--white);font-weight:500;cursor:default}
 
 /* ── SETTINGS ── */
@@ -2004,16 +2009,56 @@ function renderMockCalendar(proposed){
     return;
   }
 
-  cal.innerHTML = `<div class="mock-cal-header">Proposed Schedule</div>` +
+  const scroller = cal.closest('.modal'), keepTop = scroller ? scroller.scrollTop : 0;
+  cal.innerHTML = `<div class="mock-cal-header">Proposed Schedule <span class="mock-hint">drag ⠿ to move a post</span></div>` +
     proposed.map(item=>{
       const ds = item.date;
       const d = ds ? new Date(ds+"T12:00:00") : null;
       const fixedNote = item.kept ? ' 📌' : '';
-      return `<div class="mock-cal-row">
+      return `<div class="mock-cal-row${item.kept?' kept':''}" data-id="${item.id}">
         <div class="mock-cal-date"><div class="mn">${d?MONTHS[d.getMonth()].slice(0,3):''}</div><div class="dd">${d?d.getDate():'-'}</div></div>
         <div class="mock-cal-items"><div class="mock-pill" style="background:${colorOf(item)};${inkOn(colorOf(item))}">${esc(item.title)}${fixedNote}</div></div>
+        ${item.kept ? '' : '<div class="mock-handle" title="Drag to move">⠿</div>'}
       </div>`;
     }).join('');
+  if(scroller) scroller.scrollTop = keepTop;
+  setupMockDrag(cal);
+}
+// Drag rows in the preview list (mouse or finger). When a post is dropped, the list order
+// changes and everything is spaced out again in the new order.
+function setupMockDrag(cal){
+  cal.querySelectorAll('.mock-handle').forEach(h=>{
+    h.addEventListener('pointerdown', e=>{
+      e.preventDefault();
+      const row = h.closest('.mock-cal-row');
+      const rows = ()=>[...cal.querySelectorAll('.mock-cal-row')].filter(r=>r!==row);
+      row.classList.add('dragging'); h.setPointerCapture(e.pointerId);
+      let line = null;
+      const place = y=>{
+        const before = rows().find(r=>{ const b=r.getBoundingClientRect(); return y < b.top + b.height/2; });
+        if(!line){ line = document.createElement('div'); line.className = 'drop-line mock-drop'; }
+        if(before) before.parentNode.insertBefore(line, before); else cal.appendChild(line);
+      };
+      const move = ev=>place(ev.clientY);
+      const up = ()=>{
+        h.removeEventListener('pointermove', move); h.removeEventListener('pointerup', up); h.removeEventListener('pointercancel', up);
+        row.classList.remove('dragging');
+        if(line){ line.parentNode.insertBefore(row, line); line.remove(); }
+        const order = [...cal.querySelectorAll('.mock-cal-row')].map(r=>r.dataset.id);
+        reorderFromMock(order, row.dataset.id);
+      };
+      h.addEventListener('pointermove', move); h.addEventListener('pointerup', up); h.addEventListener('pointercancel', up);
+    });
+  });
+}
+function reorderFromMock(order, movedId){
+  const list = document.getElementById('master-list-content');
+  const byId = new Map(_listCards().map(c=>[c.dataset.id, c]));
+  order.forEach(id=>{ const c = byId.get(id); if(c) list.appendChild(c); });
+  applyScreenOrder();
+  refreshArrangeDates();
+  runAutoSchedule();
+  explainIfStuck(movedId);
 }
 
 function applyAutoSchedule(){
