@@ -1667,6 +1667,16 @@ function _showDropLine(y){
   const others = _listCards().filter(c=>c!==_dragSrc);
   if(!others.length) return;
   let before = others.find(c=>{ const r=c.getBoundingClientRect(); return y < r.top + r.height/2; });
+  // A Fixed post can only go between the Fixed posts dated before and after it
+  if(_dragSrc && _dragSrc.dataset.fixed){
+    const dateOf = c=>{ const p = posts.find(x=>x.id===c.dataset.id); return (p && p.date) || ''; };
+    const mine = dateOf(_dragSrc);
+    const idx = before ? others.indexOf(before) : others.length;
+    const fixedAbove = others.slice(0, idx).filter(c=>c.dataset.fixed);
+    const fixedBelow = others.slice(idx).filter(c=>c.dataset.fixed);
+    const ok = fixedAbove.every(c=>dateOf(c) <= mine) && fixedBelow.every(c=>dateOf(c) >= mine);
+    if(!ok){ const l = document.querySelector('.drop-line'); if(l) l.remove(); return; }
+  }
   let line = document.querySelector('.drop-line');
   if(!line){ line = document.createElement('div'); line.className = 'drop-line'; }
   if(before){
