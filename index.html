@@ -274,6 +274,18 @@ mark.hit{background:#F6E2A6;color:inherit;border-radius:2px;padding:0 1px}
 .mock-handle{display:flex;align-items:center;padding:0 12px;color:#bbb;font-size:16px;cursor:grab;touch-action:none;user-select:none}
 .mock-cal-row.dragging{opacity:.45}
 .mock-drop{margin:-2px 8px -1px}
+.compact-list{background:var(--white);border:1px solid var(--cream-d);border-radius:12px;overflow:hidden}
+.compact-row{border:none;border-radius:0;margin:0;border-bottom:1px solid var(--cream-d);align-items:stretch;background:var(--white)}
+.compact-row:last-child{border-bottom:none}
+.compact-row .card-stripe{width:54px;background:var(--cream)!important;color:var(--black);border-right:1px solid var(--cream-d);padding:6px 2px}
+.compact-row .tab-mon{color:#999}
+.compact-row .tab-num{font-size:17px}
+.compact-row .tab-none{color:#999}
+.cr-name{flex:1;min-width:0;display:flex;align-items:center;padding:6px 8px}
+.cr-name .mock-pill{display:block;width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cr-handle{display:flex;align-items:center;padding:0 12px;color:#bbb;font-size:16px;cursor:grab;touch-action:none;user-select:none}
+.compact-row.dragging{opacity:.45}
+.compact-list .drop-line{margin:-2px 8px -1px}
 .mock-pill{font-size:10px;padding:3px 8px;border-radius:6px;color:var(--white);font-weight:500;cursor:default}
 
 /* ── SETTINGS ── */
@@ -1276,7 +1288,7 @@ function renderMasterList(){
     const ids = new Set(list.concat(anchors).map(p=>p.id));
     const shown = posts.filter(p=>ids.has(p.id));
     el.innerHTML = `<div class="search-head">${list.length} post${list.length===1?'':'s'} to schedule. The date on each card is where it will land. Drag Fixed posts too: posts above one go before its date, posts below go after.</div>` +
-      (list.length ? shown.map(p=>cardHTML(p, {draggable:canDrag()})).join('') : `<div class="empty-msg">Nothing to schedule here</div>`);
+      (list.length ? `<div class="${canDrag()?'compact-list':''}">` + shown.map(p=> canDrag() ? compactRowHTML(p) : cardHTML(p, {draggable:false})).join('') + `</div>` : `<div class="empty-msg">Nothing to schedule here</div>`);
     if(list.length && !_anchorsPlaced){ placeAnchors(); _anchorsPlaced = true; applyScreenOrder(); }
     refreshArrangeDates();
     if(canDrag()) setupDragDrop();
@@ -1470,6 +1482,20 @@ function calDayTap(ds){
 }
 
 // ── ARRANGE / DRAG ─────────────────────────────────────────────────────────
+// While you drag posts yourself, each post is one slim row (date + name + handle),
+// the same look as the schedule preview, so it's quick to move up and down the list.
+function compactRowHTML(p){
+  const fixed = p.dateType==='fixed' && !!p.date;
+  const d = p.date ? new Date(p.date+'T12:00:00') : null;
+  const color = p.type==='email' ? '#C4522E' : p.type==='other' ? '#aaa' : catColor(p.cat);
+  const dateCol = d ? `<span class="tab-mon">${MONTHS[d.getMonth()].slice(0,3)}</span><span class="tab-num">${d.getDate()}</span>` + (fixed ? '<span class="tab-fixed">Fixed</span>' : '')
+                    : '<span class="tab-none">No<br>date</span>';
+  return `<div class="card compact-row" data-id="${p.id}" ${fixed?'data-fixed="1"':''} draggable="true">
+    <div class="card-stripe">${dateCol}</div>
+    <div class="cr-name"><span class="mock-pill" style="background:${color};${inkOn(color)}">${esc(p.title||'Untitled')}${fixed?' 📌':''}</span></div>
+    <div class="cr-handle" title="${fixed?'Move this Fixed post (its date stays)':'Drag to move'}">⠿</div>
+  </div>`;
+}
 // Posts Arrange can schedule: social posts that aren't Fixed and aren't already in the past,
 // in your list order, using the category / type / date chips but not the Show pills.
 // Upcoming Fixed posts, shown in the Arrange list as markers to arrange around
@@ -1490,7 +1516,8 @@ function placeAnchors(){
   const prov = {};
   computeProposal(movEls.map(c=>c.dataset.id), today.toISOString().slice(0,10)).forEach(i=>{ prov[i.id] = i.date; });
   const keyOf = c=>{ if(c.dataset.fixed){ const p = posts.find(x=>x.id===c.dataset.id); return (p && p.date) || '9999'; } return prov[c.dataset.id] || '9999'; };
-  cards.map((c,i)=>({c, k:keyOf(c), i})).sort((a,b)=> a.k.localeCompare(b.k) || a.i-b.i).forEach(x=>el.appendChild(x.c));
+  const box = cards[0].parentNode;
+  cards.map((c,i)=>({c, k:keyOf(c), i})).sort((a,b)=> a.k.localeCompare(b.k) || a.i-b.i).forEach(x=>box.appendChild(x.c));
 }
 function arrangeCandidates(){
   return getFiltered().filter(p=>p.type==='social' && p.dateType!=='fixed' && !(p.date && new Date(p.date+'T12:00:00') < today));
@@ -1762,6 +1789,7 @@ function setupTouchDrag(el){
   let startY;
   el.addEventListener('touchstart', e=>{
     if(!canDrag()) return;
+    if(el.classList.contains('compact-row') && !e.target.closest('.cr-handle')) return;
     startY = e.touches[0].clientY;
     _dragSrc = el;
     el.classList.add('dragging');
@@ -2063,9 +2091,10 @@ function setupMockDrag(cal){
   });
 }
 function reorderFromMock(order, movedId){
-  const list = document.getElementById('master-list-content');
-  const byId = new Map(_listCards().map(c=>[c.dataset.id, c]));
-  order.forEach(id=>{ const c = byId.get(id); if(c) list.appendChild(c); });
+  const cards = _listCards(); if(!cards.length) return;
+  const box = cards[0].parentNode;
+  const byId = new Map(cards.map(c=>[c.dataset.id, c]));
+  order.forEach(id=>{ const c = byId.get(id); if(c) box.appendChild(c); });
   applyScreenOrder();
   refreshArrangeDates();
   runAutoSchedule();
