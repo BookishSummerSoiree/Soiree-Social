@@ -2018,7 +2018,7 @@ function renderMockCalendar(proposed){
       return `<div class="mock-cal-row${item.kept?' kept':''}" data-id="${item.id}">
         <div class="mock-cal-date"><div class="mn">${d?MONTHS[d.getMonth()].slice(0,3):''}</div><div class="dd">${d?d.getDate():'-'}</div></div>
         <div class="mock-cal-items"><div class="mock-pill" style="background:${colorOf(item)};${inkOn(colorOf(item))}">${esc(item.title)}${fixedNote}</div></div>
-        ${item.kept ? '' : '<div class="mock-handle" title="Drag to move">⠿</div>'}
+        <div class="mock-handle" title="${item.kept ? 'Move this Fixed post (its date stays)' : 'Drag to move'}">⠿</div>
       </div>`;
     }).join('');
   if(scroller) scroller.scrollTop = keepTop;
@@ -2034,8 +2034,18 @@ function setupMockDrag(cal){
       const rows = ()=>[...cal.querySelectorAll('.mock-cal-row')].filter(r=>r!==row);
       row.classList.add('dragging'); h.setPointerCapture(e.pointerId);
       let line = null;
+      const isKept = row.classList.contains('kept');
+      const dateOf = r=>{ const p = posts.find(x=>x.id===r.dataset.id); return (p && p.date) || ''; };
       const place = y=>{
-        const before = rows().find(r=>{ const b=r.getBoundingClientRect(); return y < b.top + b.height/2; });
+        const all = rows();
+        const before = all.find(r=>{ const b=r.getBoundingClientRect(); return y < b.top + b.height/2; });
+        if(isKept){
+          // a Fixed post only goes between the Fixed posts dated before and after it
+          const idx = before ? all.indexOf(before) : all.length, mine = dateOf(row);
+          const ok = all.slice(0,idx).filter(r=>r.classList.contains('kept')).every(r=>dateOf(r) <= mine)
+                  && all.slice(idx).filter(r=>r.classList.contains('kept')).every(r=>dateOf(r) >= mine);
+          if(!ok){ if(line){ line.remove(); line = null; } return; }
+        }
         if(!line){ line = document.createElement('div'); line.className = 'drop-line mock-drop'; }
         if(before) before.parentNode.insertBefore(line, before); else cal.appendChild(line);
       };
@@ -2043,7 +2053,8 @@ function setupMockDrag(cal){
       const up = ()=>{
         h.removeEventListener('pointermove', move); h.removeEventListener('pointerup', up); h.removeEventListener('pointercancel', up);
         row.classList.remove('dragging');
-        if(line){ line.parentNode.insertBefore(row, line); line.remove(); }
+        if(!line) return;                  // nowhere valid to drop
+        line.parentNode.insertBefore(row, line); line.remove();
         const order = [...cal.querySelectorAll('.mock-cal-row')].map(r=>r.dataset.id);
         reorderFromMock(order, row.dataset.id);
       };
