@@ -938,6 +938,8 @@ async function syncAuthorIntros(){
 // their Misc Fun Stuff answers from the Author Info app (skips anything they left blank).
 const AUTHOR_INFO_URL = 'https://script.google.com/macros/s/AKfycbx243aXYN1O8ABOO729RyMlgKV68OzKqVtKUqPetqVPwSKQ_5wCjI71_vyEG6y_K66i/exec';
 const AUTHOR_FUN_LINES = [
+  ['whatYouWrite','What do you write?'],
+  ['funTalent','Fun talent or fact:'],
   ['drink','Where do you usually write?'],
   ['booksWritten','How many books have you written?'],
   ['rentFreeBook','Is there a book that lives rent free in your head?'],
@@ -951,12 +953,18 @@ function authorIntroName(p){
   const m = /^author intro:\s*(.+)$/i.exec(String(p.title||'').trim());
   return m ? m[1].trim() : '';
 }
-function buildAuthorCaption(d){
+// Captions filled before the two newest questions were added, built the old way (so we can
+// tell whether a caption is still untouched and safe to refresh).
+const AUTHOR_OLD_KEYS = ['drink','booksWritten','rentFreeBook','musicalTitle','numberGuess','heroineBook','readingFormat'];
+const SONG_LINE = /^\s*walk-?\s*out song:.*$/gim;
+function stripSongLine(t){ return String(t||'').replace(SONG_LINE,'').replace(/\n{3,}/g,'\n\n').replace(/\n+$/,'').replace(/(\n\n)\n+/g,'$1').trim(); }
+function buildAuthorCaption(d, oldWay){
   const clean = v=> String(v==null?'':v).trim();
   const out = [];
   const bio = clean(d.bio);
   if(bio) out.push(bio);
-  const qa = AUTHOR_FUN_LINES.map(([k,label])=>{ const v = clean(d[k]); return v ? label+' '+v : ''; }).filter(Boolean);
+  const lines = oldWay ? AUTHOR_FUN_LINES.filter(([k])=>AUTHOR_OLD_KEYS.includes(k)) : AUTHOR_FUN_LINES;
+  const qa = lines.map(([k,label])=>{ const v = clean(d[k]); return v ? label+' '+v : ''; }).filter(Boolean);
   if(qa.length) out.push(qa.join('\n'));
   return out.join('\n\n');
 }
@@ -1012,7 +1020,8 @@ async function fillAuthorCaptions(list){
     const post = posts.find(p=>p.hqAuthorId===String(a.id));
     if(!post) continue;
     const needCap = !post.caption && !post.captionAutoFilled, needSong = !post.walkoutSong && !post.walkoutAutoFilled;
-    if(!needCap && !needSong) continue;
+    const needRefresh = !!post.caption && !post.captionV2;   // filled before the 2 new questions existed
+    if(!needCap && !needSong && !needRefresh) continue;
     try{
       const r = await fetch(AUTHOR_INFO_URL + '?action=getAuthorData&authorName=' + encodeURIComponent(String(a.name).trim()));
       const j = await r.json();
@@ -1020,8 +1029,15 @@ async function fillAuthorCaptions(list){
       const text = buildAuthorCaption(j.data || {}), song = walkoutFrom(j.data);
       const cur = posts.find(p=>p.id===post.id);
       if(!cur) continue;
-      if(needCap && text && !cur.caption){ cur.caption = text; cur.captionAutoFilled = true; any = true; }
-      if(needSong && song && !cur.walkoutSong){ cur.walkoutSong = song; cur.walkoutAutoFilled = true; any = true; }
+      if(needCap && text && !cur.caption){ cur.caption = text; cur.captionAutoFilled = true; cur.captionV2 = true; touch(cur,['caption','captionAutoFilled','captionV2']); any = true; }
+      else if(needRefresh && cur.caption && !cur.captionV2){
+        // Only replace a caption nobody has edited: it must match what the old fill made.
+        const untouched = stripSongLine(cur.caption) === stripSongLine(buildAuthorCaption(j.data||{}, true));
+        if(untouched && text) cur.caption = text;
+        else cur.caption = stripSongLine(cur.caption);   // the song lives in Walk out song, not the caption
+        cur.captionV2 = true; touch(cur,['caption','captionV2']); any = true;
+      }
+      if(needSong && song && !cur.walkoutSong){ cur.walkoutSong = song; cur.walkoutAutoFilled = true; touch(cur,['walkoutSong','walkoutAutoFilled']); any = true; }
     }catch(e){ /* try again next time the app opens */ }
   }
   if(any){ save(); renderAll(); }
@@ -1537,7 +1553,7 @@ function startPresence(){
 // ── ALWAYS THE NEWEST VERSION ──────────────────────────────────────────────
 // When the app comes back on screen, it checks for a newer version and reloads into it
 // (unless you're in the middle of editing or arranging). Your waiting changes are kept.
-const APP_VERSION = 'soiree-social-v52';
+const APP_VERSION = 'soiree-social-v53';
 (()=>{ const l = document.getElementById('app-version-lbl'); if(l) l.textContent = APP_VERSION.replace('soiree-social-v',''); })();
 async function checkForNewVersion(){
   try{
