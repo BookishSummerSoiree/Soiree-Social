@@ -75,6 +75,11 @@ body{font-family:var(--fb);background:var(--cream);color:var(--black);min-height
 .search-ic{font-size:11px;opacity:.6}
 #search-input{flex:1;min-width:0;border:none;background:transparent;outline:none;font-family:var(--fb);font-size:16px;color:var(--black);padding:0;-webkit-appearance:none;appearance:none}
 #search-input::-webkit-search-cancel-button{display:none}
+.presence{flex-shrink:0;display:flex;align-items:center;gap:5px;font-family:var(--fb);font-size:11px;font-weight:500;color:var(--navy);background:#EAF5EA;border:1px solid #BFE0BF;border-radius:14px;padding:4px 9px;white-space:nowrap;max-width:46vw;overflow:hidden;text-overflow:ellipsis}
+.presence .pdot{width:7px;height:7px;border-radius:50%;background:#2E9D3A;box-shadow:0 0 0 2px rgba(46,157,58,.18);flex-shrink:0}
+.presence.busy{background:#FFF4E5;border-color:#F0B46B;color:#6B3E00}
+.presence.busy .pdot{background:#E8902A;box-shadow:0 0 0 2px rgba(232,144,42,.2)}
+@media (max-width:640px){.hdr-top .presence{margin-left:auto}.hdr-top .presence + .user-pill{margin-left:0}}
 .rdy-cap{display:inline-flex;align-items:center;justify-content:center;width:13px;height:13px;border-radius:50%;background:#2E7D32;color:#fff;font-size:8.5px;font-weight:700;line-height:1;margin-right:3px;vertical-align:1px;flex-shrink:0;font-family:var(--fb);font-style:normal}
 .rdy-gfx{font-size:10px;line-height:1;margin-right:3px;vertical-align:0;flex-shrink:0;font-style:normal}
 .cal-ev .rdy-cap{width:10px;height:10px;font-size:7px;margin-right:2px;background:#fff;color:#2E7D32}
@@ -362,6 +367,7 @@ mark.hit{background:#F6E2A6;color:inherit;border-radius:2px;padding:0 1px}
   <div class="hdr-top">
     <img class="hdr-logo" src="./logo.png" alt="Bookish Summer Soirée — Soiree Social">
     <div class="cd-row" id="cd-row"></div>
+    <div class="presence" id="presence-chip" style="display:none"></div>
     <button class="user-pill" onclick="openUserSwitch()" title="Switch user"><span id="current-user-display">…</span></button>
   </div>
 </div>
@@ -643,7 +649,7 @@ const _fbScript1 = document.createElement('script');
 _fbScript1.type = 'module';
 _fbScript1.textContent = `
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
-import { getFirestore, collection, doc, setDoc, getDocs, onSnapshot, deleteDoc, writeBatch }
+import { getFirestore, collection, doc, setDoc, getDocs, onSnapshot, deleteDoc, writeBatch, runTransaction }
   from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 const firebaseConfig = {
   apiKey: "AIzaSyCqB0IkXZw40SER3eoV6hEXCDmRhrSrSLk",
@@ -663,6 +669,7 @@ window._fbGetDocs = getDocs;
 window._fbOnSnapshot = onSnapshot;
 window._fbDeleteDoc = deleteDoc;
 window._fbWriteBatch = writeBatch;
+window._fbRunTransaction = runTransaction;
 window._firebaseReady = true;
 window.dispatchEvent(new Event('firebase-ready'));
 `;
@@ -1040,6 +1047,33 @@ function fmtShort(ds){
 
 // ── USER SYSTEM ────────────────────────────────────────────────────────────
 function getCurrentUser(){ return currentUser || 'Nik'; }
+// A post's "rev" is the moment someone last really edited it. The newest rev always wins:
+// an older copy (another phone, an old tab, last night's waiting changes) can never save over it.
+// touch(post, ['date']) = "this person just changed these fields". Only those fields are sent
+// up, so two people editing different parts of the same post never undo each other.
+let _dirty = _ls('ss_dirty', {});    // id -> {base: rev it was edited from, f: [fields changed]}
+function _saveDirty(){ try{ localStorage.setItem('ss_dirty', JSON.stringify(_dirty)); }catch(e){} }
+function markDirty(p, fields, baseRev){
+  const d = _dirty[p.id] || (_dirty[p.id] = {base: baseRev, f: []});
+  (fields || Object.keys(p)).concat(['lastUpdated','lastUpdatedBy']).forEach(f=>{ if(f!=='rev' && !d.f.includes(f)) d.f.push(f); });
+  _saveDirty();
+}
+function touch(p, fields){
+  if(!p) return p;
+  const base = revOf(p);
+  p.rev = Math.max(Date.now(), base + 1); p.lastUpdated = formatUserStamp(); p.lastUpdatedBy = getCurrentUser();
+  markDirty(p, fields, base);
+  return p;
+}
+// Put this device's changed fields on top of a newer cloud copy
+function applyDirty(cloud, mine){
+  const d = _dirty[mine.id]; if(!d) return null;
+  const out = {...cloud};
+  d.f.forEach(f=>{ if(f in mine) out[f] = mine[f]; else delete out[f]; });
+  out.rev = Math.max(revOf(mine), revOf(cloud) + 1);
+  return out;
+}
+const revOf = p => (p && typeof p.rev === 'number') ? p.rev : 0;
 function formatUserStamp(){
   const now = new Date();
   const m = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
@@ -1139,6 +1173,7 @@ async function loadFromFirestoreAll(){
     shieldFromOldCopies();
     syncAuthorIntros();
     setupFirestoreListeners();
+    startPresence();
     loadPostImages().catch(()=>{});
   } catch(e){ console.warn('Firestore load failed', e); window._catsLoaded = true; migrateV8(); migrateAuthorIntro(); migrateAllAuthors(); syncAuthorIntros(); }
 }
@@ -1157,6 +1192,12 @@ function setupFirestoreListeners(){
       const next = sortByOrder(mergePending(data));
       if(stableJSON(next) === stableJSON(posts)) return;   // nothing new, no redraw
       if(arrangeMode && _dragSrc) return;                          // don't move cards while you're dragging
+      const me = getCurrentUser();
+      const fromOthers = next.filter(n=>{ const o = posts.find(x=>x.id===n.id); return n.lastUpdatedBy && n.lastUpdatedBy!==me && (!o || revOf(n) > revOf(o)); });
+      if(window._postsFromCloud && fromOthers.length){
+        const who = [...new Set(fromOthers.map(n=>n.lastUpdatedBy))].join(' & ');
+        showToast(`${who} just updated ${fromOthers.length===1 ? '"'+(fromOthers[0].title||'a post')+'"' : fromOthers.length+' posts'}.`);
+      }
       posts = next;
       if(migrateV8()) return; if(migrateAuthorIntro()) return; if(migrateAllAuthors()) return;
       localStorage.setItem('ss_p2',JSON.stringify(posts)); renderAll();
@@ -1174,25 +1215,41 @@ function setupFirestoreListeners(){
 function sortByOrder(arr){
   return arr.map((p,i)=>[p,i]).sort((a,b)=>((a[0].order??1e6+a[1]) - (b[0].order??1e6+b[1]))).map(x=>x[0]);
 }
+// Categories: the shared list is MERGED, never overwritten. A category is only dropped when
+// someone removes it on purpose (it goes on the "removed" list), and any category a post
+// uses always shows up, so a post's category can't be wiped by saving it.
+let catsRemoved = _ls('ss_cats_removed', []);
+function allCats(){
+  const extra = [...new Set(posts.map(p=>p.cat).filter(c=>c && !cats.includes(c)))];
+  return cats.concat(extra);
+}
 function saveCats(){
   localStorage.setItem('ss_cats2', JSON.stringify(cats));
-  try{ localStorage.setItem('ss_catalias', JSON.stringify(catAlias)); }catch(e){}
-  const cj = stableJSON({list:cats, alias:catAlias});
+  try{ localStorage.setItem('ss_catalias', JSON.stringify(catAlias)); localStorage.setItem('ss_cats_removed', JSON.stringify(catsRemoved)); }catch(e){}
+  const cj = stableJSON({list:cats, alias:catAlias, removed:catsRemoved});
   if(window._firestoreDB && window._catsLoaded && cj !== window._syncedCats){
     window._syncedCats = cj;
-    window._fbSetDoc(window._fbDoc(window._firestoreDB,'ss_meta','cats'), {id:'cats', list:cats, alias:catAlias, at:Date.now()}).catch(()=>{ window._syncedCats = null; });
+    window._fbSetDoc(window._fbDoc(window._firestoreDB,'ss_meta','cats'), {id:'cats', list:cats, alias:catAlias, removed:catsRemoved, at:Date.now()}).catch(()=>{ window._syncedCats = null; });
   }
 }
 function adoptCats(d){
   if(!d || !Array.isArray(d.list) || !d.list.length) return false;
-  if(JSON.stringify(d.list)===JSON.stringify(cats) && JSON.stringify(d.alias||{})===JSON.stringify(catAlias)) return false;
-  cats = d.list; catAlias = d.alias || {};
+  const removed = [...new Set([...(d.removed||[]), ...catsRemoved])].filter(c=>!(d.list||[]).includes(c));
+  const merged = d.list.slice();
+  cats.forEach(c=>{ if(!merged.includes(c) && !removed.includes(c)) merged.push(c); });   // keep additions made here
+  const alias = {...catAlias, ...(d.alias||{})};
+  const before = stableJSON({cats, catAlias, catsRemoved});
+  cats = merged; catAlias = alias; catsRemoved = removed;
   localStorage.setItem('ss_cats2', JSON.stringify(cats));
-  try{ localStorage.setItem('ss_catalias', JSON.stringify(catAlias)); }catch(e){}
-  return true;
+  try{ localStorage.setItem('ss_catalias', JSON.stringify(catAlias)); localStorage.setItem('ss_cats_removed', JSON.stringify(catsRemoved)); }catch(e){}
+  if(stableJSON({list:cats, alias:catAlias, removed:catsRemoved}) !== stableJSON({list:d.list, alias:d.alias||{}, removed:d.removed||[]})) setTimeout(saveCats, 500);
+  return before !== stableJSON({cats, catAlias, catsRemoved});
+}
+// After you arrange: number the posts in their new order (only posts whose place changed get a new rev)
+function renumberOrder(){
+  posts.forEach((p,i)=>{ if(p.order !== i){ p.order = i; touch(p,['order']); } });
 }
 function save(){
-  posts.forEach((p,i)=>{ p.order = i; });
   localStorage.setItem('ss_p2', JSON.stringify(posts));
   localStorage.setItem('ss_c2', JSON.stringify(countdowns));
   localStorage.setItem('ss_cats2', JSON.stringify(cats));
@@ -1213,11 +1270,12 @@ function rememberSynced(list){ _syncedPost = {}; list.forEach(p=>{ _syncedPost[p
 // Every post change is kept on this device (ss_pending) until the cloud confirms it.
 // If saving fails (no connection, or the database's daily limit), the change stays
 // here, the app keeps showing it, and it uploads automatically later.
-const _ls = (k,d)=>{ try{ const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; }catch(e){ return d; } };
+function _ls(k,d){ try{ const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; }catch(e){ return d; } }
 let _pending = new Set(_ls('ss_pending', []));        // post ids changed here, not yet confirmed by the cloud
 let _pendingDel = new Set(_ls('ss_pending_del', []));  // post ids deleted here, not yet confirmed
 function _savePendingLists(confirmed){
   try{
+    localStorage.setItem('ss_pending_del_at', JSON.stringify(_delAt));
     // add in anything another tab is waiting on, except what the cloud just confirmed
     _ls('ss_pending', []).forEach(id=>{ if(!(confirmed && confirmed.has(id))) _pending.add(id); });
     _ls('ss_pending_del', []).forEach(id=>{ if(!(confirmed && confirmed.has(id))) _pendingDel.add(id); });
@@ -1255,35 +1313,90 @@ function rescueUnsentPosts(cloud){
   }catch(e){}
 }
 function mergePending(cloud){
-  // cloud list + this device's not-yet-uploaded changes and deletions
+  // cloud list + this device's not-yet-uploaded changes and deletions, but only where this
+  // device's copy is at least as new as the cloud's
   let local = []; try{ local = JSON.parse(localStorage.getItem('ss_p2')||'[]'); }catch(e){}
   const byId = new Map(cloud.map(p=>[p.id,p]));
-  _pending.forEach(id=>{ const lp = local.find(x=>x.id===id) || posts.find(x=>x.id===id); if(lp) byId.set(id, lp); });
-  _pendingDel.forEach(id=>byId.delete(id));
+  _pending.forEach(id=>{
+    const lp = posts.find(x=>x.id===id) || local.find(x=>x.id===id);
+    const cp = byId.get(id);
+    if(!lp){ _pending.delete(id); return; }
+    if(!cp || revOf(lp) >= revOf(cp)){ byId.set(id, lp); return; }
+    const m = _dirty[id] ? applyDirty(cp, lp) : null;      // newer cloud copy + this device's changed fields
+    if(m) byId.set(id, m); else { _pending.delete(id); delete _dirty[id]; }
+  });
+  _pendingDel.forEach(id=>{ const cp = byId.get(id); if(cp && revOf(cp) > (_delAt[id]||0)){ _pendingDel.delete(id); } else byId.delete(id); });
+  _savePendingLists();
   return [...byId.values()];
 }
+let _delAt = _ls('ss_pending_del_at', {});
+let _saving = false, _saveAgain = false;
 function savePostsToFirestore(force){
   const changed = posts.filter(p=>p.id && (force && _pending.has(p.id) || _syncedPost[p.id] !== stableJSON(p)));
   const dels = [..._pendingDel];
   if(!changed.length && !dels.length){ renderSaveBanner(); return; }
-  changed.forEach(p=>{ _pending.add(p.id); });
+  changed.forEach(p=>{ if(typeof p.rev !== 'number') p.rev = 1; _pending.add(p.id); });
   _savePendingLists();
-  const sent = new Map(changed.map(p=>[p.id, stableJSON(p)]));
-  changed.forEach(p=>{ _syncedPost[p.id] = sent.get(p.id); });
+  if(_saving){ _saveAgain = true; renderSaveBanner(); return; }   // one upload at a time
+  _saving = true;
+  const send = changed.slice(0,200), sendDel = dels.slice(0,40);
+  const sent = new Map(send.map(p=>[p.id, stableJSON(p)]));
+  send.forEach(p=>{ _syncedPost[p.id] = sent.get(p.id); });
   const db = window._firestoreDB;
-  const batch = window._fbWriteBatch(db);
-  changed.slice(0,450).forEach(p=>batch.set(window._fbDoc(db,'ss_posts2',p.id), p));
-  dels.slice(0,40).forEach(id=>batch.delete(window._fbDoc(db,'ss_posts2',id)));
   renderSaveBanner();
-  batch.commit().then(()=>{
+  const lostTo = [];   // posts someone else changed more recently: we keep theirs
+  const merged = [];   // our changed fields put on top of someone else's newer version
+  const run = window._fbRunTransaction ? window._fbRunTransaction(db, async tx=>{
+    lostTo.length = 0;
+    const refs = send.map(p=>window._fbDoc(db,'ss_posts2',p.id)), dRefs = sendDel.map(id=>window._fbDoc(db,'ss_posts2',id));
+    const snaps = await Promise.all(refs.map(r=>tx.get(r))), dSnaps = await Promise.all(dRefs.map(r=>tx.get(r)));
+    merged.length = 0;
+    send.forEach((p,i)=>{
+      const cloud = snaps[i].exists() ? snaps[i].data() : null;
+      const d = _dirty[p.id];
+      const cloudIsOlder = !cloud || (d ? revOf(cloud) <= d.base : revOf(cloud) <= revOf(p));
+      if(cloudIsOlder){ tx.set(refs[i], p); return; }
+      // the cloud has a newer version than the one this change was made on
+      const m = d ? applyDirty(cloud, p) : null;
+      if(m){ tx.set(refs[i], m); merged.push(m); } else lostTo.push(cloud);
+    });
+    sendDel.forEach((id,i)=>{
+      const cloud = dSnaps[i].exists() ? dSnaps[i].data() : null;
+      if(cloud && revOf(cloud) > (_delAt[id]||0)) lostTo.push(cloud); else if(cloud) tx.delete(dRefs[i]);
+    });
+  }) : (()=>{ const batch = window._fbWriteBatch(db); send.forEach(p=>batch.set(window._fbDoc(db,'ss_posts2',p.id), p)); sendDel.forEach(id=>batch.delete(window._fbDoc(db,'ss_posts2',id))); return batch.commit(); })();
+  run.then(()=>{
     const done = new Set();
-    changed.slice(0,450).forEach(p=>{ const cur = posts.find(x=>x.id===p.id); if(!cur || stableJSON(cur)===sent.get(p.id)){ _pending.delete(p.id); done.add(p.id); } });
-    dels.slice(0,40).forEach(id=>{ _pendingDel.delete(id); done.add(id); });
+    send.forEach(p=>{ const cur = posts.find(x=>x.id===p.id); if(!cur || stableJSON(cur)===sent.get(p.id)){ _pending.delete(p.id); delete _dirty[p.id]; done.add(p.id); } });
+    merged.forEach(m=>{
+      const i = posts.findIndex(x=>x.id===m.id);
+      const mine = i>=0 ? posts[i] : null;
+      if(!mine || stableJSON(mine)===sent.get(m.id)){ if(i>=0) posts[i] = m; _pending.delete(m.id); delete _dirty[m.id]; done.add(m.id); }
+      _syncedPost[m.id] = stableJSON(m);
+    });
+    if(merged.length){ localStorage.setItem('ss_p2', JSON.stringify(posts)); renderAll(); }
+    _saveDirty();
+    sendDel.forEach(id=>{ _pendingDel.delete(id); delete _delAt[id]; done.add(id); });
+    // someone else's newer version wins: show it here too
+    lostTo.forEach(cloud=>{
+      _pending.delete(cloud.id); _pendingDel.delete(cloud.id); delete _dirty[cloud.id]; done.add(cloud.id);
+      _syncedPost[cloud.id] = stableJSON(cloud);
+      const i = posts.findIndex(x=>x.id===cloud.id);
+      if(i>=0) posts[i] = cloud; else posts.push(cloud);
+    });
+    if(lostTo.length){
+      localStorage.setItem('ss_p2', JSON.stringify(posts)); renderAll();
+      const who = [...new Set(lostTo.map(c=>c.lastUpdatedBy).filter(Boolean))].join(' & ') || 'Someone';
+      showToast(`${who} changed ${lostTo.length===1 ? '"'+(lostTo[0].title||'a post')+'"' : lostTo.length+' posts'} more recently, so their version was kept.`);
+    }
     _savePendingLists(done); setSaveProblem(null);
   }).catch(e=>{
     console.warn('save failed', e);
-    changed.forEach(p=>{ delete _syncedPost[p.id]; });
+    send.forEach(p=>{ delete _syncedPost[p.id]; });
     setSaveProblem(e);
+  }).finally(()=>{
+    _saving = false;
+    if(_saveAgain || changed.length > send.length || dels.length > sendDel.length){ _saveAgain = false; setTimeout(()=>savePostsToFirestore(), 300); }
   });
 }
 // Two tabs (or windows) of the app on the same computer share this device's copy and its
@@ -1304,6 +1417,65 @@ window.addEventListener('storage', e=>{
     }
   }catch(err){}
 });
+// ── WHO'S ON ───────────────────────────────────────────────────────────────
+// Each open copy of the app checks in about once a minute (only while it's on screen), and
+// says if it's arranging or editing. The chip at the top shows anyone else who's on.
+const DEVICE_ID = (()=>{ try{ let d = localStorage.getItem('ss_device'); if(!d){ d = 'd'+Math.random().toString(36).slice(2,10); localStorage.setItem('ss_device', d); } return d; }catch(e){ return 'd'+Math.random().toString(36).slice(2,10); } })();
+const DEVICE_KIND = /iPhone/.test(navigator.userAgent) ? 'iPhone' : /iPad/.test(navigator.userAgent) ? 'iPad' : /Android/.test(navigator.userAgent) ? 'phone' : /Mac/.test(navigator.userAgent) ? 'Mac' : 'computer';
+let _myActivity = '', _others = [], _presenceTimer = null;
+function checkIn(){
+  if(!window._firestoreDB || document.visibilityState !== 'visible') return;
+  window._fbSetDoc(window._fbDoc(window._firestoreDB,'ss_presence',DEVICE_ID), {id:DEVICE_ID, user:getCurrentUser(), device:DEVICE_KIND, doing:_myActivity || (document.getElementById('post-modal')?.classList.contains('open') ? 'editing a post' : ''), at:Date.now()}).catch(()=>{});
+}
+function setActivity(a){ if(a === _myActivity) return; _myActivity = a; checkIn(); }
+function checkOut(){
+  if(!window._firestoreDB) return;
+  window._fbSetDoc(window._fbDoc(window._firestoreDB,'ss_presence',DEVICE_ID), {id:DEVICE_ID, user:getCurrentUser(), device:DEVICE_KIND, doing:'', at:0}).catch(()=>{});
+}
+function othersOn(){ const now = Date.now(); return _others.filter(o=>o.id!==DEVICE_ID && o.at && now - o.at < 150000); }
+function renderPresence(){
+  const el = document.getElementById('presence-chip'); if(!el) return;
+  const on = othersOn();
+  if(!on.length){ el.style.display = 'none'; return; }
+  const me = getCurrentUser();
+  const names = on.map(o=> o.user===me ? `you (${o.device})` : o.user);
+  const busy = on.find(o=>o.doing==='arranging') || on.find(o=>o.doing);
+  const who = busy ? (busy.user===me ? `You (${busy.device})` : busy.user) : '';
+  el.className = 'presence' + (busy ? ' busy' : '');
+  const uniq = [...new Set(names)];
+  const verb = n => (n.length===1 && !n[0].startsWith('you')) ? 'is' : 'are';
+  el.innerHTML = '<span class="pdot"></span>' + (busy ? `${esc(who)} ${who.startsWith('You')?'are':'is'} ${esc(busy.doing)}` : `${esc(uniq.join(' + '))} ${verb(uniq)} on`);
+  el.title = on.map(o=>`${o.user} on ${o.device}${o.doing?' ('+o.doing+')':''}`).join('\n');
+  el.style.display = '';
+}
+function startPresence(){
+  if(_presenceTimer || !window._firestoreDB) return;
+  checkIn();
+  _presenceTimer = setInterval(()=>{ checkIn(); renderPresence(); }, 60*1000);
+  window._fbOnSnapshot(window._fbCollection(window._firestoreDB,'ss_presence'), snap=>{
+    _others = snap.docs.map(d=>d.data()); renderPresence();
+  });
+  document.addEventListener('visibilitychange', ()=>{ if(document.visibilityState==='visible'){ checkIn(); checkForNewVersion(); } else checkOut(); });
+  window.addEventListener('pagehide', checkOut);
+  setInterval(renderPresence, 30*1000);
+}
+
+// ── ALWAYS THE NEWEST VERSION ──────────────────────────────────────────────
+// When the app comes back on screen, it checks for a newer version and reloads into it
+// (unless you're in the middle of editing or arranging). Your waiting changes are kept.
+const APP_VERSION = 'soiree-social-v49';
+async function checkForNewVersion(){
+  try{
+    const t = await fetch('sw.js?check=' + Date.now(), {cache:'no-store'}).then(r=>r.text());
+    const m = /CACHE_NAME = '([^']+)'/.exec(t);
+    if(!m || m[1] === APP_VERSION) return;
+    const busy = arrangeMode || document.querySelector('.modal-ov.open');
+    if(busy){ showToast('A new version of the app is ready.', 'Refresh', ()=>location.reload()); return; }
+    if(navigator.serviceWorker){ const regs = await navigator.serviceWorker.getRegistrations(); await Promise.all(regs.map(r=>r.update().catch(()=>{}))); }
+    location.reload();
+  }catch(e){}
+}
+
 // keep trying in the background while anything is waiting
 setInterval(()=>{ if(window._firestoreDB && (_pending.size || _pendingDel.size)) savePostsToFirestore(true); }, 90*1000);
 window.addEventListener('online', ()=>{ if(window._firestoreDB && (_pending.size || _pendingDel.size)) savePostsToFirestore(true); });
@@ -1368,7 +1540,7 @@ function renderCountdowns(){
 function renderCatFilters(){
   const row = document.getElementById('cat-filter-row');
   const lbl = row.querySelector('.fg-lbl');
-  const chips = cats.map(cat=>{
+  const chips = allCats().map(cat=>{
     const active = activeCatFilters.has(cat) ? ' active c-cat' : '';
     return `<button class="chip${active}" data-fcat="${cat}" onclick="toggleFilter('cat','${cat}',this)">${cat}</button>`;
   }).join('');
@@ -1579,7 +1751,7 @@ function renderMasterList(){
 
   } else if(view === 'by-cat'){
     let h = '';
-    cats.forEach(cat=>{
+    allCats().forEach(cat=>{
       const group = filtered.filter(p=>p.cat===cat);
       if(!group.length) return;
       h += `<div class="section-divider"><div class="sd-line"></div><div class="sd-lbl">${cat}</div><div class="sd-line"></div></div>`;
@@ -1768,6 +1940,9 @@ function rememberArrangeOrder(){ _arrangeOrder = _listCards().map(c=>c.dataset.i
 function toggleArrange(){
   if(arrangeMode){ exitArrangeMode(); renderMasterList(); return; }
   arrangeMode = true; arrangeStage = 'choose'; _anchorsPlaced = false; _arrangeOrder = null;
+  setActivity('arranging');
+  const other = othersOn().find(o=>o.doing==='arranging');
+  if(other) showToast(`${other.user===getCurrentUser() ? 'You (on your '+other.device+')' : other.user} ${other.user===getCurrentUser()?'are':'is'} arranging right now. If you both arrange, whoever taps done last wins.`);
   syncArrangeUI(); renderMasterList();
 }
 function setArrangeStage(stage){
@@ -1812,6 +1987,7 @@ function renderArrangeBar(){
 }
 function exitArrangeMode(){
   arrangeMode = false; arrangeStage = 'choose'; _arrangeOrder = null;
+  setActivity('');
   syncArrangeUI();
 }
 // "I'm done arranging them": space out and schedule in the order on screen, straight away.
@@ -1840,7 +2016,7 @@ function applyScreenOrder(){
   posts = ids.map(id=>posts.find(p=>p.id===id)).filter(Boolean).concat(posts.filter(p=>!inView.has(p.id)));
 }
 function saveArrangeOrder(leave){
-  applyScreenOrder();
+  applyScreenOrder(); renumberOrder();
   if(leave) exitArrangeMode();
   save(); renderMasterList();
 }
@@ -1999,7 +2175,7 @@ function explainIfStuck(id){
   if(!before || ds > before.date) return;
   const t = '"' + (p.title||'This post').replace(/^Author intro:\s*/i,'') + '"';
   if(isAuthorPost(p)){ showToast(t+' is an Author Intro, so it has to go out by Jan 31.'); return; }
-  if(p.dateType==='premar1') showToast(t+' is set to Pre Mar 1, so it stays before March 1.', 'Make it Flexible', ()=>{ p.dateType='flexible'; p.lastUpdated=formatUserStamp(); p.lastUpdatedBy=getCurrentUser(); save(); refreshArrangeDates(); });
+  if(p.dateType==='premar1') showToast(t+' is set to Pre Mar 1, so it stays before March 1.', 'Make it Flexible', ()=>{ p.dateType='flexible'; touch(p,['dateType']); save(); refreshArrangeDates(); });
 }
 
 function setupDragDrop(){
@@ -2345,9 +2521,10 @@ function applyAutoSchedule(){
   applyScreenOrder();   // keep the list in the order you scheduled
   pendingAutoSchedule.forEach(item=>{
     const p = posts.find(x=>x.id===item.id);
-    if(p && item.date && !item.kept){ p.date = item.date; p.lastUpdated = formatUserStamp(); p.lastUpdatedBy = getCurrentUser(); }
+    if(p && item.date && !item.kept){ p.date = item.date; touch(p,['date']); }
   });
   pendingAutoSchedule = null;
+  renumberOrder();
   exitArrangeMode();
   save();
   closeModal('autosched-modal');
@@ -2469,7 +2646,8 @@ function showPostFields(type, p){
 
 function renderCatChips(selected){
   const wrap = document.getElementById('pm-cat-chips');
-  wrap.innerHTML = cats.map(cat=>
+  const list = allCats(); if(selected && !list.includes(selected)) list.push(selected);
+  wrap.innerHTML = list.map(cat=>
     `<button class="cat-chip ${catClass(cat)}${selected===cat?' active':''}" data-cat="${esc(cat)}" onclick="selectCat(this.dataset.cat,this)">${esc(cat)}</button>`
   ).join('') + `<button class="cat-chip" data-cat-custom onclick="promptAddCatInline()">+ Category</button>`;
 }
@@ -2625,15 +2803,23 @@ function savePost(){
     graphicReady: document.getElementById('pm-gfx-ready').classList.contains('on'),
     lastUpdated: formatUserStamp(),
     lastUpdatedBy: getCurrentUser(),
+    rev: Date.now(),
   };
 
   let savedId = editingPostId;
+  delete data.rev;
   if(editingPostId){
     const i = posts.findIndex(p=>p.id===editingPostId);
-    if(i>=0) posts[i] = {...posts[i], ...data};
+    if(i>=0){
+      const old = posts[i];
+      const fields = Object.keys(data).filter(k=>k!=='lastUpdated' && k!=='lastUpdatedBy' && stableJSON(old[k]) !== stableJSON(data[k]));
+      posts[i] = {...old, ...data};
+      touch(posts[i], fields);
+    }
   } else {
     savedId = uid();
-    posts.push({id:savedId, ...data});
+    const np = {id:savedId, ...data, order: posts.reduce((m,q)=>Math.max(m, typeof q.order==='number'?q.order:-1), -1) + 1};
+    posts.push(np); touch(np, null);
   }
   if(_pendingImg !== undefined) storePostImage(savedId, _pendingImg);
   _pendingImg = undefined;
@@ -2659,7 +2845,7 @@ function deletePost(){
     return;
   }
   posts = posts.filter(p=>p.id!==editingPostId);
-  _pendingDel.add(editingPostId); _pending.delete(editingPostId); _savePendingLists();
+  _pendingDel.add(editingPostId); _delAt[editingPostId] = Date.now(); _pending.delete(editingPostId); _savePendingLists();
   if(postImages[editingPostId]) storePostImage(editingPostId, '');
   save();
   closeModal('post-modal');
@@ -2716,7 +2902,7 @@ function openDetail(id){
 function toggleReady(id, field){
   const p = posts.find(x=>x.id===id); if(!p) return;
   p[field] = !p[field];
-  p.lastUpdated = formatUserStamp(); p.lastUpdatedBy = getCurrentUser();
+  touch(p,[field]);
   save(); renderMasterList();
   const sc = document.querySelector('#detail-modal .modal'), top = sc ? sc.scrollTop : 0;
   openDetail(id); if(sc) sc.scrollTop = top;
@@ -2725,7 +2911,7 @@ function unschedulePost(id){
   const p = posts.find(x=>x.id===id); if(!p) return;
   p.date = '';
   if(p.dateType==='fixed') p.dateType = 'flexible';
-  p.lastUpdated = formatUserStamp(); p.lastUpdatedBy = getCurrentUser();
+  touch(p,['date','dateType']);
   save(); renderMasterList(); openDetail(id);
 }
 
@@ -2812,6 +2998,7 @@ function promptAddCat(){
   if(!name||!name.trim()) return;
   const n = name.trim();
   if(!cats.includes(n)) cats.push(n);
+  catsRemoved = catsRemoved.filter(c=>c!==n);
   catsChanged();
 }
 function promptAddCatInline(){
@@ -2819,6 +3006,7 @@ function promptAddCatInline(){
   if(!name||!name.trim()) return;
   const n = name.trim();
   if(!cats.includes(n)) cats.push(n);
+  catsRemoved = catsRemoved.filter(c=>c!==n);
   saveCats(); renderCatFilters();
   const selected = document.querySelector('#pm-cat-chips .cat-chip.active')?.dataset.cat||'';
   renderCatChips(selected);
@@ -2900,7 +3088,9 @@ function renameCat(i){
   delete catAlias[old];
   if(base !== name) catAlias[name] = base;
   let n = 0;
-  posts.forEach(p=>{ if(p.cat === old){ p.cat = name; p.lastUpdated = formatUserStamp(); p.lastUpdatedBy = getCurrentUser(); n++; } });
+  posts.forEach(p=>{ if(p.cat === old){ p.cat = name; touch(p,['cat']); n++; } });
+  if(!catsRemoved.includes(old)) catsRemoved.push(old);
+  catsRemoved = catsRemoved.filter(c=>c!==name);
   if(activeCatFilters.has(old)){ activeCatFilters.delete(old); activeCatFilters.add(name); }
   save();
   catsChanged();
@@ -2911,6 +3101,9 @@ function removeCat(i){
   if(used && !confirm('Remove "'+cat+'"? '+used+' post'+(used===1?'':'s')+' use it and will have no category.')) return;
   cats.splice(i,1);
   delete catAlias[cat];
+  if(!catsRemoved.includes(cat)) catsRemoved.push(cat);
+  posts.forEach(p=>{ if(p.cat===cat){ p.cat=''; touch(p,['cat']); } });
+  if(used) save();
   catsChanged();
 }
 
@@ -2946,6 +3139,7 @@ function switchNav(nav){
 function openModal(id){
   const ov = document.getElementById(id);
   ov.classList.add('open');
+  if(id==='post-modal') setTimeout(checkIn, 50);
   // always open at the top, not wherever the last post was scrolled to
   const m = ov.querySelector('.modal');
   if(m){ m.scrollTop = 0; requestAnimationFrame(()=>{ m.scrollTop = 0; }); }
@@ -2989,7 +3183,7 @@ function calSwipe(which, dir){
     if(Math.abs(acc) > 60){ calSwipe(which, acc>0 ? 1 : -1); spent = true; }
   }, {passive:false});
 })();
-function closeModal(id){ document.getElementById(id).classList.remove('open'); }
+function closeModal(id){ document.getElementById(id).classList.remove('open'); if(id==='post-modal') setTimeout(checkIn, 50); }
 document.querySelectorAll('.modal-ov').forEach(ov=>{
   ov.addEventListener('click', e=>{ if(e.target===ov) ov.classList.remove('open'); });
 });

@@ -1,6 +1,6 @@
 // ── SOIREE SOCIAL SERVICE WORKER ─────────────────────────────────────────
 // Version bump this string any time you update the app — it forces a cache refresh
-const CACHE_NAME = 'soiree-social-v48';
+const CACHE_NAME = 'soiree-social-v49';
 
 // Files to cache for offline use
 const PRECACHE_URLS = [
@@ -39,6 +39,19 @@ self.addEventListener('activate', event => {
 self.addEventListener('fetch', event => {
   // Only handle GET requests
   if (event.request.method !== 'GET') return;
+
+  // The app page itself: always try the network first (so every open gets the newest
+  // version), fall back to the saved copy when offline.
+  const u = new URL(event.request.url);
+  if (event.request.mode === 'navigate' || (u.origin === self.location.origin && (u.pathname.endsWith('/') || u.pathname.endsWith('/index.html')))) {
+    event.respondWith(
+      fetch(event.request).then(resp => {
+        if (resp && resp.status === 200) { const c = resp.clone(); caches.open(CACHE_NAME).then(cache => cache.put('./index.html', c)); }
+        return resp;
+      }).catch(() => caches.match('./index.html').then(r => r || caches.match('./')))
+    );
+    return;
+  }
 
   event.respondWith(
     caches.match(event.request).then(cached => {
