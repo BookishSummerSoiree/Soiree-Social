@@ -744,7 +744,6 @@ const V8_POSTS = [
   {id:"v8-post-5",dateType:"postmar1",date:"",type:"social",cat:"Event",postType:"",title:"Prizes (part 2)",purpose:"",caption:"",driveLink:"",htagId:"",extraHtags:"",lastUpdated:"Oct 24 · Nik",lastUpdatedBy:"Nik"},
   {id:"v8-post-6",dateType:"postmar1",date:"",type:"social",cat:"Fun",postType:"",title:"5th birthday celebration",purpose:"",caption:"",driveLink:"",htagId:"",extraHtags:"",lastUpdated:"Oct 24 · Nik",lastUpdatedBy:"Nik"},
   {id:"v8-post-7",dateType:"postmar1",date:"",type:"social",cat:"All authors",postType:"",title:"Shadow Mountain",purpose:"",caption:"",driveLink:"",htagId:"",extraHtags:"",lastUpdated:"Oct 24 · Nik",lastUpdatedBy:"Nik"},
-  {id:"v8-post-8",dateType:"postmar1",date:"",type:"social",cat:"All authors",postType:"",title:"Storefront",purpose:"",caption:"",driveLink:"",htagId:"",extraHtags:"",lastUpdated:"Oct 24 · Nik",lastUpdatedBy:"Nik"},
   {id:"v8-soldout",dateType:"fixed",date:"2027-03-01",type:"social",cat:"Tickets",postType:"",title:"Sold Out",purpose:"",caption:"",driveLink:"",htagId:"",extraHtags:"",lastUpdated:"Oct 24 · Nik",lastUpdatedBy:"Nik"},
 ];
 // Ideas I suggested should never come with a date. Clear the ones I dated earlier
@@ -760,7 +759,7 @@ function migrateV8(){
   posts.forEach(p=>{
     if(V8_SEED_IDS.includes(p.id) && p.lastUpdated==='Jan 15 · Nik' && p.dateType!=='fixed') p.date = '';
   });
-  V8_POSTS.forEach(np=>{ if(!posts.some(p=>p.id===np.id)) posts.push(JSON.parse(JSON.stringify(np))); });
+  V8_POSTS.forEach(np=>{ if(!isGone(np.id) && !posts.some(p=>p.id===np.id)) posts.push(JSON.parse(JSON.stringify(np))); });
   save(); renderAll();
   return true;
 }
@@ -773,7 +772,7 @@ function migrateV8(){
 // can match them again. Their category is left exactly as it is.
 function shieldFromOldCopies(){
   let changed = false;
-  ['v8-post-3','v8-post-7','v8-post-8'].forEach(id=>{
+  ['v8-post-3','v8-post-7'].forEach(id=>{
     const p = posts.find(x=>x.id===id);
     if(p && /^[A-Z][a-z]{2} \d+ · [^,]+$/.test(p.lastUpdated||'')){ p.lastUpdated = p.lastUpdated.replace(' · ', ', 12:00 PM · '); changed = true; }
   });
@@ -1186,12 +1185,14 @@ async function loadFromFirestoreAll(){
       loadFromFirestore('ss_meta'),
     ]);
     let changed = false;
+    adoptTombs((fsMeta||[]).find(d=>d.id==='deleted'));
     const metaCats = (fsMeta||[]).find(d=>d.id==='cats');
     if(adoptCats(metaCats)) changed = true;
     if(metaCats) window._syncedCats = stableJSON({list:metaCats.list, alias:metaCats.alias||{}});
     window._catsLoaded = true;
     if(!metaCats) saveCats();   // first phone to get this version shares its list
-    if(fsPosts && fsPosts.length > 0){ rescueUnsentPosts(fsPosts); rememberSynced(fsPosts); posts = sortByOrder(mergePending(fsPosts)); changed = true; window._postsFromCloud = true; if(_pending.size||_pendingDel.size) setTimeout(()=>savePostsToFirestore(true), 1500); }
+    if(fsPosts && fsPosts.length > 0){ rescueUnsentPosts(fsPosts); rememberSynced(fsPosts); posts = sortByOrder(mergePending(fsPosts)); dropGone();
+      if(fsPosts.some(p=>isGone(p.id))) setTimeout(()=>savePostsToFirestore(), 1200); changed = true; window._postsFromCloud = true; if(_pending.size||_pendingDel.size) setTimeout(()=>savePostsToFirestore(true), 1500); }
     if(fsCDs && fsCDs.length > 0){ countdowns = fsCDs; changed = true; }
     window._syncedCds = stableJSON(countdowns);
     if(changed){
@@ -1221,7 +1222,7 @@ function setupFirestoreListeners(){
       const data = _latestPostDocs;
       if(!data || !data.length) return;
       rememberSynced(data);
-      const next = sortByOrder(mergePending(data));
+      const next = sortByOrder(mergePending(data)).filter(p=>!isGone(p.id));
       if(stableJSON(next) === stableJSON(posts)) return;   // nothing new, no redraw
       if(arrangeMode && _dragSrc) return;                          // don't move cards while you're dragging
       const me = getCurrentUser();
@@ -1236,7 +1237,9 @@ function setupFirestoreListeners(){
     }, 250);
   });
   window._fbOnSnapshot(window._fbCollection(window._firestoreDB,'ss_meta'), snap=>{
-    const d = snap.docs.map(x=>x.data()).find(x=>x.id==='cats');
+    const docs = snap.docs.map(x=>x.data());
+    if(adoptTombs(docs.find(x=>x.id==='deleted')) && dropGone()){ localStorage.setItem('ss_p2', JSON.stringify(posts)); renderAll(); }
+    const d = docs.find(x=>x.id==='cats');
     if(adoptCats(d)){ renderCatFilters(); renderSettingsPage(); renderMasterList(); }
   });
   window._fbOnSnapshot(window._fbCollection(window._firestoreDB,'ss_cds2'), snap=>{
@@ -1305,12 +1308,14 @@ function rememberSynced(list){ _syncedPost = {}; list.forEach(p=>{ _syncedPost[p
 function _ls(k,d){ try{ const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; }catch(e){ return d; } }
 let _pending = new Set(_ls('ss_pending', []));        // post ids changed here, not yet confirmed by the cloud
 let _pendingDel = new Set(_ls('ss_pending_del', []));  // post ids deleted here, not yet confirmed
+const _dropped = new Set();   // waiting changes this device decided not to send (deleted / older)
+function dropPending(id){ _pending.delete(id); delete _dirty[id]; _dropped.add(id); }
 function _savePendingLists(confirmed){
   try{
     localStorage.setItem('ss_pending_del_at', JSON.stringify(_delAt));
     // add in anything another tab is waiting on, except what the cloud just confirmed
-    _ls('ss_pending', []).forEach(id=>{ if(!(confirmed && confirmed.has(id))) _pending.add(id); });
-    _ls('ss_pending_del', []).forEach(id=>{ if(!(confirmed && confirmed.has(id))) _pendingDel.add(id); });
+    _ls('ss_pending', []).forEach(id=>{ if(!(confirmed && confirmed.has(id)) && !_dropped.has(id) && !isGone(id)) _pending.add(id); });
+    _ls('ss_pending_del', []).forEach(id=>{ if(!(confirmed && confirmed.has(id)) && !_dropped.has(id)) _pendingDel.add(id); });
     localStorage.setItem('ss_pending', JSON.stringify([..._pending])); localStorage.setItem('ss_pending_del', JSON.stringify([..._pendingDel]));
   }catch(e){}
 }
@@ -1342,22 +1347,55 @@ function rescueUnsentPosts(cloud){
     const local = JSON.parse(localStorage.getItem('ss_p2')||'[]');
     const inCloud = new Set(cloud.map(p=>p.id));
     const system = /^(bss\d+|v8-|intro-|author-slot-)/;
-    local.filter(p=>p && p.id && !inCloud.has(p.id) && !system.test(p.id) && p.title).forEach(p=>_pending.add(p.id));
+    local.filter(p=>p && p.id && !inCloud.has(p.id) && !system.test(p.id) && !isGone(p.id) && p.title).forEach(p=>_pending.add(p.id));
     _savePendingLists();
   }catch(e){}
+}
+// ── DELETED STAYS DELETED ──────────────────────────────────────────────────
+// Every delete is written to a shared list (ss_meta/deleted). Every device drops those posts
+// and never uploads them again, even if it was holding an old waiting change for one.
+const GONE_FOREVER = ['v8-post-8'];   // the built-in "Storefront" (Mar 2) idea, removed for good
+let _tomb = _ls('ss_tomb', {});
+function isGone(id){ return GONE_FOREVER.includes(id) || !!_tomb[id]; }
+function adoptTombs(d){
+  if(!d || !d.ids) return false;
+  let added = false;
+  Object.entries(d.ids).forEach(([id,at])=>{ if(!_tomb[id] || _tomb[id] < at){ _tomb[id] = at; added = true; } });
+  if(added) try{ localStorage.setItem('ss_tomb', JSON.stringify(_tomb)); }catch(e){}
+  return added;
+}
+function dropGone(){
+  const before = posts.length;
+  posts = posts.filter(p=>!isGone(p.id));
+  [..._pending].forEach(id=>{ if(isGone(id)) dropPending(id); });
+  _savePendingLists();
+  return posts.length !== before;
+}
+function recordDeletion(id){
+  _tomb[id] = Date.now();
+  try{ localStorage.setItem('ss_tomb', JSON.stringify(_tomb)); }catch(e){}
+  const db = window._firestoreDB; if(!db) return;
+  const ref = window._fbDoc(db,'ss_meta','deleted');
+  const write = ()=> window._fbRunTransaction(db, async tx=>{
+    const snap = await tx.get(ref);
+    const ids = {...((snap.exists() && snap.data().ids) || {}), ..._tomb};
+    tx.set(ref, {id:'deleted', ids});
+  });
+  (window._fbRunTransaction ? write() : window._fbSetDoc(ref, {id:'deleted', ids:_tomb})).catch(()=>{ setTimeout(()=>recordDeletion(id), 90*1000); });
 }
 function mergePending(cloud){
   // cloud list + this device's not-yet-uploaded changes and deletions, but only where this
   // device's copy is at least as new as the cloud's
   let local = []; try{ local = JSON.parse(localStorage.getItem('ss_p2')||'[]'); }catch(e){}
-  const byId = new Map(cloud.map(p=>[p.id,p]));
+  const byId = new Map(cloud.filter(p=>!isGone(p.id)).map(p=>[p.id,p]));
   _pending.forEach(id=>{
     const lp = posts.find(x=>x.id===id) || local.find(x=>x.id===id);
     const cp = byId.get(id);
-    if(!lp){ _pending.delete(id); return; }
+    if(!lp || isGone(id)){ dropPending(id); return; }
+    if(!cp && /^(bss\d+|v8-|intro-|author-slot-)/.test(id)){ dropPending(id); return; }   // a starter post someone deleted
     if(!cp || revOf(lp) >= revOf(cp)){ byId.set(id, lp); return; }
     const m = _dirty[id] ? applyDirty(cp, lp) : null;      // newer cloud copy + this device's changed fields
-    if(m) byId.set(id, m); else { _pending.delete(id); delete _dirty[id]; }
+    if(m) byId.set(id, m); else dropPending(id);
   });
   _pendingDel.forEach(id=>{ const cp = byId.get(id); if(cp && revOf(cp) > (_delAt[id]||0)){ _pendingDel.delete(id); } else byId.delete(id); });
   _savePendingLists();
@@ -1366,7 +1404,9 @@ function mergePending(cloud){
 let _delAt = _ls('ss_pending_del_at', {});
 let _saving = false, _saveAgain = false;
 function savePostsToFirestore(force){
-  const changed = posts.filter(p=>p.id && (force && _pending.has(p.id) || _syncedPost[p.id] !== stableJSON(p)));
+  if(dropGone()) localStorage.setItem('ss_p2', JSON.stringify(posts));
+  Object.keys(_syncedPost).forEach(id=>{ if(isGone(id) && !_pendingDel.has(id)){ _pendingDel.add(id); if(!_delAt[id]) _delAt[id] = Date.now(); } });
+  const changed = posts.filter(p=>p.id && !isGone(p.id) && (force && _pending.has(p.id) || _syncedPost[p.id] !== stableJSON(p)));
   const dels = [..._pendingDel];
   if(!changed.length && !dels.length){ renderSaveBanner(); return; }
   changed.forEach(p=>{ if(typeof p.rev !== 'number') p.rev = 1; _pending.add(p.id); });
@@ -1396,7 +1436,7 @@ function savePostsToFirestore(force){
     });
     sendDel.forEach((id,i)=>{
       const cloud = dSnaps[i].exists() ? dSnaps[i].data() : null;
-      if(cloud && revOf(cloud) > (_delAt[id]||0)) lostTo.push(cloud); else if(cloud) tx.delete(dRefs[i]);
+      if(cloud && !isGone(id) && revOf(cloud) > (_delAt[id]||0)) lostTo.push(cloud); else if(cloud) tx.delete(dRefs[i]);
     });
   }) : (()=>{ const batch = window._fbWriteBatch(db); send.forEach(p=>batch.set(window._fbDoc(db,'ss_posts2',p.id), p)); sendDel.forEach(id=>batch.delete(window._fbDoc(db,'ss_posts2',id))); return batch.commit(); })();
   run.then(()=>{
@@ -1413,7 +1453,7 @@ function savePostsToFirestore(force){
     sendDel.forEach(id=>{ _pendingDel.delete(id); delete _delAt[id]; done.add(id); });
     // someone else's newer version wins: show it here too
     lostTo.forEach(cloud=>{
-      _pending.delete(cloud.id); _pendingDel.delete(cloud.id); delete _dirty[cloud.id]; done.add(cloud.id);
+      dropPending(cloud.id); _pendingDel.delete(cloud.id); done.add(cloud.id);
       _syncedPost[cloud.id] = stableJSON(cloud);
       const i = posts.findIndex(x=>x.id===cloud.id);
       if(i>=0) posts[i] = cloud; else posts.push(cloud);
@@ -1497,7 +1537,7 @@ function startPresence(){
 // ── ALWAYS THE NEWEST VERSION ──────────────────────────────────────────────
 // When the app comes back on screen, it checks for a newer version and reloads into it
 // (unless you're in the middle of editing or arranging). Your waiting changes are kept.
-const APP_VERSION = 'soiree-social-v51';
+const APP_VERSION = 'soiree-social-v52';
 (()=>{ const l = document.getElementById('app-version-lbl'); if(l) l.textContent = APP_VERSION.replace('soiree-social-v',''); })();
 async function checkForNewVersion(){
   try{
@@ -2962,7 +3002,8 @@ function deletePost(){
     return;
   }
   posts = posts.filter(p=>p.id!==editingPostId);
-  _pendingDel.add(editingPostId); _delAt[editingPostId] = Date.now(); _pending.delete(editingPostId); _savePendingLists();
+  _pendingDel.add(editingPostId); _delAt[editingPostId] = Date.now(); _pending.delete(editingPostId); delete _dirty[editingPostId]; _saveDirty(); _savePendingLists();
+  recordDeletion(editingPostId);
   if(postImages[editingPostId]) storePostImage(editingPostId, '');
   save();
   closeModal('post-modal');
