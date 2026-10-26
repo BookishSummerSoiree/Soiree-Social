@@ -444,6 +444,7 @@ mark.hit{background:#F6E2A6;color:inherit;border-radius:2px;padding:0 1px}
       </div>
     </div>
     <button class="btn-ghost" style="margin-top:4px" onclick="confirmReset()">Reset to defaults</button>
+    <div style="text-align:center;font-size:11px;color:#999;margin:14px 0 4px">App version <b id="app-version-lbl"></b></div>
   </div>
 </div>
 
@@ -1284,7 +1285,8 @@ function _savePendingLists(confirmed){
 }
 let _saveProblem = null;
 function setSaveProblem(err){
-  _saveProblem = err ? (String(err.code||err.message||err).includes('resource-exhausted') || String(err).includes('Quota') ? 'quota' : 'offline') : null;
+  const t = err ? String(err.code||'') + ' ' + String(err.message||err) : '';
+  _saveProblem = !err ? null : (t.includes('resource-exhausted') || t.includes('Quota')) ? 'quota' : (t.includes('permission') ? 'refused' : 'offline');
   renderSaveBanner();
 }
 function renderSaveBanner(){
@@ -1295,6 +1297,7 @@ function renderSaveBanner(){
   const what = waiting ? `${waiting} change${waiting===1?'':'s'} waiting to upload. ` : '';
   bar.innerHTML = _saveProblem==='quota'
     ? `⚠️ <b>Not saving to the cloud right now.</b> The database hit its daily limit. ${what}Your changes are kept safe on this device and will upload by themselves when the limit resets. Please don't clear this browser's data.`
+    : _saveProblem==='refused' ? `⚠️ <b>The cloud turned this save away.</b> ${what}Your changes are kept on this device. Close the app completely and open it again to get the newest version.`
     : _saveProblem ? `⚠️ <b>Can't reach the cloud.</b> ${what}Your changes are kept on this device and will upload when the connection is back.`
     : `☁️ ${waiting} change${waiting===1?'':'s'} waiting to upload. They're saved on this device and will upload by themselves.`;
 }
@@ -1463,7 +1466,8 @@ function startPresence(){
 // ── ALWAYS THE NEWEST VERSION ──────────────────────────────────────────────
 // When the app comes back on screen, it checks for a newer version and reloads into it
 // (unless you're in the middle of editing or arranging). Your waiting changes are kept.
-const APP_VERSION = 'soiree-social-v49';
+const APP_VERSION = 'soiree-social-v50';
+(()=>{ const l = document.getElementById('app-version-lbl'); if(l) l.textContent = APP_VERSION.replace('soiree-social-v',''); })();
 async function checkForNewVersion(){
   try{
     const t = await fetch('sw.js?check=' + Date.now(), {cache:'no-store'}).then(r=>r.text());
