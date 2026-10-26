@@ -84,6 +84,8 @@ body{font-family:var(--fb);background:var(--cream);color:var(--black);min-height
 .rdy-gfx{font-size:10px;line-height:1;margin-right:3px;vertical-align:0;flex-shrink:0;font-style:normal}
 .cal-ev .rdy-cap{width:10px;height:10px;font-size:7px;margin-right:2px;background:#fff;color:#2E7D32}
 .cal-ev .rdy-gfx{font-size:8px;margin-right:2px}
+.fill-pill{display:inline-flex;align-items:center;gap:5px;margin-top:8px;border:1px solid var(--sage);background:var(--sage-l);color:var(--sage-d);border-radius:16px;padding:5px 12px;font-family:var(--fb);font-size:11px;font-weight:500;cursor:pointer}
+.fill-pill:disabled{opacity:.6}
 .ready-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:14px 0 4px}
 .ready-btn{border:1.5px solid var(--gray);background:var(--white);border-radius:12px;padding:10px 8px;font-family:var(--fb);font-size:11.5px;font-weight:500;color:#777;cursor:pointer;line-height:1.3;text-align:center}
 .ready-btn.on{border-color:#2E7D32;background:#E8F5E9;color:#1B5E20}
@@ -334,7 +336,13 @@ mark.hit{background:#F6E2A6;color:inherit;border-radius:2px;padding:0 1px}
 .cal-cell.has-posts{cursor:pointer}
 .cal-day-num{font-size:10px;font-weight:500;color:#888;line-height:1;margin-bottom:2px}
 .cal-cell.today .cal-day-num{color:var(--coral-d);font-weight:700}
-.cal-ev{font-size:8.5px;font-weight:500;line-height:1.2;color:#fff;border-radius:3px;padding:1px 3px;margin-bottom:2px;overflow:hidden;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;word-break:break-word;hyphens:auto}
+.modal.mini-post{padding:18px 16px calc(18px + env(safe-area-inset-bottom,0px))}
+.mini-title{font-family:var(--fd);font-size:20px;font-weight:600;color:var(--black);line-height:1.3;margin-bottom:14px;word-break:break-word}
+.mini-btns{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.cal-ev.lifting{opacity:.35}
+.cal-ghost{position:fixed;z-index:600;pointer-events:none;transform:translate(-50%,-60%) scale(1.08);box-shadow:0 8px 22px rgba(0,0,0,.25);border-radius:5px;max-width:120px}
+.cal-cell.drop-target{outline:2px dashed var(--coral);outline-offset:-2px;background:#FFF4EE}
+.cal-ev{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;cursor:pointer;font-size:8.5px;font-weight:500;line-height:1.2;color:#fff;border-radius:3px;padding:1px 3px;margin-bottom:2px;overflow:hidden;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;word-break:break-word;hyphens:auto}
 @media (min-width:640px){.cal-ev{font-size:10.5px;padding:2px 5px;-webkit-line-clamp:2}}
 .cal-overflow{font-size:8.5px;color:#888;line-height:1.2;font-weight:500}
 /* Cal detail popover */
@@ -433,7 +441,7 @@ mark.hit{background:#F6E2A6;color:inherit;border-radius:2px;padding:0 1px}
       <div id="cat-settings-list"></div>
     </div>
     <div class="settings-section">
-      <div class="settings-hdr"><div class="settings-title">Hashtag Groups</div><button class="settings-add" onclick="addHtagGroup()">+ Add</button></div>
+      <div class="settings-hdr"><div class="settings-title">Keyword Groups</div><button class="settings-add" onclick="addHtagGroup()">+ Add</button></div>
       <div id="htag-settings-list"></div>
     </div>
     <div class="settings-section">
@@ -521,19 +529,6 @@ mark.hit{background:#F6E2A6;color:inherit;border-radius:2px;padding:0 1px}
           <button class="chip c-type" id="pt-slides" onclick="togglePostType('Slides',this)">Slides</button>
         </div>
       </div>
-      <!-- Hashtag group (social only) -->
-      <div class="ef" id="pm-htag-section" style="display:none">
-        <label class="ef-lbl">Hashtag Group</label>
-        <select class="ef-input" id="pm-htag" onchange="previewHtags()">
-          <option value="">— None —</option>
-        </select>
-        <div class="htag-preview" id="pm-htag-preview"></div>
-      </div>
-      <!-- Extra hashtags (social only) -->
-      <div class="ef" id="pm-extra-htag-section" style="display:none">
-        <label class="ef-lbl">Extra hashtags for this post</label>
-        <input class="ef-input" id="pm-extra-htags" placeholder="#bss2027 #bookish">
-      </div>
       <!-- Purpose / Subject -->
       <div class="ef">
         <label class="ef-lbl" id="pm-purpose-lbl">Purpose of post</label>
@@ -543,12 +538,30 @@ mark.hit{background:#F6E2A6;color:inherit;border-radius:2px;padding:0 1px}
       <div class="ef" id="pm-caption-section" style="display:none">
         <label class="ef-lbl">Caption</label>
         <textarea class="ef-textarea" id="pm-caption" placeholder="Write your caption here..."></textarea>
-        <button type="button" class="btn-copy" id="pm-fill-author" style="display:none;margin-top:8px" onclick="fillCaptionFromAuthorInfo()">📖 Fill from Author Info (bio + fun answers)</button>
+        <button type="button" class="fill-pill" id="pm-fill-author" style="display:none" onclick="fillCaptionFromAuthorInfo()">📖 Fill from Author Info (bio + fun answers)</button>
         <div id="pm-fill-msg" style="font-size:12px;color:#777;margin-top:6px;display:none"></div>
+      </div>
+      <!-- Walk out song (author intro posts) -->
+      <div class="ef" id="pm-walkout-section" style="display:none">
+        <label class="ef-lbl">Walk out song</label>
+        <input class="ef-input" id="pm-walkout" placeholder="Their answer from Author Info">
+      </div>
+      <!-- Keyword group (social only) -->
+      <div class="ef" id="pm-htag-section" style="display:none">
+        <label class="ef-lbl">Keyword Group</label>
+        <select class="ef-input" id="pm-htag" onchange="previewHtags()">
+          <option value="">— None —</option>
+        </select>
+        <div class="htag-preview" id="pm-htag-preview"></div>
+      </div>
+      <!-- Extra keywords (social only) -->
+      <div class="ef" id="pm-extra-htag-section" style="display:none">
+        <label class="ef-lbl">Extra keywords for this post</label>
+        <input class="ef-input" id="pm-extra-htags" placeholder="#bss2027 #bookish">
       </div>
       <!-- Copy caption button (social only) -->
       <div id="pm-copy-section" style="display:none;margin-bottom:14px">
-        <button class="btn-copy" onclick="copyCaption()">📋 Copy Caption + Hashtags</button>
+        <button class="btn-copy" onclick="copyCaption()">📋 Copy Caption + Keywords</button>
       </div>
       <!-- Graphic — Drive link (social only) -->
       <div class="ef" id="pm-graphic-section" style="display:none">
@@ -615,6 +628,17 @@ mark.hit{background:#F6E2A6;color:inherit;border-radius:2px;padding:0 1px}
 </div>
 
 <!-- Auto-Schedule Modal -->
+<!-- Calendar: tap a post -->
+<div class="modal-ov" id="mini-post">
+  <div class="modal mini-post">
+    <div class="mini-title" id="mini-post-title"></div>
+    <div class="mini-btns">
+      <button class="btn-ghost" style="margin-top:0" onclick="closeModal('mini-post')">Close</button>
+      <button class="btn-navy" style="margin-top:0" id="mini-post-edit">✏️ Edit</button>
+    </div>
+  </div>
+</div>
+
 <!-- Auto-Schedule preview -->
 <div class="modal-ov" id="autosched-modal">
   <div class="modal">
@@ -922,7 +946,6 @@ const AUTHOR_FUN_LINES = [
   ['numberGuess','Writing-cave look:'],
   ['heroineBook','Weirdest thing you\u2019ve googled:'],
   ['readingFormat','Plotter or Pantser:'],
-  ['sportsSong','Walk-out song:']
 ];
 function authorIntroName(p){
   if(!p) return '';
@@ -938,6 +961,9 @@ function buildAuthorCaption(d){
   if(qa.length) out.push(qa.join('\n'));
   return out.join('\n\n');
 }
+// "If you were a sports superstar, what song would you want played when you ran out onto the field?"
+function walkoutFrom(d){ return String((d && d.sportsSong) == null ? '' : d.sportsSong).trim(); }
+function isAuthorIntroPost(p){ return !!p && p.type==='social' && (!!authorIntroName(p) || catKey(p.cat)===AUTHOR_CAT); }
 let _fillArmed = false;
 function updateAuthorFillBtn(p){
   const btn = document.getElementById('pm-fill-author'), msg = document.getElementById('pm-fill-msg');
@@ -967,8 +993,10 @@ async function fillCaptionFromAuthorInfo(){
     if(!j.success) throw new Error(j.error || 'Author Info did not answer');
     if(!j.exists){ say('Author Info has no form saved for ' + name + ' yet.'); return; }
     const text = buildAuthorCaption(j.data || {});
-    if(!text){ say(name + ' hasn\u2019t filled in a bio or the Misc Fun Stuff yet.'); return; }
+    if(!text){ const song = walkoutFrom(j.data); if(song){ document.getElementById('pm-walkout').value = song; say('Walk out song filled in. No bio or fun answers yet.'); } else say(name + ' hasn\u2019t filled in a bio or the Misc Fun Stuff yet.'); return; }
     box.value = text;
+    const song = walkoutFrom(j.data);
+    if(song) document.getElementById('pm-walkout').value = song;
     say('Filled in. Look it over, then tap Save.');
   }catch(e){
     say('Could not reach Author Info. Check your connection and try again.');
@@ -983,15 +1011,18 @@ async function fillAuthorCaptions(list){
   let any = false;
   for(const a of list){
     const post = posts.find(p=>p.hqAuthorId===String(a.id));
-    if(!post || post.caption || post.captionAutoFilled) continue;
+    if(!post) continue;
+    const needCap = !post.caption && !post.captionAutoFilled, needSong = !post.walkoutSong && !post.walkoutAutoFilled;
+    if(!needCap && !needSong) continue;
     try{
       const r = await fetch(AUTHOR_INFO_URL + '?action=getAuthorData&authorName=' + encodeURIComponent(String(a.name).trim()));
       const j = await r.json();
       if(!j || !j.success || !j.exists) continue;
-      const text = buildAuthorCaption(j.data || {});
+      const text = buildAuthorCaption(j.data || {}), song = walkoutFrom(j.data);
       const cur = posts.find(p=>p.id===post.id);
-      if(!text || !cur || cur.caption) continue;
-      cur.caption = text; cur.captionAutoFilled = true; any = true;
+      if(!cur) continue;
+      if(needCap && text && !cur.caption){ cur.caption = text; cur.captionAutoFilled = true; any = true; }
+      if(needSong && song && !cur.walkoutSong){ cur.walkoutSong = song; cur.walkoutAutoFilled = true; any = true; }
     }catch(e){ /* try again next time the app opens */ }
   }
   if(any){ save(); renderAll(); }
@@ -1466,7 +1497,7 @@ function startPresence(){
 // ── ALWAYS THE NEWEST VERSION ──────────────────────────────────────────────
 // When the app comes back on screen, it checks for a newer version and reloads into it
 // (unless you're in the middle of editing or arranging). Your waiting changes are kept.
-const APP_VERSION = 'soiree-social-v50';
+const APP_VERSION = 'soiree-social-v51';
 (()=>{ const l = document.getElementById('app-version-lbl'); if(l) l.textContent = APP_VERSION.replace('soiree-social-v',''); })();
 async function checkForNewVersion(){
   try{
@@ -1824,10 +1855,10 @@ function renderCalendarView(){
     const isToday = ds===todayStr;
     const isSel = ds===_calSelectedDay;
     const dayPosts = byDay[ds]||[];
-    const dots = dayPosts.slice(0,4).map(p=>`<div class="cal-ev" style="background:${postColor(p)};${inkOn(postColor(p))}">${readyMarks(p)}${esc(calLabel(p.title))}</div>`).join('');
+    const dots = dayPosts.slice(0,4).map(p=>`<div class="cal-ev" data-id="${p.id}" style="background:${postColor(p)};${inkOn(postColor(p))}" onclick="calPostTap(event,'${p.id}')">${readyMarks(p)}${esc(calLabel(p.title))}</div>`).join('');
     const overflow = dayPosts.length>4 ? `<div class="cal-overflow">+${dayPosts.length-4} more</div>` : '';
     const selStyle = isSel ? ';box-shadow:0 0 0 2px var(--sage)' : '';
-    cells += `<div class="cal-cell${isToday?' today':''}${dayPosts.length?' has-posts':''}" style="cursor:${dayPosts.length||isSel?'pointer':'default'}${selStyle}" onclick="calDayTap('${ds}')">
+    cells += `<div class="cal-cell${isToday?' today':''}${dayPosts.length?' has-posts':''}" data-ds="${ds}" style="cursor:${dayPosts.length||isSel?'pointer':'default'}${selStyle}" onclick="calDayTap('${ds}')">
       <div class="cal-day-num">${d}</div>${dots}${overflow}
     </div>`;
   }
@@ -1843,7 +1874,7 @@ function renderCalendarView(){
     const d = new Date(ds+"T12:00:00");
     const dayLabel = `${DAYS[d.getDay()]}, ${MONTHS[d.getMonth()]} ${d.getDate()}, ${d.getFullYear()}`;
     const items = byDay[ds].map(p=>`
-      <div class="cal-pop-item" onclick="openDetail('${p.id}')">
+      <div class="cal-pop-item" onclick="calPostTap(event,'${p.id}')">
         <div class="cal-pop-dot" style="background:${postColor(p)}"></div>
         <div class="cal-pop-title">${p.title||'Untitled'}</div>
         <div class="cal-pop-type">${p.type==='email'?'Email':p.type==='other'?'Other':(p.postType||'Post')}</div>
@@ -1870,6 +1901,85 @@ function calNav(dir){
   renderCalendarView();
 }
 
+// ── CALENDAR: tap a post = small box with its full name + Edit.
+//    Press and HOLD a post (about half a second) to pick it up, then drag it to another day.
+let _calDragEnded = 0, _calDragActive = false;
+function calPostTap(e, id){
+  if(e) e.stopPropagation();
+  if(Date.now() - _calDragEnded < 400) return;     // that was the end of a drag, not a tap
+  const p = posts.find(x=>x.id===id); if(!p) return;
+  document.getElementById('mini-post-title').textContent = p.title || 'Untitled';
+  document.getElementById('mini-post-edit').onclick = ()=>{ closeModal('mini-post'); openEditPost(id); };
+  openModal('mini-post');
+}
+function calMoveTo(id, ds){
+  const p = posts.find(x=>x.id===id); if(!p || !ds || p.date===ds) return;
+  const nice = d=>{ const x = new Date(d+'T12:00:00'); return MONTHS[x.getMonth()].slice(0,3)+' '+x.getDate(); };
+  const name = '"' + calLabel(p.title) + '"';
+  if(isAuthorPost(p) && p.dateType!=='postmar1' && ds >= AUTHOR_DEADLINE){ showToast(name+' is an Author Intro, so it has to go out by Jan 31.'); return; }
+  if(p.dateType==='premar1' && ds >= TICKETS_DATE){ showToast(name+' is set to Pre Mar 1, so it has to stay before March 1.'); return; }
+  if(p.dateType==='postmar1' && ds < TICKETS_DATE){ showToast(name+' is set to Post Mar 1, so it has to stay on or after March 1.'); return; }
+  const was = p.date;
+  p.date = ds; touch(p,['date']); save(); renderMasterList();
+  showToast(`Moved ${name} to ${nice(ds)}${p.dateType==='fixed'?' (its new fixed date)':''}.`, 'Undo', ()=>{ const q = posts.find(x=>x.id===id); if(q){ q.date = was; touch(q,['date']); save(); renderMasterList(); } });
+}
+(function(){
+  const HOLD = 450, SLOP = 8;
+  let timer = null, startX = 0, startY = 0, srcEl = null, srcId = null, ghost = null, overCell = null, isTouch = false;
+  const reset = ()=>{
+    clearTimeout(timer); timer = null;
+    if(ghost){ ghost.remove(); ghost = null; }
+    if(srcEl) srcEl.classList.remove('lifting');
+    if(overCell) overCell.classList.remove('drop-target');
+    srcEl = srcId = overCell = null; _calDragActive = false;
+  };
+  const move = (x,y)=>{
+    if(!ghost) return;
+    ghost.style.left = x+'px'; ghost.style.top = y+'px';
+    const under = document.elementFromPoint(x,y);
+    const cell = under && under.closest ? under.closest('#master-list-content .cal-cell[data-ds]') : null;
+    if(cell !== overCell){ if(overCell) overCell.classList.remove('drop-target'); overCell = cell; if(cell) cell.classList.add('drop-target'); }
+  };
+  const lift = ()=>{
+    timer = null; if(!srcEl) return;
+    _calDragActive = true;
+    srcEl.classList.add('lifting');
+    ghost = srcEl.cloneNode(true); ghost.classList.remove('lifting'); ghost.classList.add('cal-ghost'); ghost.removeAttribute('onclick');
+    ghost.style.width = srcEl.getBoundingClientRect().width + 'px';
+    document.body.appendChild(ghost);
+    move(startX, startY);
+    if(navigator.vibrate) try{ navigator.vibrate(15); }catch(e){}
+  };
+  const drop = ()=>{
+    const id = srcId, ds = overCell ? overCell.dataset.ds : null, wasDragging = _calDragActive;
+    reset();
+    if(wasDragging){ _calDragEnded = Date.now(); if(ds) calMoveTo(id, ds); }
+  };
+  const begin = (el,x,y,touch)=>{
+    if(!el || viewMode!=='calendar') return;
+    reset(); srcEl = el; srcId = el.dataset.id; startX = x; startY = y; isTouch = touch;
+    timer = setTimeout(lift, HOLD);
+  };
+  // mouse / trackpad
+  document.addEventListener('mousedown', e=>{ if(e.button!==0) return; const el = e.target.closest && e.target.closest('#master-list-content .cal-ev[data-id]'); if(el){ e.preventDefault(); begin(el, e.clientX, e.clientY, false); } });
+  document.addEventListener('mousemove', e=>{
+    if(!srcEl || isTouch) return;
+    if(timer){ if(Math.hypot(e.clientX-startX, e.clientY-startY) > SLOP) reset(); return; }   // moved before the hold finished: not a drag
+    move(e.clientX, e.clientY);
+  });
+  document.addEventListener('mouseup', ()=>{ if(!srcEl || isTouch) return; if(timer){ reset(); return; } drop(); });
+  // finger
+  document.addEventListener('touchstart', e=>{ if(e.touches.length!==1) return; const el = e.target.closest && e.target.closest('#master-list-content .cal-ev[data-id]'); if(el) begin(el, e.touches[0].clientX, e.touches[0].clientY, true); }, {passive:true});
+  document.addEventListener('touchmove', e=>{
+    if(!srcEl || !isTouch) return;
+    const t = e.touches[0];
+    if(timer){ if(Math.hypot(t.clientX-startX, t.clientY-startY) > SLOP) reset(); return; }   // scrolling or swiping, not a hold
+    e.preventDefault(); move(t.clientX, t.clientY);
+  }, {passive:false});
+  document.addEventListener('touchend', e=>{ if(!srcEl || !isTouch) return; if(timer){ reset(); return; } e.preventDefault(); drop(); }, {passive:false});
+  document.addEventListener('touchcancel', ()=>{ if(srcEl) reset(); });
+  document.addEventListener('contextmenu', e=>{ if(e.target.closest && e.target.closest('#master-list-content .cal-ev')) e.preventDefault(); });
+})();
 function calDayTap(ds){
   _calSelectedDay = _calSelectedDay===ds ? null : ds;
   renderCalendarView();
@@ -2638,6 +2748,8 @@ function showPostFields(type, p){
   document.getElementById('pm-copy-section').style.display = type==='social' ? '' : 'none';
   if(type==='social') document.getElementById('pm-caption').value = p ? (p.caption||'') : '';
   updateAuthorFillBtn(p);
+  document.getElementById('pm-walkout-section').style.display = isAuthorIntroPost(p) ? '' : 'none';
+  document.getElementById('pm-walkout').value = p ? (p.walkoutSong||'') : '';
 
   // Graphic — social only
   document.getElementById('pm-graphic-section').style.display = type==='social' ? '' : 'none';
@@ -2803,6 +2915,7 @@ function savePost(){
     extraHtags: type==='social' ? document.getElementById('pm-extra-htags').value.trim() : '',
     caption: type==='social' ? document.getElementById('pm-caption').value.trim() : '',
     driveLink: type==='social' ? document.getElementById('pm-drive-link').value.trim() : '',
+    walkoutSong: document.getElementById('pm-walkout').value.trim(),
     captionReady: document.getElementById('pm-cap-ready').classList.contains('on'),
     graphicReady: document.getElementById('pm-gfx-ready').classList.contains('on'),
     lastUpdated: formatUserStamp(),
@@ -2878,12 +2991,15 @@ function openDetail(id){
   if(p.purpose||p.subject){
     h += `<div class="detail-section"><div class="detail-lbl">${isEmail?'Subject line':'Purpose'}</div><div class="detail-text">${p.purpose||p.subject||''}</div></div>`;
   }
+  const walkoutHTML = p.walkoutSong ? `<div class="detail-section"><div class="detail-lbl">Walk out song</div><div class="detail-text">${esc(p.walkoutSong)}</div></div>` : '';
+  if(!p.caption) h += walkoutHTML;
   if(p.caption){
     const g = p.htagId ? hashtagGroups.find(x=>x.id===p.htagId) : null;
     const allTags = [g?g.tags:'', p.extraHtags||''].filter(Boolean).join(' ');
     h += `<div class="detail-section"><div class="detail-lbl">Caption</div><div class="detail-caption">${p.caption}</div></div>`;
-    if(allTags) h += `<div class="detail-section"><div class="detail-lbl">Hashtags</div><div class="detail-tags">${allTags}</div></div>`;
-    h += `<button class="btn-copy" onclick="copyDetailCaption('${id}')">📋 Copy Caption + Hashtags</button>`;
+    h += walkoutHTML;
+    if(allTags) h += `<div class="detail-section"><div class="detail-lbl">Keywords</div><div class="detail-tags">${allTags}</div></div>`;
+    h += `<button class="btn-copy" onclick="copyDetailCaption('${id}')">📋 Copy Caption + Keywords</button>`;
   }
   if(postImages[p.id] || p.driveLink){
     h += `<div class="detail-section"><div class="detail-lbl">Graphic / Video</div>`
@@ -2936,7 +3052,7 @@ function copyDetailCaption(id){
 // ── HASHTAGS ───────────────────────────────────────────────────────────────
 function renderHtagDropdown(){
   const sel = document.getElementById('pm-htag');
-  sel.innerHTML = `<option value="">— No hashtag group —</option>` +
+  sel.innerHTML = `<option value="">— No keyword group —</option>` +
     hashtagGroups.map(g=>`<option value="${g.id}">${g.name}</option>`).join('');
 }
 function previewHtags(){
@@ -3026,7 +3142,7 @@ function renderHtagSettings(){
         <button class="si-btn del" onclick="deleteHtagGroup('${g.id}')">✕</button>
       </div>
       <textarea class="ef-textarea" style="font-size:11px;min-height:60px;line-height:1.6" onchange="hashtagGroups[${i}].tags=this.value;localStorage.setItem('ss_htags2',JSON.stringify(hashtagGroups))">${g.tags}</textarea>
-      <div style="font-size:10px;color:#aaa;margin-top:4px">${g.tags.split(' ').filter(t=>t.startsWith('#')).length} hashtags</div>
+      <div style="font-size:10px;color:#aaa;margin-top:4px">${g.tags.split(' ').filter(t=>t.startsWith('#')).length} keywords</div>
     </div>`).join('') + `<div style="padding:12px 14px"><button class="btn-save" onclick="addHtagGroup()" style="margin-top:0">+ New Group</button></div>`;
 }
 function addHtagGroup(){
@@ -3169,6 +3285,7 @@ function calSwipe(which, dir){
   }, {passive:true});
   document.addEventListener('touchend', e=>{
     if(!target) return;
+    if(_calDragActive || Date.now() - _calDragEnded < 400){ target = null; return; }
     const t = e.changedTouches[0], dx = t.clientX-sx, dy = t.clientY-sy;
     if(Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy)*1.5) calSwipe(target, dx<0 ? 1 : -1);
     target = null;
