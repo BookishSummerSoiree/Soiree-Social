@@ -93,8 +93,11 @@ body{font-family:var(--fb);background:var(--cream);color:var(--black);min-height
 .ai-box ul{margin:0;padding-left:18px;white-space:normal}
 .ai-box li{margin:0 0 4px;white-space:pre-wrap}
 .ai-box li:last-child{margin-bottom:0}
-.ai-opt{color:var(--black);margin-left:8px;white-space:nowrap}
-.ai-pick{color:#3f7a3a;font-weight:600;margin-left:8px;white-space:nowrap}
+.ai-choices{display:flex;flex-wrap:wrap;gap:6px 16px;margin-top:4px}
+.ai-opt,.ai-pick{display:inline-flex;align-items:center;gap:6px;white-space:nowrap;color:var(--black)}
+.ai-box-c{width:15px;height:15px;border:1.5px solid #bbb;border-radius:3px;background:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:11px;line-height:1;flex-shrink:0}
+.ai-pick{color:#2f7a2c;font-weight:600}
+.ai-pick .ai-box-c{border-color:#2f7a2c;background:#e6f2e3;color:#2f7a2c;font-weight:700}
 .ai-box.empty{color:#aaa;font-style:italic}
 .ai-head{display:flex;align-items:center;justify-content:space-between;margin:12px 0 5px}
 .ai-head:first-child{margin-top:0}
@@ -1036,8 +1039,9 @@ function funItemHTML(it){
   const pick = it.v.toLowerCase();
   const list = opts.slice();
   if(!opts.some(o=>o.toLowerCase()===pick)) list.push(it.v);   // an answer that isn't one of the choices still shows
-  return '<li>' + esc(it.label) + ' ' + list.map(o=> o.toLowerCase()===pick
-    ? `<span class="ai-pick">\u2713 ${esc(o)}</span>` : `<span class="ai-opt">${esc(o)}</span>`).join('') + '</li>';
+  return '<li>' + esc(it.label) + '<div class="ai-choices">' + list.map(o=> o.toLowerCase()===pick
+    ? `<span class="ai-pick"><span class="ai-box-c">\u2713</span>${esc(o)}</span>`
+    : `<span class="ai-opt"><span class="ai-box-c"></span>${esc(o)}</span>`).join('') + '</div></li>';
 }
 function copyAuthorInfo(id, key, btn){
   const text = (_authInfo[id] || {})[key] || ''; if(!text) return;
@@ -1698,7 +1702,7 @@ function startPresence(){
 // ── ALWAYS THE NEWEST VERSION ──────────────────────────────────────────────
 // When the app comes back on screen, it checks for a newer version and reloads into it
 // (unless you're in the middle of editing or arranging). Your waiting changes are kept.
-const APP_VERSION = 'soiree-social-v60';
+const APP_VERSION = 'soiree-social-v61';
 (()=>{ const l = document.getElementById('app-version-lbl'); if(l) l.textContent = APP_VERSION.replace('soiree-social-v',''); })();
 async function checkForNewVersion(){
   try{
@@ -3200,6 +3204,7 @@ function openDetail(id){
     h += `<div class="detail-section"><div class="detail-lbl">${isEmail?'Subject line':'Purpose'}</div><div class="detail-text">${p.purpose||p.subject||''}</div></div>`;
   }
   const walkoutHTML = p.walkoutSong ? `<div class="detail-section"><div class="detail-lbl">Walk out song</div><div class="detail-text">${esc(p.walkoutSong)}</div></div>` : '';
+  if(!p.caption && authorIntroName(p)) h += `<div class="detail-section"><div class="detail-lbl">Caption</div><div class="detail-caption" style="color:#aaa;font-style:italic">No caption yet</div></div>`;
   if(!p.caption) h += walkoutHTML;
   if(p.caption){
     const g = p.htagId ? hashtagGroups.find(x=>x.id===p.htagId) : null;
