@@ -89,6 +89,14 @@ body{font-family:var(--fb);background:var(--cream);color:var(--black);min-height
 .asset-row{display:flex;gap:8px;flex-wrap:wrap}
 .asset-btn{flex:1;min-width:130px;display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:10px 12px;border-radius:10px;border:1px solid var(--navy);background:#fff;color:var(--navy);font-family:var(--fb);font-size:13px;font-weight:500;text-decoration:none}
 .asset-btn.off{border-color:#ddd;color:#aaa;pointer-events:none;background:#fafafa}
+.ai-box{position:relative;background:#faf8f4;border:1px dashed var(--cream-d);border-radius:10px;padding:10px 12px 12px;font-size:13px;line-height:1.6;white-space:pre-wrap;color:var(--black);-webkit-user-select:text;user-select:text;min-height:38px}
+.ai-box.empty{color:#aaa;font-style:italic}
+.ai-head{display:flex;align-items:center;justify-content:space-between;margin:12px 0 5px}
+.ai-head:first-child{margin-top:0}
+.ai-lbl{font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:#888}
+.ai-copy{border:1px solid var(--navy);background:#fff;color:var(--navy);border-radius:14px;padding:3px 11px;font-family:var(--fb);font-size:11px;font-weight:500;cursor:pointer}
+.ai-copy:disabled{opacity:.4}
+.ai-note{font-size:11px;color:#999;margin-top:6px}
 .asset-note{font-size:11px;color:#999;margin-top:6px}
 .ready-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:14px 0 4px}
 .ready-btn{border:1.5px solid var(--gray);background:var(--white);border-radius:12px;padding:10px 8px;font-family:var(--fb);font-size:11.5px;font-weight:500;color:#777;cursor:pointer;line-height:1.3;text-align:center}
@@ -542,8 +550,10 @@ mark.hit{background:#F6E2A6;color:inherit;border-radius:2px;padding:0 1px}
       <div class="ef" id="pm-caption-section" style="display:none">
         <label class="ef-lbl">Caption</label>
         <textarea class="ef-textarea" id="pm-caption" placeholder="Write your caption here..."></textarea>
-        <button type="button" class="fill-pill" id="pm-fill-author" style="display:none" onclick="fillCaptionFromAuthorInfo()">📖 Fill from Author Info (bio + fun answers)</button>
-        <div id="pm-fill-msg" style="font-size:12px;color:#777;margin-top:6px;display:none"></div>
+      </div>
+      <!-- Bio + Misc Fun Stuff from Author Info (author intro posts; read-only, refreshed on open) -->
+      <div class="ef" id="pm-authinfo-section" style="display:none">
+        <div class="author-info" id="pm-authinfo"></div>
       </div>
       <!-- Walk out song (author intro posts) -->
       <div class="ef" id="pm-walkout-section" style="display:none">
@@ -980,6 +990,45 @@ function buildAuthorCaption(d, oldWay){
 }
 // "If you were a sports superstar, what song would you want played when you ran out onto the field?"
 function walkoutFrom(d){ return String((d && d.sportsSong) == null ? '' : d.sportsSong).trim(); }
+// ── BIO + MISC FUN STUFF (read-only, from Author Info) ─────────────────────
+// Each time an author intro post is opened, the author's current bio and Misc Fun Stuff
+// answers are pulled from Author Info and shown in two copy-only boxes. The Caption box
+// above them is yours to write in.
+function buildAuthorFun(d){
+  const clean = v=> String(v==null?'':v).trim();
+  return AUTHOR_FUN_LINES.map(([k,label])=>{ const v = clean(d[k]); return v ? label+' '+v : ''; }).filter(Boolean).join('\n');
+}
+let _authInfo = _ls('ss_authinfo', {});   // post id -> {bio, fun} last seen (shows instantly, then refreshes)
+function authorInfoInner(p){
+  const c = _authInfo[p.id] || {}, st = _assetLookup[p.id];
+  const box = (key, label, text, empty)=> `<div class="ai-head"><span class="ai-lbl">${label}</span>`
+    + `<button type="button" class="ai-copy" ${text?'':'disabled'} onclick="copyAuthorInfo('${p.id}','${key}',this)">📋 Copy</button></div>`
+    + `<div class="ai-box${text?'':' empty'}">${text ? esc(text) : empty}</div>`;
+  const waiting = st==='loading' && !_authInfo[p.id];
+  let note = '';
+  if(waiting) note = 'Getting the latest from Author Info\u2026';
+  else if(st==='none') note = 'Author Info has no form saved for ' + esc(authorIntroName(p)) + ' yet.';
+  else if(st==='error') note = _authInfo[p.id] ? 'Could not reach Author Info, so this may not be the newest version.' : 'Could not reach Author Info. Check your connection and reopen the post.';
+  return box('bio','Bio (from Author Info)', c.bio, waiting?'Loading\u2026':'No bio yet')
+    + box('fun','Misc Fun Stuff (from Author Info)', c.fun, waiting?'Loading\u2026':'No fun answers yet')
+    + (note ? `<div class="ai-note">${note}</div>` : '');
+}
+function copyAuthorInfo(id, key, btn){
+  const text = (_authInfo[id] || {})[key] || ''; if(!text) return;
+  const done = ()=>{ const o = btn.textContent; btn.textContent = '✅ Copied!'; setTimeout(()=>{ btn.textContent = o; }, 1800); };
+  const fallback = ()=>{ const ta = document.createElement('textarea'); ta.value = text; document.body.appendChild(ta); ta.select(); try{ document.execCommand('copy'); }catch(e){} document.body.removeChild(ta); done(); };
+  if(navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(done).catch(fallback); else fallback();
+}
+// A caption the app filled in automatically (bio + answers) and nobody changed is cleared,
+// so the Caption box is blank and ready for your own words. Anything you typed stays.
+function clearAutoCaption(p, d){
+  if(!p || !p.caption || !p.captionAutoFilled || p.captionCleared) return false;
+  const c = stripSongLine(p.caption);
+  if(c === stripSongLine(buildAuthorCaption(d)) || c === stripSongLine(buildAuthorCaption(d, true))){
+    p.caption = ''; p.captionCleared = true; touch(p, ['caption','captionCleared']); return true;
+  }
+  return false;
+}
 // ── HEADSHOT + LOGO LINKS ──────────────────────────────────────────────────
 // Author Info saves each author's headshot and logo to Google Drive. An author intro post
 // shows two buttons that open those Drive files (for the social media manager).
@@ -1000,6 +1049,7 @@ function authorAssetsInner(p){
 function paintAuthorAssets(id){
   const p = posts.find(x=>x.id===id); if(!p) return;
   document.querySelectorAll('.author-assets').forEach(el=>{ if(el.dataset.id===id) el.innerHTML = authorAssetsInner(p); });
+  document.querySelectorAll('.author-info').forEach(el=>{ if(el.dataset.id===id) el.innerHTML = authorInfoInner(p); });
 }
 // Saves the links on the post (so they show right away next time and on the other phone).
 // Author Info sends the headshot/logo links next to the answers (j.headshotUrl), not inside j.data.
@@ -1015,15 +1065,28 @@ function storeAuthorAssets(p, d){
 }
 async function loadAuthorAssets(id){
   const p = posts.find(x=>x.id===id); const name = authorIntroName(p);
-  if(!name || _assetLookup[id]==='loading' || _assetLookup[id]==='done') return;
+  if(!name || _assetLookup[id]==='loading') return;   // refreshes every time the post is opened
   _assetLookup[id] = 'loading'; paintAuthorAssets(id);
   try{
     const r = await fetch(AUTHOR_INFO_URL + '?action=getAuthorData&authorName=' + encodeURIComponent(name));
     const j = await r.json();
     if(!j || !j.success) throw new Error('no answer');
     const cur = posts.find(x=>x.id===id); if(!cur) return;
-    if(!j.exists){ _assetLookup[id] = 'none'; }
-    else { _assetLookup[id] = 'done'; if(storeAuthorAssets(cur, authorInfoData(j))) save(); }
+    if(!j.exists){ _assetLookup[id] = 'none'; delete _authInfo[id]; }
+    else {
+      _assetLookup[id] = 'done';
+      const d = authorInfoData(j);
+      _authInfo[id] = { bio: String(d.bio==null?'':d.bio).trim(), fun: buildAuthorFun(d) };
+      let changed = storeAuthorAssets(cur, d);
+      if(clearAutoCaption(cur, d)){
+        changed = true;
+        const box = document.getElementById('pm-caption');
+        if(box && editingPostId===id && stripSongLine(box.value) !== '' && box.dataset.orig === box.value) box.value = '';
+        const dc = document.querySelector('#detail-modal.open .detail-caption'); if(dc && viewingPostId===id) openDetail(id);
+      }
+      if(changed) save();
+    }
+    try{ localStorage.setItem('ss_authinfo', JSON.stringify(_authInfo)); }catch(e){}
   }catch(e){ _assetLookup[id] = 'error'; }
   paintAuthorAssets(id);
 }
@@ -1076,8 +1139,8 @@ async function fillAuthorCaptions(list){
   for(const a of list){
     const post = posts.find(p=>p.hqAuthorId===String(a.id));
     if(!post) continue;
-    const needCap = !post.caption && !post.captionAutoFilled, needSong = !post.walkoutSong && !post.walkoutAutoFilled;
-    const needRefresh = !!post.caption && !post.captionV2;   // filled before the 2 new questions existed
+    const needCap = false, needSong = !post.walkoutSong && !post.walkoutAutoFilled;
+    const needRefresh = !!post.caption && !!post.captionAutoFilled && !post.captionCleared;   // an untouched auto caption to clear
     const needLinks = !post.headshotUrl;   // pick up headshot/logo links once they're uploaded
     if(!needCap && !needSong && !needRefresh && !needLinks) continue;
     try{
@@ -1088,13 +1151,9 @@ async function fillAuthorCaptions(list){
       const cur = posts.find(p=>p.id===post.id);
       if(!cur) continue;
       if(storeAuthorAssets(cur, authorInfoData(j))) any = true;
-      if(needCap && text && !cur.caption){ cur.caption = text; cur.captionAutoFilled = true; cur.captionV2 = true; touch(cur,['caption','captionAutoFilled','captionV2']); any = true; }
-      else if(needRefresh && cur.caption && !cur.captionV2){
-        // Only replace a caption nobody has edited: it must match what the old fill made.
-        const untouched = stripSongLine(cur.caption) === stripSongLine(buildAuthorCaption(j.data||{}, true));
-        if(untouched && text) cur.caption = text;
-        else cur.caption = stripSongLine(cur.caption);   // the song lives in Walk out song, not the caption
-        cur.captionV2 = true; touch(cur,['caption','captionV2']); any = true;
+      if(needRefresh){
+        if(clearAutoCaption(cur, j.data||{})) any = true;
+        else { cur.captionCleared = true; const t = stripSongLine(cur.caption); if(t !== cur.caption) cur.caption = t; touch(cur,['caption','captionCleared']); any = true; }   // you edited it: keep your words
       }
       if(needSong && song && !cur.walkoutSong){ cur.walkoutSong = song; cur.walkoutAutoFilled = true; touch(cur,['walkoutSong','walkoutAutoFilled']); any = true; }
     }catch(e){ /* try again next time the app opens */ }
@@ -1612,7 +1671,7 @@ function startPresence(){
 // ── ALWAYS THE NEWEST VERSION ──────────────────────────────────────────────
 // When the app comes back on screen, it checks for a newer version and reloads into it
 // (unless you're in the middle of editing or arranging). Your waiting changes are kept.
-const APP_VERSION = 'soiree-social-v57';
+const APP_VERSION = 'soiree-social-v58';
 (()=>{ const l = document.getElementById('app-version-lbl'); if(l) l.textContent = APP_VERSION.replace('soiree-social-v',''); })();
 async function checkForNewVersion(){
   try{
@@ -2861,12 +2920,15 @@ function showPostFields(type, p){
   // Caption — social only
   document.getElementById('pm-caption-section').style.display = type==='social' ? '' : 'none';
   document.getElementById('pm-copy-section').style.display = type==='social' ? '' : 'none';
-  if(type==='social') document.getElementById('pm-caption').value = p ? (p.caption||'') : '';
+  if(type==='social'){ const cb = document.getElementById('pm-caption'); cb.value = p ? (p.caption||'') : ''; cb.dataset.orig = cb.value; }
   updateAuthorFillBtn(p);
   document.getElementById('pm-walkout-section').style.display = isAuthorIntroPost(p) ? '' : 'none';
   { const show = !!(p && authorIntroName(p)); const box = document.getElementById('pm-assets');
     document.getElementById('pm-assets-section').style.display = show ? '' : 'none';
     box.dataset.id = show ? p.id : ''; box.innerHTML = show ? authorAssetsInner(p) : '';
+    const ai = document.getElementById('pm-authinfo');
+    document.getElementById('pm-authinfo-section').style.display = show ? '' : 'none';
+    ai.dataset.id = show ? p.id : ''; ai.innerHTML = show ? authorInfoInner(p) : '';
     if(show) loadAuthorAssets(p.id); }
   document.getElementById('pm-walkout').value = p ? (p.walkoutSong||'') : '';
 
@@ -3122,6 +3184,7 @@ function openDetail(id){
     h += `<button class="btn-copy" onclick="copyDetailCaption('${id}')">📋 Copy Caption + Keywords</button>`;
   }
   if(authorIntroName(p)){
+    h += `<div class="detail-section"><div class="author-info" data-id="${p.id}">${authorInfoInner(p)}</div></div>`;
     h += `<div class="detail-section"><div class="detail-lbl">Headshot &amp; Logo</div><div class="author-assets" data-id="${p.id}">${authorAssetsInner(p)}</div></div>`;
   }
   if(postImages[p.id] || p.driveLink){
