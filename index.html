@@ -86,6 +86,10 @@ body{font-family:var(--fb);background:var(--cream);color:var(--black);min-height
 .cal-ev .rdy-gfx{font-size:8px;margin-right:2px}
 .fill-pill{display:inline-flex;align-items:center;gap:5px;margin-top:8px;border:1px solid var(--sage);background:var(--sage-l);color:var(--sage-d);border-radius:16px;padding:5px 12px;font-family:var(--fb);font-size:11px;font-weight:500;cursor:pointer}
 .fill-pill:disabled{opacity:.6}
+.asset-row{display:flex;gap:8px;flex-wrap:wrap}
+.asset-btn{flex:1;min-width:130px;display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:10px 12px;border-radius:10px;border:1px solid var(--navy);background:#fff;color:var(--navy);font-family:var(--fb);font-size:13px;font-weight:500;text-decoration:none}
+.asset-btn.off{border-color:#ddd;color:#aaa;pointer-events:none;background:#fafafa}
+.asset-note{font-size:11px;color:#999;margin-top:6px}
 .ready-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:14px 0 4px}
 .ready-btn{border:1.5px solid var(--gray);background:var(--white);border-radius:12px;padding:10px 8px;font-family:var(--fb);font-size:11.5px;font-weight:500;color:#777;cursor:pointer;line-height:1.3;text-align:center}
 .ready-btn.on{border-color:#2E7D32;background:#E8F5E9;color:#1B5E20}
@@ -546,6 +550,11 @@ mark.hit{background:#F6E2A6;color:inherit;border-radius:2px;padding:0 1px}
         <label class="ef-lbl">Walk out song</label>
         <input class="ef-input" id="pm-walkout" placeholder="Their answer from Author Info">
       </div>
+      <!-- Headshot + logo links (author intro posts) -->
+      <div class="ef" id="pm-assets-section" style="display:none">
+        <label class="ef-lbl">Headshot &amp; Logo</label>
+        <div class="author-assets" id="pm-assets"></div>
+      </div>
       <!-- Keyword group (social only) -->
       <div class="ef" id="pm-htag-section" style="display:none">
         <label class="ef-lbl">Keyword Group</label>
@@ -971,6 +980,50 @@ function buildAuthorCaption(d, oldWay){
 }
 // "If you were a sports superstar, what song would you want played when you ran out onto the field?"
 function walkoutFrom(d){ return String((d && d.sportsSong) == null ? '' : d.sportsSong).trim(); }
+// ── HEADSHOT + LOGO LINKS ──────────────────────────────────────────────────
+// Author Info saves each author's headshot and logo to Google Drive. An author intro post
+// shows two buttons that open those Drive files (for the social media manager).
+const _assetLookup = {};   // post id -> 'loading' | 'none' | 'done' | 'error' (this visit only)
+function authorAssetsInner(p){
+  const st = _assetLookup[p.id];
+  const btn = (url, icon, label, missing)=> url
+    ? `<a class="asset-btn" href="${esc(url)}" target="_blank" rel="noopener">${icon} ${label} ↗</a>`
+    : `<span class="asset-btn off">${icon} ${missing}</span>`;
+  const waiting = st==='loading' && !p.headshotUrl && !p.logoUrl;
+  let note = '';
+  if(waiting) note = 'Looking these up in Author Info…';
+  else if(st==='none') note = 'Author Info has no form saved for ' + esc(authorIntroName(p)) + ' yet.';
+  else if(st==='error' && !p.headshotUrl && !p.logoUrl) note = 'Could not reach Author Info. Check your connection and reopen the post.';
+  return `<div class="asset-row">${btn(p.headshotUrl,'👤','Headshot', waiting?'Headshot…':'No headshot yet')}${btn(p.logoUrl,'🏷️','Logo', waiting?'Logo…':'No logo')}</div>`
+    + (note ? `<div class="asset-note">${note}</div>` : '');
+}
+function paintAuthorAssets(id){
+  const p = posts.find(x=>x.id===id); if(!p) return;
+  document.querySelectorAll('.author-assets').forEach(el=>{ if(el.dataset.id===id) el.innerHTML = authorAssetsInner(p); });
+}
+// Saves the links on the post (so they show right away next time and on the other phone).
+function storeAuthorAssets(p, d){
+  const h = String((d && d.headshotUrl) || '').trim(), l = String((d && d.logoUrl) || '').trim();
+  const f = [];
+  if(h !== (p.headshotUrl||'')){ p.headshotUrl = h; f.push('headshotUrl'); }
+  if(l !== (p.logoUrl||'')){ p.logoUrl = l; f.push('logoUrl'); }
+  if(f.length) touch(p, f);
+  return f.length > 0;
+}
+async function loadAuthorAssets(id){
+  const p = posts.find(x=>x.id===id); const name = authorIntroName(p);
+  if(!name || _assetLookup[id]==='loading' || _assetLookup[id]==='done') return;
+  _assetLookup[id] = 'loading'; paintAuthorAssets(id);
+  try{
+    const r = await fetch(AUTHOR_INFO_URL + '?action=getAuthorData&authorName=' + encodeURIComponent(name));
+    const j = await r.json();
+    if(!j || !j.success) throw new Error('no answer');
+    const cur = posts.find(x=>x.id===id); if(!cur) return;
+    if(!j.exists){ _assetLookup[id] = 'none'; }
+    else { _assetLookup[id] = 'done'; if(storeAuthorAssets(cur, j.data||{})) save(); }
+  }catch(e){ _assetLookup[id] = 'error'; }
+  paintAuthorAssets(id);
+}
 function isAuthorIntroPost(p){ return !!p && p.type==='social' && (!!authorIntroName(p) || catKey(p.cat)===AUTHOR_CAT); }
 let _fillArmed = false;
 function updateAuthorFillBtn(p){
@@ -1022,7 +1075,8 @@ async function fillAuthorCaptions(list){
     if(!post) continue;
     const needCap = !post.caption && !post.captionAutoFilled, needSong = !post.walkoutSong && !post.walkoutAutoFilled;
     const needRefresh = !!post.caption && !post.captionV2;   // filled before the 2 new questions existed
-    if(!needCap && !needSong && !needRefresh) continue;
+    const needLinks = !post.headshotUrl;   // pick up headshot/logo links once they're uploaded
+    if(!needCap && !needSong && !needRefresh && !needLinks) continue;
     try{
       const r = await fetch(AUTHOR_INFO_URL + '?action=getAuthorData&authorName=' + encodeURIComponent(String(a.name).trim()));
       const j = await r.json();
@@ -1030,6 +1084,7 @@ async function fillAuthorCaptions(list){
       const text = buildAuthorCaption(j.data || {}), song = walkoutFrom(j.data);
       const cur = posts.find(p=>p.id===post.id);
       if(!cur) continue;
+      if(storeAuthorAssets(cur, j.data||{})) any = true;
       if(needCap && text && !cur.caption){ cur.caption = text; cur.captionAutoFilled = true; cur.captionV2 = true; touch(cur,['caption','captionAutoFilled','captionV2']); any = true; }
       else if(needRefresh && cur.caption && !cur.captionV2){
         // Only replace a caption nobody has edited: it must match what the old fill made.
@@ -1554,7 +1609,7 @@ function startPresence(){
 // ── ALWAYS THE NEWEST VERSION ──────────────────────────────────────────────
 // When the app comes back on screen, it checks for a newer version and reloads into it
 // (unless you're in the middle of editing or arranging). Your waiting changes are kept.
-const APP_VERSION = 'soiree-social-v55';
+const APP_VERSION = 'soiree-social-v56';
 (()=>{ const l = document.getElementById('app-version-lbl'); if(l) l.textContent = APP_VERSION.replace('soiree-social-v',''); })();
 async function checkForNewVersion(){
   try{
@@ -2806,6 +2861,10 @@ function showPostFields(type, p){
   if(type==='social') document.getElementById('pm-caption').value = p ? (p.caption||'') : '';
   updateAuthorFillBtn(p);
   document.getElementById('pm-walkout-section').style.display = isAuthorIntroPost(p) ? '' : 'none';
+  { const show = !!(p && authorIntroName(p)); const box = document.getElementById('pm-assets');
+    document.getElementById('pm-assets-section').style.display = show ? '' : 'none';
+    box.dataset.id = show ? p.id : ''; box.innerHTML = show ? authorAssetsInner(p) : '';
+    if(show) loadAuthorAssets(p.id); }
   document.getElementById('pm-walkout').value = p ? (p.walkoutSong||'') : '';
 
   // Graphic — social only
@@ -3059,6 +3118,9 @@ function openDetail(id){
     if(allTags) h += `<div class="detail-section"><div class="detail-lbl">Keywords</div><div class="detail-tags">${allTags}</div></div>`;
     h += `<button class="btn-copy" onclick="copyDetailCaption('${id}')">📋 Copy Caption + Keywords</button>`;
   }
+  if(authorIntroName(p)){
+    h += `<div class="detail-section"><div class="detail-lbl">Headshot &amp; Logo</div><div class="author-assets" data-id="${p.id}">${authorAssetsInner(p)}</div></div>`;
+  }
   if(postImages[p.id] || p.driveLink){
     h += `<div class="detail-section"><div class="detail-lbl">Graphic / Video</div>`
       + (postImages[p.id] ? `<img class="detail-img" src="${postImages[p.id]}" alt="">` : '')
@@ -3075,6 +3137,7 @@ function openDetail(id){
 
   document.getElementById('detail-content').innerHTML = h;
   openModal('detail-modal');
+  if(authorIntroName(p)) loadAuthorAssets(p.id);
 }
 
 function toggleReady(id, field){

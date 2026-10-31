@@ -1,6 +1,6 @@
 // ── SOIREE SOCIAL SERVICE WORKER ─────────────────────────────────────────
 // Version bump this string any time you update the app — it forces a cache refresh
-const CACHE_NAME = 'soiree-social-v55';
+const CACHE_NAME = 'soiree-social-v56';
 
 // Files to cache for offline use
 const PRECACHE_URLS = [
