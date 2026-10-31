@@ -1002,6 +1002,9 @@ function paintAuthorAssets(id){
   document.querySelectorAll('.author-assets').forEach(el=>{ if(el.dataset.id===id) el.innerHTML = authorAssetsInner(p); });
 }
 // Saves the links on the post (so they show right away next time and on the other phone).
+// Author Info sends the headshot/logo links next to the answers (j.headshotUrl), not inside j.data.
+function authorInfoData(j){ const d = {...((j && j.data) || {})};
+  if(j && j.headshotUrl) d.headshotUrl = j.headshotUrl; if(j && j.logoUrl) d.logoUrl = j.logoUrl; return d; }
 function storeAuthorAssets(p, d){
   const h = String((d && d.headshotUrl) || '').trim(), l = String((d && d.logoUrl) || '').trim();
   const f = [];
@@ -1020,7 +1023,7 @@ async function loadAuthorAssets(id){
     if(!j || !j.success) throw new Error('no answer');
     const cur = posts.find(x=>x.id===id); if(!cur) return;
     if(!j.exists){ _assetLookup[id] = 'none'; }
-    else { _assetLookup[id] = 'done'; if(storeAuthorAssets(cur, j.data||{})) save(); }
+    else { _assetLookup[id] = 'done'; if(storeAuthorAssets(cur, authorInfoData(j))) save(); }
   }catch(e){ _assetLookup[id] = 'error'; }
   paintAuthorAssets(id);
 }
@@ -1084,7 +1087,7 @@ async function fillAuthorCaptions(list){
       const text = buildAuthorCaption(j.data || {}), song = walkoutFrom(j.data);
       const cur = posts.find(p=>p.id===post.id);
       if(!cur) continue;
-      if(storeAuthorAssets(cur, j.data||{})) any = true;
+      if(storeAuthorAssets(cur, authorInfoData(j))) any = true;
       if(needCap && text && !cur.caption){ cur.caption = text; cur.captionAutoFilled = true; cur.captionV2 = true; touch(cur,['caption','captionAutoFilled','captionV2']); any = true; }
       else if(needRefresh && cur.caption && !cur.captionV2){
         // Only replace a caption nobody has edited: it must match what the old fill made.
@@ -1609,7 +1612,7 @@ function startPresence(){
 // ── ALWAYS THE NEWEST VERSION ──────────────────────────────────────────────
 // When the app comes back on screen, it checks for a newer version and reloads into it
 // (unless you're in the middle of editing or arranging). Your waiting changes are kept.
-const APP_VERSION = 'soiree-social-v56';
+const APP_VERSION = 'soiree-social-v57';
 (()=>{ const l = document.getElementById('app-version-lbl'); if(l) l.textContent = APP_VERSION.replace('soiree-social-v',''); })();
 async function checkForNewVersion(){
   try{
