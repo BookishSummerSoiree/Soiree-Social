@@ -93,6 +93,8 @@ body{font-family:var(--fb);background:var(--cream);color:var(--black);min-height
 .ai-box ul{margin:0;padding-left:18px;white-space:normal}
 .ai-box li{margin:0 0 4px;white-space:pre-wrap}
 .ai-box li:last-child{margin-bottom:0}
+.ai-opt{color:var(--black);margin-left:8px;white-space:nowrap}
+.ai-pick{color:#3f7a3a;font-weight:600;margin-left:8px;white-space:nowrap}
 .ai-box.empty{color:#aaa;font-style:italic}
 .ai-head{display:flex;align-items:center;justify-content:space-between;margin:12px 0 5px}
 .ai-head:first-child{margin-top:0}
@@ -997,6 +999,16 @@ function walkoutFrom(d){ return String((d && d.sportsSong) == null ? '' : d.spor
 // Each time an author intro post is opened, the author's current bio and Misc Fun Stuff
 // answers are pulled from Author Info and shown in two copy-only boxes. The Caption box
 // above them is yours to write in.
+// Multiple-choice questions in Author Info: show every choice, with the author's pick in green.
+const AUTHOR_FUN_CHOICES = {
+  drink: ['Cafe','Couch','Desk'],
+  numberGuess: ['Pajamas','Power outfit','Something in between'],
+  readingFormat: ['Plotter','Pantser','A bit of both'],
+};
+function buildAuthorFunItems(d){
+  const clean = v=> String(v==null?'':v).trim();
+  return AUTHOR_FUN_LINES.map(([k,label])=>{ const v = clean(d[k]); return v ? {k, label, v} : null; }).filter(Boolean);
+}
 function buildAuthorFun(d){
   const clean = v=> String(v==null?'':v).trim();
   return AUTHOR_FUN_LINES.map(([k,label])=>{ const v = clean(d[k]); return v ? '\u2022 '+label+' '+v : ''; }).filter(Boolean).join('\n');
@@ -1007,7 +1019,7 @@ function authorInfoInner(p){
   const box = (key, label, text, empty)=> `<div class="ai-head"><span class="ai-lbl">${label}</span>`
     + `<button type="button" class="ai-copy" ${text?'':'disabled'} onclick="copyAuthorInfo('${p.id}','${key}',this)">📋 Copy</button></div>`
     + `<div class="ai-box${text?'':' empty'}">${!text ? empty : key==='fun'
-        ? '<ul>' + text.split('\n').map(l=>'<li>'+esc(l.replace(/^\u2022\s*/,''))+'</li>').join('') + '</ul>'
+        ? '<ul>' + (c.items ? c.items.map(funItemHTML) : text.split('\n').map(l=>'<li>'+esc(l.replace(/^\u2022\s*/,''))+'</li>')).join('') + '</ul>'
         : esc(text)}</div>`;
   const waiting = st==='loading' && !_authInfo[p.id];
   let note = '';
@@ -1017,6 +1029,15 @@ function authorInfoInner(p){
   return box('bio','Bio (from Author Info)', c.bio, waiting?'Loading\u2026':'No bio yet')
     + box('fun','Misc Fun Stuff (from Author Info)', c.fun, waiting?'Loading\u2026':'No fun answers yet')
     + (note ? `<div class="ai-note">${note}</div>` : '');
+}
+function funItemHTML(it){
+  const opts = AUTHOR_FUN_CHOICES[it.k];
+  if(!opts) return '<li>' + esc(it.label + ' ' + it.v) + '</li>';
+  const pick = it.v.toLowerCase();
+  const list = opts.slice();
+  if(!opts.some(o=>o.toLowerCase()===pick)) list.push(it.v);   // an answer that isn't one of the choices still shows
+  return '<li>' + esc(it.label) + ' ' + list.map(o=> o.toLowerCase()===pick
+    ? `<span class="ai-pick">\u2713 ${esc(o)}</span>` : `<span class="ai-opt">${esc(o)}</span>`).join('') + '</li>';
 }
 function copyAuthorInfo(id, key, btn){
   const text = (_authInfo[id] || {})[key] || ''; if(!text) return;
@@ -1082,7 +1103,7 @@ async function loadAuthorAssets(id){
       _assetLookup[id] = 'done';
       const d = authorInfoData(j);
       const bioKey = Object.keys(d).find(k=>/^(author_?)?bio$/i.test(k) && String(d[k]||'').trim());
-      _authInfo[id] = { bio: bioKey ? String(d[bioKey]).trim() : '', fun: buildAuthorFun(d) };
+      _authInfo[id] = { bio: bioKey ? String(d[bioKey]).trim() : '', fun: buildAuthorFun(d), items: buildAuthorFunItems(d) };
       let changed = storeAuthorAssets(cur, d);
       if(clearAutoCaption(cur, d)){
         changed = true;
@@ -1677,7 +1698,7 @@ function startPresence(){
 // ── ALWAYS THE NEWEST VERSION ──────────────────────────────────────────────
 // When the app comes back on screen, it checks for a newer version and reloads into it
 // (unless you're in the middle of editing or arranging). Your waiting changes are kept.
-const APP_VERSION = 'soiree-social-v59';
+const APP_VERSION = 'soiree-social-v60';
 (()=>{ const l = document.getElementById('app-version-lbl'); if(l) l.textContent = APP_VERSION.replace('soiree-social-v',''); })();
 async function checkForNewVersion(){
   try{
