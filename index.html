@@ -570,7 +570,7 @@ mark.hit{background:#F6E2A6;color:inherit;border-radius:2px;padding:0 1px}
       </div>
       <!-- Headshot + logo links (author intro posts) -->
       <div class="ef" id="pm-assets-section" style="display:none">
-        <label class="ef-lbl">Headshot &amp; Logo</label>
+        <label class="ef-lbl">Headshot, Logo &amp; Fun photo</label>
         <div class="author-assets" id="pm-assets"></div>
       </div>
       <!-- Keyword group (social only) -->
@@ -1073,7 +1073,7 @@ function authorAssetsInner(p){
   if(waiting) note = 'Looking these up in Author Info…';
   else if(st==='none') note = 'Author Info has no form saved for ' + esc(authorIntroName(p)) + ' yet.';
   else if(st==='error' && !p.headshotUrl && !p.logoUrl) note = 'Could not reach Author Info. Check your connection and reopen the post.';
-  return `<div class="asset-row">${btn(p.headshotUrl,'👤','Headshot', waiting?'Headshot…':'No headshot yet')}${btn(p.logoUrl,'🏷️','Logo', waiting?'Logo…':'No logo')}</div>`
+  return `<div class="asset-row">${btn(p.headshotUrl,'👤','Headshot', waiting?'Headshot…':'No headshot yet')}${btn(p.logoUrl,'🏷️','Logo', waiting?'Logo…':'No logo')}${btn(p.funPhotoUrl,'📸','Fun photo', waiting?'Fun photo…':'No fun photo')}</div>`
     + (note ? `<div class="asset-note">${note}</div>` : '');
 }
 function paintAuthorAssets(id){
@@ -1090,6 +1090,8 @@ function storeAuthorAssets(p, d){
   const f = [];
   if(h !== (p.headshotUrl||'')){ p.headshotUrl = h; f.push('headshotUrl'); }
   if(l !== (p.logoUrl||'')){ p.logoUrl = l; f.push('logoUrl'); }
+  const fp = String((d && d.funPhotoUrl) || '').trim();
+  if(fp !== (p.funPhotoUrl||'')){ p.funPhotoUrl = fp; f.push('funPhotoUrl'); }
   if(f.length) touch(p, f);
   return f.length > 0;
 }
@@ -1702,7 +1704,7 @@ function startPresence(){
 // ── ALWAYS THE NEWEST VERSION ──────────────────────────────────────────────
 // When the app comes back on screen, it checks for a newer version and reloads into it
 // (unless you're in the middle of editing or arranging). Your waiting changes are kept.
-const APP_VERSION = 'soiree-social-v61';
+const APP_VERSION = 'soiree-social-v62';
 (()=>{ const l = document.getElementById('app-version-lbl'); if(l) l.textContent = APP_VERSION.replace('soiree-social-v',''); })();
 async function checkForNewVersion(){
   try{
@@ -3216,7 +3218,7 @@ function openDetail(id){
   }
   if(authorIntroName(p)){
     h += `<div class="detail-section"><div class="author-info" data-id="${p.id}">${authorInfoInner(p)}</div></div>`;
-    h += `<div class="detail-section"><div class="detail-lbl">Headshot &amp; Logo</div><div class="author-assets" data-id="${p.id}">${authorAssetsInner(p)}</div></div>`;
+    h += `<div class="detail-section"><div class="detail-lbl">Headshot, Logo &amp; Fun photo</div><div class="author-assets" data-id="${p.id}">${authorAssetsInner(p)}</div></div>`;
   }
   if(postImages[p.id] || p.driveLink){
     h += `<div class="detail-section"><div class="detail-lbl">Graphic / Video</div>`
