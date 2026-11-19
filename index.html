@@ -869,6 +869,31 @@ function dedupeAuthorIntros(confirmed){
   });
   return changed;
 }
+// An intro only belongs to an author whose HQ status is Confirmed. If an author's status goes
+// back to anything else (Asked, Maybe, Declined…) or they're removed from HQ, their intro turns
+// back into an empty numbered "Author Intro N" slot. The post keeps its date and anything you
+// typed; their headshot/logo/photo links and auto-filled walk-out song are cleared.
+function unconfirmAuthorIntros(confirmed){
+  if(!confirmed || !confirmed.length) return false;   // never act on an empty or failed HQ read
+  const ids = new Set(confirmed.map(a=>String(a.id)));
+  const names = new Set(confirmed.map(a=>String(a.name).trim().toLowerCase()));
+  const taken = new Set(posts.map(p=>{ const m=/^Author Intro (\d+)$/i.exec(p.title||''); return m ? +m[1] : null; }).filter(Boolean));
+  let changed = false;
+  posts.forEach(p=>{
+    const name = authorIntroName(p).toLowerCase();
+    if(!name && !p.hqAuthorId) return;
+    if((p.hqAuthorId && ids.has(String(p.hqAuthorId))) || (name && names.has(name))) return;
+    let n = 1; while(taken.has(n)) n++; taken.add(n);
+    const f = ['title','hqAuthorId','cat','headshotUrl','logoUrl','funPhotoUrl'];
+    p.title = 'Author Intro ' + n; delete p.hqAuthorId; p.cat = catName('Author Intro');
+    delete p.headshotUrl; delete p.logoUrl; delete p.funPhotoUrl;
+    if(p.walkoutAutoFilled){ delete p.walkoutSong; delete p.walkoutAutoFilled; f.push('walkoutSong','walkoutAutoFilled'); }
+    try{ delete _authInfo[p.id]; localStorage.setItem('ss_authinfo', JSON.stringify(_authInfo)); }catch(e){}
+    touch(p, f);
+    changed = true;
+  });
+  return changed;
+}
 // There are AUTHOR_SLOTS author posts in all: one per confirmed author (each started out as a
 // numbered "Author Intro N") plus numbered ones still waiting for an author.
 const AUTHOR_SLOTS = 18;
@@ -931,7 +956,8 @@ async function syncAuthorIntros(){
   const last = n=>String(n).trim().split(/\s+/).pop();
   list.sort((a,b)=>last(a.name).localeCompare(last(b.name)) || a.name.localeCompare(b.name));
 
-  let changed = dedupeAuthorIntros(list);
+  let changed = unconfirmAuthorIntros(list);
+  if(dedupeAuthorIntros(list)) changed = true;
   if(window._postsFromCloud && tidyAuthorSlots(list)) changed = true;
   const numbered = posts
     .map(p=>({p, m:/^Author Intro (\d+)$/i.exec(p.title||'')}))
@@ -1705,7 +1731,7 @@ function startPresence(){
 // ── ALWAYS THE NEWEST VERSION ──────────────────────────────────────────────
 // When the app comes back on screen, it checks for a newer version and reloads into it
 // (unless you're in the middle of editing or arranging). Your waiting changes are kept.
-const APP_VERSION = 'soiree-social-v63';
+const APP_VERSION = 'soiree-social-v64';
 (()=>{ const l = document.getElementById('app-version-lbl'); if(l) l.textContent = APP_VERSION.replace('soiree-social-v',''); })();
 async function checkForNewVersion(){
   try{
